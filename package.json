@@ -1,0 +1,37 @@
+{
+    "name": "denizenscript",
+    "displayName": "DenizenScript",
+    "description": "The Denizen scripting language.",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.33.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "denizenscript",
+            "aliases": ["Denizen Script", "denizenscript"],
+            "extensions": [".dsc"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "denizenscript",
+            "scopeName": "source.denizen",
+            "path": "./syntaxes/denizenscript.tmLanguage.json"
+        }],
+        "themes": [
+            {
+                "label": "denizenscript",
+                "uiTheme": "vs-dark",
+                "path": "./themes/dscript-theme.json"
+            }
+        ],
+        "configurationDefaults": {
+            "[denizenscript]": {
+                "editor.insertSpaces": true
+            }
+        }
+    }
+}
