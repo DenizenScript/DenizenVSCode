@@ -2,7 +2,10 @@
     "name": "denizenscript",
     "displayName": "DenizenScript",
     "description": "The Denizen scripting language.",
-    "version": "0.0.1",
+    "author": "mcmonkey and the DenizenScript team",
+    "version": "0.0.2",
+    "publisher": "denizenscript",
+    "repository": "https://github.com/DenizenScript/DenizenVSCode",
     "engines": {
         "vscode": "^1.33.0"
     },
