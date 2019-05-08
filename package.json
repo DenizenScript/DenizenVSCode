@@ -3,7 +3,7 @@
     "displayName": "DenizenScript",
     "description": "The Denizen scripting language.",
     "author": "mcmonkey and the DenizenScript team",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "publisher": "denizenscript",
     "repository": "https://github.com/DenizenScript/DenizenVSCode",
     "engines": {
@@ -12,18 +12,31 @@
     "categories": [
         "Programming Languages"
     ],
+    "activationEvents": [
+        "*"
+    ],
+    "main": "./out/extension.js",
     "contributes": {
-        "languages": [{
-            "id": "denizenscript",
-            "aliases": ["Denizen Script", "denizenscript"],
-            "extensions": [".dsc"],
-            "configuration": "./language-configuration.json"
-        }],
-        "grammars": [{
-            "language": "denizenscript",
-            "scopeName": "source.denizen",
-            "path": "./syntaxes/denizenscript.tmLanguage.json"
-        }],
+        "languages": [
+            {
+                "id": "denizenscript",
+                "aliases": [
+                    "Denizen Script",
+                    "denizenscript"
+                ],
+                "extensions": [
+                    ".dsc"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "denizenscript",
+                "scopeName": "source.denizen",
+                "path": "./syntaxes/denizenscript.tmLanguage.json"
+            }
+        ],
         "themes": [
             {
                 "label": "denizenscript",
@@ -35,6 +48,14 @@
             "[denizenscript]": {
                 "editor.insertSpaces": true
             }
+        },
+        "scripts": {
+            "vscode:prepublish": "npm run compile",
+            "compile": "tsc -p ./"
+        },
+        "devDependencies": {
+            "@types/node": "^8.10.25",
+            "typescript": "^2.6.1"
         }
     }
 }
