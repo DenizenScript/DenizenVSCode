@@ -11,6 +11,13 @@
         ["\"", "\""],
         ["'", "'"]
     ],
+    // symbols that are highlighted in pairs
+    "brackets": [
+        ["<", ">"],
+        ["[", "]"],
+        ["\"", "\""],
+        ["'", "'"]
+    ],
     // symbols that that can be used to surround a selection
     "surroundingPairs": [
         ["<", ">"],
