@@ -64,8 +64,18 @@
 		},
 		"code_line_quotes_tags": {
 			"patterns": [{
-				"begin": "(\"|')",
-				"end": "(\"|')",
+				"begin": "\"",
+				"end": "\"",
+				"name": "dscript.quotes",
+				"patterns": [{
+					"include": "#code_line_tags"
+				}]
+			}]
+		},
+		"code_line_single_quotes_tags": {
+			"patterns": [{
+				"begin": "'",
+				"end": "'",
 				"name": "dscript.quotes",
 				"patterns": [{
 					"include": "#code_line_tags"
@@ -119,6 +129,9 @@
 				},
 				"patterns": [{
 					"include": "#code_line_quotes_tags"
+				},
+				{
+					"include": "#code_line_single_quotes_tags"
 				},
 				{
 					"include": "#code_line_tags"
