@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using JsonRpc.DynamicProxy.Client;
-using JsonRpc.Standard.Client;
+using JsonRpc.Client;
 
 namespace LanguageServer.VsCode.Contracts.Client
 {

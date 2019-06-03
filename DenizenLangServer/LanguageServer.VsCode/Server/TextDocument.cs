@@ -78,7 +78,7 @@ namespace LanguageServer.VsCode.Server
         /// <summary>
         /// Gets a part of the content by the specified line/column-based range.
         /// </summary>
-        public virtual string GetRange(Range range)
+        public virtual string GetRange(Contracts.Range range)
         {
             var start = OffsetAt(range.Start);
             return GetRange(start, OffsetAt(range.End) - start);

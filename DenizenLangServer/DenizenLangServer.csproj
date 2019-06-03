@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="CXuesong.JsonRpc.Commons" Version="0.5.2-int1" />
     <PackageReference Include="CXuesong.JsonRpc.Streams" Version="0.5.2" />
+    <PackageReference Include="CXuesong.JsonRpc.DynamicProxy" Version="0.5.0" />
   </ItemGroup>
 
 </Project>
