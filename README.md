@@ -9,6 +9,11 @@ This project has just been started, but already contains functional basic syntax
 
 In the future, we plan to have code completion suggestions and other handy IDE-like functionalities.
 
+## Used Projects
+
+The folder path `DenizenLangServer/LanguageServer.VsCode` is copied from https://github.com/CXuesong/LanguageServer.NET and is subject to the Apache license contained there.
+Some compatibility modifications have been made.
+
 ### Licensing pre-note:
 
 This is an open source project, provided entirely freely, for everyone to use and contribute to.
