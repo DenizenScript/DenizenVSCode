@@ -1,32 +1,34 @@
 import * as vscode from 'vscode';
+import * as languageClient from "vscode-languageclient";
+import * as path from "path";
+import * as fs from "fs";
 
-let timeout : NodeJS.Timer = undefined;
+const languageServerPath : string = "server/DenizenLangServer.dll";
 
-export function activate(context: vscode.ExtensionContext) {
-
-    let xCurrentTheme : string = vscode.workspace.getConfiguration().get("workbench.colorTheme");
-    if (xCurrentTheme == "denizenscript") {
-        timeout = setTimeout(() => {
-            vscode.workspace.getConfiguration().update("workbench.colorTheme", undefined);
-        }, 500);
+function activateLanguageServer(context: vscode.ExtensionContext) {
+    let pathFile : string = context.asAbsolutePath(languageServerPath);
+    if (!fs.existsSync(pathFile)) {
+        return;
     }
-    
-    const visibleEditorsDisposable = vscode.window.onDidChangeVisibleTextEditors((e) => {
-        if (timeout) {
-            clearTimeout(timeout);
-        }
-        timeout = setTimeout(() => {
-            let xOrigString : string = vscode.workspace.getConfiguration().get("workbench.colorTheme");
-            if (xOrigString != "denizenscript" && vscode.window.activeTextEditor.document.languageId == "denizenscript") {
-                vscode.workspace.getConfiguration().update("workbench.colorTheme", "denizenscript");
-            }
-            else if (xOrigString == "denizenscript") {
-                vscode.workspace.getConfiguration().update("workbench.colorTheme", undefined);
-            }
-            timeout = undefined;
-        }, 500);
-    });
-    context.subscriptions.push(visibleEditorsDisposable);
+    let pathDir : string = path.dirname(pathFile);
+    let serverOptions: languageClient.ServerOptions = {
+        run: { command: "dotnet", args: [pathFile], options: { cwd: pathDir } },
+        debug: { command: "dotnet", args: [pathFile, "--debug"], options: { cwd: pathDir } }
+    }
+    let clientOptions: languageClient.LanguageClientOptions = {
+        documentSelector: ["denizenscript"],
+        synchronize: {
+            configurationSection: "DenizenLangServer",
+        },
+    }
+	let client = new languageClient.LanguageClient("DenizenLangServer", "Denizen Language Server", serverOptions, clientOptions);
+    let disposable = client.start();
+    context.subscriptions.push(disposable);
 }
 
-export function deactivate() {}
+export function activate(context: vscode.ExtensionContext) {
+    activateLanguageServer(context);
+}
+
+export function deactivate() {
+}

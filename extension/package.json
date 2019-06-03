@@ -3,7 +3,7 @@
     "displayName": "DenizenScript",
     "description": "The Denizen scripting language.",
     "author": "mcmonkey and the DenizenScript team",
-    "version": "0.0.6",
+    "version": "0.1.0",
     "publisher": "denizenscript",
     "repository": "https://github.com/DenizenScript/DenizenVSCode",
     "engines": {
@@ -13,7 +13,7 @@
         "Programming Languages"
     ],
     "activationEvents": [
-        "*"
+        "onLanguage:denizenscript"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -30,23 +30,10 @@
                 "configuration": "./language-configuration.json"
             }
         ],
-        "grammars": [
-            {
-                "language": "denizenscript",
-                "scopeName": "source.denizen",
-                "path": "./syntaxes/denizenscript.tmLanguage.json"
-            }
-        ],
-        "themes": [
-            {
-                "label": "denizenscript",
-                "uiTheme": "vs-dark",
-                "path": "./themes/dscript-theme.json"
-            }
-        ],
         "configurationDefaults": {
             "[denizenscript]": {
                 "editor.insertSpaces": true
+            }
         },
         "scripts": {
             "vscode:prepublish": "npm run compile",
