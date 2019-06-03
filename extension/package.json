@@ -3,7 +3,7 @@
     "displayName": "DenizenScript",
     "description": "The Denizen scripting language.",
     "author": "mcmonkey and the DenizenScript team",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "publisher": "denizenscript",
     "repository": "https://github.com/DenizenScript/DenizenVSCode",
     "engines": {
@@ -47,7 +47,6 @@
         "configurationDefaults": {
             "[denizenscript]": {
                 "editor.insertSpaces": true
-            }
         },
         "scripts": {
             "vscode:prepublish": "npm run compile",

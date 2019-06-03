@@ -109,15 +109,19 @@
 		},
 		"code_line_tags": {
 			"patterns": [{
-				"begin": "<",
-				"end": ">",
+				"match": "<([^\\s]+)>",
 				"name": "dscript.tags",
-				"patterns": [{
-					"include": "#code_line_tags_params"
-				},
-				{
-					"include": "#code_line_tags_dots"
-				}]
+				"captures": {
+					"1": {
+						"name": "dscript.tags",
+						"patterns": [{
+							"include": "#code_line_tags_params"
+						},
+						{
+							"include": "#code_line_tags_dots"
+						}]
+					}
+				}
 			}]
 		},
 		"code_line": {
