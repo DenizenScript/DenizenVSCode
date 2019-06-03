@@ -5,6 +5,7 @@
     "author": "mcmonkey and the DenizenScript team",
     "version": "0.1.0",
     "publisher": "denizenscript",
+    "license": "MIT",
     "repository": "https://github.com/DenizenScript/DenizenVSCode",
     "engines": {
         "vscode": "^1.33.0"
@@ -37,11 +38,17 @@
         },
         "scripts": {
             "vscode:prepublish": "npm run compile",
-            "compile": "tsc -p ./"
+            "compile": "tsc -p ./ --skipLibCheck"
         },
         "devDependencies": {
+            "vscode-languageclient": "^5.2.1",
             "@types/node": "^8.10.25",
             "typescript": "^2.6.1"
         }
+    },
+    "devDependencies": {
+        "vscode": "^1.1.34",
+        "vscode-languageclient": "^5.2.1",
+        "@types/node": "^12.0.4"
     }
 }

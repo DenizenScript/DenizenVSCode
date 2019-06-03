@@ -29,9 +29,25 @@ namespace DenizenLangServer
                 };
                 StreamRpcClientHandler clientHandler = new StreamRpcClientHandler();
                 JsonRpcClient client = new JsonRpcClient(clientHandler);
+                clientHandler.MessageSending += (_, e) =>
+                {
+                    Console.Error.WriteLine("Sending: " + e.Message);
+                };
+                clientHandler.MessageReceiving += (_, e) =>
+                {
+                    Console.Error.WriteLine("Receiving: " + e.Message);
+                };
                 LanguageServerSession session = new LanguageServerSession(client, contractResolver);
-                IJsonRpcServiceHost host = new JsonRpcServiceHostBuilder { ContractResolver = contractResolver }
-                    .UseCancellationHandling().Register(typeof(Program).GetTypeInfo().Assembly).Build();
+                JsonRpcServiceHostBuilder builder = new JsonRpcServiceHostBuilder { ContractResolver = contractResolver };
+                builder.UseCancellationHandling();
+                builder.Register(typeof(Program).GetTypeInfo().Assembly);
+                builder.Intercept(async (context, next) =>
+                {
+                    Console.Error.WriteLine("Request: " + context.Request);
+                    await next();
+                    Console.Error.WriteLine("Response: " + context.Response);
+                });
+                IJsonRpcServiceHost host = builder.Build();
                 StreamRpcServerHandler serverHandler = new StreamRpcServerHandler(host,
                     StreamRpcServerHandlerOptions.ConsistentResponseSequence | StreamRpcServerHandlerOptions.SupportsRequestCancellation);
                 serverHandler.DefaultFeatures.Set(session);

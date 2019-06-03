@@ -21,7 +21,7 @@ function activateLanguageServer(context: vscode.ExtensionContext) {
             configurationSection: "DenizenLangServer",
         },
     }
-	let client = new languageClient.LanguageClient("DenizenLangServer", "Denizen Language Server", serverOptions, clientOptions);
+    let client = new languageClient.LanguageClient("DenizenLangServer", "Denizen Language Server", serverOptions, clientOptions);
     let disposable = client.start();
     context.subscriptions.push(disposable);
 }
