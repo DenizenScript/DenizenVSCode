@@ -9,7 +9,7 @@ using LanguageServer.VsCode.Server;
 
 namespace DenizenLangServer.Services
 {
-    public class DemoLanguageServiceBase : JsonRpcService
+    public class DenizenLanguageServiceBase : JsonRpcService
     {
 
         protected LanguageServerSession Session => RequestContext.Features.Get<LanguageServerSession>();

@@ -3,6 +3,12 @@ DenizenScript VS Code Extension
 
 An extension to [VS Code](https://github.com/microsoft/vscode) to provide general language support for `.dsc` files written for [Denizen](https://github.com/DenizenScript/Denizen-For-Bukkit).
 
+### Building
+
+- Within `DenizenLangServer/`, build the C# language server project with `dotnet build`
+- Copy the output files (deepest folder under `DenizenLangServer/bin/`) to path `extension/server/`
+- Within `extension/`, build the extension TypeScript files with `tsc -p ./ --skipLibCheck`
+
 ### Status
 
 This project has just been started, but already contains functional basic syntax highlighting!

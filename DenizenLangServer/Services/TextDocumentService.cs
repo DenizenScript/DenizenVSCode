@@ -12,14 +12,12 @@ using LanguageServer.VsCode.Server;
 namespace DenizenLangServer.Services
 {
     [JsonRpcScope(MethodPrefix = "textDocument/")]
-    public class TextDocumentService : DemoLanguageServiceBase
+    public class TextDocumentService : DenizenLanguageServiceBase
     {
         [JsonRpcMethod]
-        public async Task<Hover> Hover(TextDocumentIdentifier textDocument, Position position, CancellationToken ct)
+        public Hover Hover(TextDocumentIdentifier textDocument, Position position, CancellationToken ct)
         {
-            // Note that Hover is cancellable.
-            await Task.Delay(1000, ct);
-            return new Hover {Contents = "Test _hover_ @" + position + "\n\n" + textDocument};
+            return null;
         }
 
         [JsonRpcMethod]
@@ -27,8 +25,6 @@ namespace DenizenLangServer.Services
         {
             return new SignatureHelp(new List<SignatureInformation>
             {
-                new SignatureInformation("**Function1**", "Documentation1"),
-                new SignatureInformation("**Function2** <strong>test</strong>", "Documentation2"),
             });
         }
 
@@ -63,8 +59,6 @@ namespace DenizenLangServer.Services
         [JsonRpcMethod(IsNotification = true)]
         public void WillSave(TextDocumentIdentifier textDocument, TextDocumentSaveReason reason)
         {
-            //Client.Window.LogMessage(MessageType.Log, "-----------");
-            //Client.Window.LogMessage(MessageType.Log, Documents[textDocument].Content);
         }
 
         [JsonRpcMethod(IsNotification = true)]
@@ -79,22 +73,12 @@ namespace DenizenLangServer.Services
 
         private static readonly CompletionItem[] PredefinedCompletionItems =
         {
-            new CompletionItem(".NET", CompletionItemKind.Keyword,
-                "Keyword1",
-                "Short for **.NET Framework**, a software framework by Microsoft (possibly its subsets) or later open source .NET Core.",
-                null),
-            new CompletionItem(".NET Standard", CompletionItemKind.Keyword,
-                "Keyword2",
-                "The .NET Standard is a formal specification of .NET APIs that are intended to be available on all .NET runtimes.",
-                null),
-            new CompletionItem(".NET Framework", CompletionItemKind.Keyword,
-                "Keyword3",
-                ".NET Framework (pronounced dot net) is a software framework developed by Microsoft that runs primarily on Microsoft Windows.", null),
         };
 
         [JsonRpcMethod]
         public CompletionList Completion(TextDocumentIdentifier textDocument, Position position, Dictionary<string, object> context)
         {
+            // TODO: Actual completion logic
             return new CompletionList(PredefinedCompletionItems);
         }
     }

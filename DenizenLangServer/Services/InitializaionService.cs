@@ -10,7 +10,7 @@ using Newtonsoft.Json.Linq;
 
 namespace DenizenLangServer.Services
 {
-    public class InitializaionService : DemoLanguageServiceBase
+    public class InitializaionService : DenizenLanguageServiceBase
     {
 
         [JsonRpcMethod(AllowExtensionData = true)]
@@ -32,17 +32,13 @@ namespace DenizenLangServer.Services
         }
 
         [JsonRpcMethod(IsNotification = true)]
-        public async Task Initialized()
+        public void Initialized()
         {
-            await Client.Window.ShowMessage(MessageType.Info, "Hello from language server.");
-            var choice = await Client.Window.ShowMessage(MessageType.Warning, "Wanna drink?", "Yes", "No");
-            await Client.Window.ShowMessage(MessageType.Info, $"You chose {(string) choice ?? "Nothing"}.");
         }
 
         [JsonRpcMethod]
         public void Shutdown()
         {
-
         }
 
         [JsonRpcMethod(IsNotification = true)]
