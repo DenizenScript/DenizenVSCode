@@ -40,6 +40,9 @@ function colorSet(name : string, incolor : string) {
         if (subValueSetting == "style") {
             resultColor.fontStyle = subValueSplit[1];
         }
+        else if (subValueSetting == "background") {
+            resultColor.backgroundColor = subValueSplit[1];
+        }
     }
     highlightDecors[name] = vscode.window.createTextEditorDecorationType(resultColor);
 }
@@ -47,7 +50,7 @@ function colorSet(name : string, incolor : string) {
 const colorTypes : string[] = [
     "comment_header", "comment_normal", "comment_code",
     "key", "key_inline", "command", "quote_double", "quote_single",
-    "tag", "tag_dot", "tag_param"
+    "tag", "tag_dot", "tag_param", "bad_space"
 ];
 
 function activateHighlighter(context: vscode.ExtensionContext) {
@@ -75,7 +78,16 @@ function refreshDecor() {
     }
 }
 
-function decorateLine(line : string, lineNumber : number, decorations: { [color: string]: vscode.Range[] }) {
+function addDecor(decorations: { [color: string]: vscode.Range[] }, type: string, lineNumber: number, startChar: number, endChar: number) {
+    decorations[type].push(new vscode.Range(new vscode.Position(lineNumber, startChar), new vscode.Position(lineNumber, endChar)));
+}
+
+function decorateLine(line : string, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
+    const trimmedEnd : string = line.trimRight();
+    if (trimmedEnd.length != line.length) {
+        addDecor(decorations, "bad_space", lineNumber, trimmedEnd.length, line.length);
+    }
+    const trimmed : string = trimmedEnd.trimLeft();
     const len : number = line.length;
     for (let i : number = 0; i < len; i++) {
         let c : string = line.charAt(i);

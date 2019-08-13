@@ -93,6 +93,11 @@
                     "type": "string",
                     "default": "#7777FF",
                     "description": "Color of [parameters] within tags."
+                },
+                "denizenscript.theme_colors.bad_space": {
+                    "type": "string",
+                    "default": "#FFFFFF|background=#440000",
+                    "description": "Highlighting for bad spaces (eg past end of line)."
                 }
             }
         },
