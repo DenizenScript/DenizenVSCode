@@ -50,7 +50,7 @@ function colorSet(name : string, incolor : string) {
 const colorTypes : string[] = [
     "comment_header", "comment_normal", "comment_code",
     "key", "key_inline", "command", "quote_double", "quote_single",
-    "tag", "tag_dot", "tag_param", "bad_space", "colons"
+    "tag", "tag_dot", "tag_param", "bad_space", "colons", "normal"
 ];
 
 function activateHighlighter(context: vscode.ExtensionContext) {
@@ -114,6 +114,21 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         }
     }
     else if (trimmed.startsWith("-")) {
+        addDecor(decorations, "normal", lineNumber, preSpaces, preSpaces + 1);
+        let afterDash : string = trimmed.substring(1);
+        const commandEnd : number = afterDash.indexOf(' ', 1) + 1;
+        const endIndexCleaned : number = commandEnd == 0 ? line.length : (preSpaces + commandEnd);
+        if (!afterDash.startsWith(" ")) {
+            addDecor(decorations, "bad_space", lineNumber, preSpaces + 1, endIndexCleaned);
+            decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations);
+        }
+        else {
+            afterDash = afterDash.substring(1);
+            addDecor(decorations, "command", lineNumber, preSpaces + 2, endIndexCleaned);
+            if (commandEnd > 0) {
+                decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations);
+            }
+        }
         // Command line highlighting
     }
     else if (trimmed.endsWith(":")) {
@@ -125,6 +140,9 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         addDecor(decorations, "key", lineNumber, preSpaces, colonIndex);
         addDecor(decorations, "colons", lineNumber, colonIndex, colonIndex + 1);
         decorateArg(trimmed.substring(colonIndex + 1), colonIndex + 1, lineNumber, decorations);
+    }
+    else {
+        addDecor(decorations, "bad_space", lineNumber, preSpaces, line.length);
     }
 }
 

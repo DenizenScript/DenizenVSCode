@@ -103,6 +103,11 @@
                     "type": "string",
                     "default": "#FFFFFF|background=#440000",
                     "description": "Highlighting for bad spaces (eg past end of line)."
+                },
+                "denizenscript.theme_colors.normal": {
+                    "type": "string",
+                    "default": "#FFFFFF",
+                    "description": "Highlighting for anything not otherwise specified."
                 }
             }
         },
