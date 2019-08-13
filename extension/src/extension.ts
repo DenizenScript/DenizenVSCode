@@ -83,7 +83,24 @@ function addDecor(decorations: { [color: string]: vscode.Range[] }, type: string
 }
 
 function decorateArg(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
-    // TODO: tags, quotes, etc
+    const len : number = arg.length;
+    let quoted : boolean = false;
+    let quoteMode : string = 'x';
+    let quoteStart : number = 0;
+    for (let i = 0; i < len; i++) {
+        const c : string = arg.charAt(i);
+        if (c == '"' || c == '\'') {
+            if (quoted && c == quoteMode) {
+                addDecor(decorations, quoteMode == '"' ? "quote_double" : "quote_single", lineNumber, start + quoteStart, start + i + 1);
+                quoted = false;
+            }
+            else if (!quoted) {
+                quoted = true;
+                quoteMode = c;
+                quoteStart = i;
+            }
+        }
+    }
 }
 
 function decorateLine(line : string, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
@@ -129,7 +146,6 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
                 decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations);
             }
         }
-        // Command line highlighting
     }
     else if (trimmed.endsWith(":")) {
         addDecor(decorations, "key", lineNumber, preSpaces, trimmedEnd.length - 1);

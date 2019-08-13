@@ -56,7 +56,7 @@
                 },
                 "denizenscript.theme_colors.key": {
                     "type": "string",
-                    "default": "#3377FF",
+                    "default": "#1155FF",
                     "description": "Color of basic keys (lines that end with a colon)."
                 },
                 "denizenscript.theme_colors.key_inline": {
@@ -71,7 +71,7 @@
                 },
                 "denizenscript.theme_colors.quote_double": {
                     "type": "string",
-                    "default": "#88CCEE",
+                    "default": "#77BBF5",
                     "description": "Color of double-quoted sections."
                 },
                 "denizenscript.theme_colors.quote_single": {
