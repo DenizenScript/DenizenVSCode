@@ -28,28 +28,26 @@ function activateLanguageServer(context: vscode.ExtensionContext) {
 
 const highlightDecors: { [color: string]: vscode.TextEditorDecorationType } = {};
 
-function colorSet(name : string, internalName : string) {
-    highlightDecors[name] = vscode.window.createTextEditorDecorationType({ color: new vscode.ThemeColor(internalName) });
+function colorSet(name : string, color : string) {
+    highlightDecors[name] = vscode.window.createTextEditorDecorationType({ color: color });
 }
 
-const tagParamBackgroundColor : vscode.TextEditorDecorationType =
-    vscode.window.createTextEditorDecorationType({ color: new vscode.ThemeColor("terminal.ansiMagenta") });
+function colorSetAdvanced(name : string, color : vscode.DecorationRenderOptions) {
+    highlightDecors[name] = vscode.window.createTextEditorDecorationType(color);
+}
 
 function activateHighlighter(context: vscode.ExtensionContext) {
-    // Just colors
-    colorSet("comment_header", "terminal.ansiBrightRed");
-    colorSet("comment_normal", "terminal.ansiGreen");
-    colorSet("comment_code", "terminal.ansiYellow");
-    colorSet("key", "terminal.ansiBrightBlue");
-    colorSet("quote_double", "terminal.ansiCyan");
-    colorSet("quote_single", "terminal.ansiBrightCyan");
-    colorSet("tag", "terminal.ansiWhite");
-    colorSet("tag_dot", "terminal.ansiBrightWhite");
-    // Have other formatting applied
-    highlightDecors["command"] = vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor("terminal.ansiBrightMagenta"), fontStyle: "italic" });
-    highlightDecors["tag_param"] = vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor("terminal.ansiWhite"), backgroundColor: new vscode.ThemeColor("terminal.ansiBrightMagenta") });
+    colorSet("comment_header", "#FF0000");
+    colorSet("comment_normal", "#007700");
+    colorSet("comment_code", "#DD5500");
+    colorSet("key", "#3377FF");
+    colorSetAdvanced("key_inline", { color: "#1155FF", fontStyle: "italic" });
+    colorSetAdvanced("command", { color: "#DD99FF", fontStyle: "italic" });
+    colorSet("quote_double", "#88CCEE");
+    colorSet("quote_single", "#88DDFF");
+    colorSet("tag", "#AAAAAA");
+    colorSet("tag_dot", "#EEEEFF");
+    colorSet("tag_param", "#7777FF");
 }
 
 let refreshTimer: NodeJS.Timer | undefined = undefined;
