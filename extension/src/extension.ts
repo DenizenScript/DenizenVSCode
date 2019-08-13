@@ -71,37 +71,36 @@ function refreshDecor() {
         if (!uri.endsWith(".dsc")) {
             continue;
         }
-        decorate(editor);
-        console.log('Denizen extension refresh: ' + uri);
+        decorateFullFile(editor);
     }
 }
 
-function decorate(editor: vscode.TextEditor) {
-    let linearDecorations: { [color: string]: vscode.Range[] } = {};
-    for (const c in highlightDecors) {
-        linearDecorations[c] = [];
-    }
-    const fullText : string = editor.document.getText();
-    const len : number = fullText.length;
-    let line : number = 0;
-    let chr : number = 0;
+function decorateLine(line : string, lineNumber : number, decorations: { [color: string]: vscode.Range[] }) {
+    const len : number = line.length;
     for (let i : number = 0; i < len; i++) {
-        let c : string = fullText.charAt(i);
-        if (c == '\n') {
-            line++;
-            chr = 0;
-            continue;
-        }
+        let c : string = line.charAt(i);
         if (c == '"') {
-            linearDecorations["quote_double"].push(new vscode.Range(new vscode.Position(line, chr - 1), new vscode.Position(line, chr + 1)));
+            decorations["quote_double"].push(new vscode.Range(new vscode.Position(lineNumber, i - 1), new vscode.Position(lineNumber, i + 1)));
         }
         if (c == '\'') {
-            linearDecorations["command"].push(new vscode.Range(new vscode.Position(line, chr - 1), new vscode.Position(line, chr + 1)));
+            decorations["command"].push(new vscode.Range(new vscode.Position(lineNumber, i - 1), new vscode.Position(lineNumber, i + 1)));
         }
-        chr++;
     }
-    for (const c in linearDecorations) {
-        editor.setDecorations(highlightDecors[c], linearDecorations[c]);
+}
+
+function decorateFullFile(editor: vscode.TextEditor) {
+    let decorations: { [color: string]: vscode.Range[] } = {};
+    for (const c in highlightDecors) {
+        decorations[c] = [];
+    }
+    const fullText : string = editor.document.getText();
+    const splitText : string[] = fullText.split('\n');
+    const totalLines = splitText.length;
+    for (let i : number = 0; i < totalLines; i++) {
+        decorateLine(splitText[i], i, decorations);
+    }
+    for (const c in decorations) {
+        editor.setDecorations(highlightDecors[c], decorations[c]);
     }
 }
 
