@@ -82,24 +82,110 @@ function addDecor(decorations: { [color: string]: vscode.Range[] }, type: string
     decorations[type].push(new vscode.Range(new vscode.Position(lineNumber, startChar), new vscode.Position(lineNumber, endChar)));
 }
 
+function decorateTag(tag : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
+    const len : number = tag.length;
+    let inTagCounter : number = 0;
+    let tagStart : number = 0;
+    let inTagParamCounter : number = 0;
+    let defaultDecor : string = "tag";
+    let lastDecor : number = -1; // Color the < too.
+    for (let i = 0; i < len; i++) {
+        const c : string = tag.charAt(i);
+        if (c == '<') {
+            inTagCounter++;
+            if (inTagCounter == 1) {
+                addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
+                lastDecor = i;
+                defaultDecor = "tag";
+                tagStart = i;
+            }
+        }
+        else if (c == '>' && inTagCounter > 0) {
+            inTagCounter--;
+            if (inTagCounter == 0) {
+                decorateTag(tag.substring(tagStart + 1, i), start + tagStart + 1, lineNumber, decorations);
+                addDecor(decorations, "tag", lineNumber, start + i, start + i + 1);
+                defaultDecor = inTagParamCounter > 0 ? "tag_param" : "tag";
+                lastDecor = i + 1;
+            }
+        }
+        else if (c == '[' && inTagCounter == 0) {
+            inTagParamCounter++;
+            if (inTagParamCounter == 1) {
+                addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
+                lastDecor = i;
+                defaultDecor = "tag_param";
+            }
+        }
+        else if (c == ']' && inTagCounter == 0) {
+            inTagParamCounter--;
+            if (inTagParamCounter == 0) {
+                addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i + 1);
+                defaultDecor = "tag";
+                lastDecor = i + 1;
+            }
+        }
+        else if (c == '.' && inTagParamCounter == 0) {
+            addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
+            lastDecor = i + 1;
+            addDecor(decorations, "tag_dot", lineNumber, start + i, start + i + 1);
+        }
+    }
+    if (lastDecor < len) {
+        addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + len);
+    }
+}
+
 function decorateArg(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
     const len : number = arg.length;
     let quoted : boolean = false;
     let quoteMode : string = 'x';
-    let quoteStart : number = 0;
+    let inTagCounter : number = 0;
+    let tagStart : number = 0;
+    let defaultDecor : string = "normal";
+    let lastDecor : number = 0;
     for (let i = 0; i < len; i++) {
         const c : string = arg.charAt(i);
         if (c == '"' || c == '\'') {
             if (quoted && c == quoteMode) {
-                addDecor(decorations, quoteMode == '"' ? "quote_double" : "quote_single", lineNumber, start + quoteStart, start + i + 1);
+                addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i + 1);
+                lastDecor = i + 1;
+                defaultDecor = "normal";
                 quoted = false;
             }
             else if (!quoted) {
+                addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
+                lastDecor = i;
                 quoted = true;
+                defaultDecor = c == '"' ? "quote_double" : "quote_single";
                 quoteMode = c;
-                quoteStart = i;
             }
         }
+        else if (c == '<') {
+            inTagCounter++;
+            if (inTagCounter == 1) {
+                addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
+                lastDecor = i;
+                tagStart = i;
+                defaultDecor = "tag";
+            }
+        }
+        else if (c == '>' && inTagCounter > 0) {
+            inTagCounter--;
+            if (inTagCounter == 0) {
+                decorateTag(arg.substring(tagStart + 1, i), start + tagStart + 1, lineNumber, decorations);
+                addDecor(decorations, "tag", lineNumber, start + i, start + i + 1);
+                defaultDecor = quoted ? (quoteMode == '"' ? "quote_double" : "quote_single") : "normal";
+                lastDecor = i + 1;
+            }
+        }
+        else if (c == ' ' && !quoted) {
+            inTagCounter = 0;
+            defaultDecor = "normal";
+        }
+    }
+    if (lastDecor < len) {
+        addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + len);
     }
 }
 
