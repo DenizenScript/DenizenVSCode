@@ -94,6 +94,11 @@
                     "default": "#7777FF",
                     "description": "Color of [parameters] within tags."
                 },
+                "denizenscript.theme_colors.colons": {
+                    "type": "string",
+                    "default": "#66CCFF|style=bold",
+                    "description": "Colons, on a key or the end of a command."
+                },
                 "denizenscript.theme_colors.bad_space": {
                     "type": "string",
                     "default": "#FFFFFF|background=#440000",

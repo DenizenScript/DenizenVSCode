@@ -50,7 +50,7 @@ function colorSet(name : string, incolor : string) {
 const colorTypes : string[] = [
     "comment_header", "comment_normal", "comment_code",
     "key", "key_inline", "command", "quote_double", "quote_single",
-    "tag", "tag_dot", "tag_param", "bad_space"
+    "tag", "tag_dot", "tag_param", "bad_space", "colons"
 ];
 
 function activateHighlighter(context: vscode.ExtensionContext) {
@@ -113,7 +113,8 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         // Command line highlighting
     }
     else if (trimmed.endsWith(":")) {
-        // Key highlighting
+        addDecor(decorations, "key", lineNumber, preSpaces, trimmedEnd.length - 1);
+        addDecor(decorations, "colons", lineNumber, trimmedEnd.length - 1, trimmedEnd.length);
     }
     else if (trimmed.includes(":")) {
         // Inline-key
