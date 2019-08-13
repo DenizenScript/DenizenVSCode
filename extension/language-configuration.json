@@ -25,5 +25,10 @@
         ["(", ")"],
         ["\"", "\""],
         ["'", "'"]
-    ]
+    ],
+    // regex for when to auto-indent
+    "indentationRules": {
+      "increaseIndentPattern": "^.*:$",
+      "decreaseIndentPattern": "^(This_Should_Never_Happen){5000}$"
+    }
 }
