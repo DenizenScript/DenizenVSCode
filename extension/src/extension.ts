@@ -83,20 +83,40 @@ function addDecor(decorations: { [color: string]: vscode.Range[] }, type: string
 }
 
 function decorateLine(line : string, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
+    if (line.endsWith("\r")) {
+        line = line.substring(0, line.length - 1);
+    }
     const trimmedEnd : string = line.trimRight();
+    const trimmed : string = trimmedEnd.trimLeft();
+    if (trimmed.length == 0) {
+        return;
+    }
     if (trimmedEnd.length != line.length) {
         addDecor(decorations, "bad_space", lineNumber, trimmedEnd.length, line.length);
     }
-    const trimmed : string = trimmedEnd.trimLeft();
-    const len : number = line.length;
-    for (let i : number = 0; i < len; i++) {
-        let c : string = line.charAt(i);
-        if (c == '"') {
-            decorations["quote_double"].push(new vscode.Range(new vscode.Position(lineNumber, i - 1), new vscode.Position(lineNumber, i + 1)));
+    const preSpaces = trimmedEnd.length - trimmed.length;
+    if (trimmed.startsWith("#")) {
+        const afterComment = trimmed.substring(1).trim();
+        if (afterComment.startsWith("|") || afterComment.startsWith("+") || afterComment.startsWith("=")
+                || afterComment.startsWith("#") || afterComment.startsWith("_") || afterComment.startsWith("@")
+                || afterComment.startsWith("/")) {
+            addDecor(decorations, "comment_header", lineNumber, preSpaces, line.length);
         }
-        if (c == '\'') {
-            decorations["command"].push(new vscode.Range(new vscode.Position(lineNumber, i - 1), new vscode.Position(lineNumber, i + 1)));
+        else if (afterComment.startsWith("-")) {
+            addDecor(decorations, "comment_code", lineNumber, preSpaces, line.length);
         }
+        else {
+            addDecor(decorations, "comment_normal", lineNumber, preSpaces, line.length);
+        }
+    }
+    else if (trimmed.startsWith("-")) {
+        // Command line highlighting
+    }
+    else if (trimmed.endsWith(":")) {
+        // Key highlighting
+    }
+    else if (trimmed.includes(":")) {
+        // Inline-key
     }
 }
 
