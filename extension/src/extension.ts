@@ -46,8 +46,10 @@ function activateHighlighter(context: vscode.ExtensionContext) {
     colorSet("tag", "terminal.ansiWhite");
     colorSet("tag_dot", "terminal.ansiBrightWhite");
     // Have other formatting applied
-    colorSet("command", "terminal.ansiBrightMagenta");
-    colorSet("tag_param", "terminal.ansiWhite");
+    highlightDecors["command"] = vscode.window.createTextEditorDecorationType({
+        color: new vscode.ThemeColor("terminal.ansiBrightMagenta"), fontStyle: "italic" });
+    highlightDecors["tag_param"] = vscode.window.createTextEditorDecorationType({
+        color: new vscode.ThemeColor("terminal.ansiWhite"), backgroundColor: new vscode.ThemeColor("terminal.ansiBrightMagenta") });
 }
 
 let refreshTimer: NodeJS.Timer | undefined = undefined;
@@ -65,30 +67,10 @@ function refreshDecor() {
     }
 }
 
-const linearDecorationTerms: string[] = [
-    "comment_header", "comment_normal", "comment_code",
-    "key", "quote_double", "quote_single", "tag", "tag_dot"
-];
-const specialDecorationTerms: string[] = [
-    "command", "tag_param"
-];
-
-function commandDecoration(inRange : vscode.Range) : vscode.DecorationOptions {
-    return { range: inRange, renderOptions : { before: { fontStyle: "italic" } } };
-}
-
-function tagParamDecoration(inRange : vscode.Range) : vscode.DecorationOptions {
-    return { range: inRange, renderOptions : { before: { backgroundColor: tagParamBackgroundColor } } };
-}
-
 function decorate(editor: vscode.TextEditor) {
     let linearDecorations: { [color: string]: vscode.Range[] } = {};
-    for (const c in linearDecorationTerms) {
-        linearDecorations[linearDecorationTerms[c]] = [];
-    }
-    let specialDecorations: { [color: string]: vscode.DecorationOptions[] } = {};
-    for (const c in specialDecorationTerms) {
-        specialDecorations[specialDecorationTerms[c]] = [];
+    for (const c in highlightDecors) {
+        linearDecorations[c] = [];
     }
     const fullText : string = editor.document.getText();
     const len : number = fullText.length;
@@ -105,15 +87,12 @@ function decorate(editor: vscode.TextEditor) {
             linearDecorations["quote_double"].push(new vscode.Range(new vscode.Position(line, chr - 1), new vscode.Position(line, chr + 1)));
         }
         if (c == '\'') {
-            specialDecorations["command"].push(commandDecoration(new vscode.Range(new vscode.Position(line, chr - 1), new vscode.Position(line, chr + 1))));
+            linearDecorations["command"].push(new vscode.Range(new vscode.Position(line, chr - 1), new vscode.Position(line, chr + 1)));
         }
         chr++;
     }
     for (const c in linearDecorations) {
         editor.setDecorations(highlightDecors[c], linearDecorations[c]);
-    }
-    for (const c in specialDecorations) {
-        editor.setDecorations(highlightDecors[c], specialDecorations[c]);
     }
 }
 
@@ -140,6 +119,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeVisibleTextEditors(editors => {
         scheduleRefresh();
     }, null, context.subscriptions);
+    scheduleRefresh();
     console.log('Denizen extension has been activated');
 }
 
