@@ -2,8 +2,11 @@ import * as vscode from 'vscode';
 import * as languageClient from "vscode-languageclient";
 import * as path from "path";
 import * as fs from "fs";
+import { isUndefined } from 'util';
 
 const languageServerPath : string = "server/DenizenLangServer.dll";
+
+const configuration : vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
 
 function activateLanguageServer(context: vscode.ExtensionContext) {
     let pathFile : string = context.asAbsolutePath(languageServerPath);
@@ -28,26 +31,34 @@ function activateLanguageServer(context: vscode.ExtensionContext) {
 
 const highlightDecors: { [color: string]: vscode.TextEditorDecorationType } = {};
 
-function colorSet(name : string, color : string) {
-    highlightDecors[name] = vscode.window.createTextEditorDecorationType({ color: color });
+function colorSet(name : string, incolor : string) {
+    const colorSplit : string[] = incolor.split('\|');
+    let resultColor : vscode.DecorationRenderOptions = { color : colorSplit[0] };
+    for (const i in colorSplit) {
+        const subValueSplit = colorSplit[i].split('=', 2);
+        const subValueSetting = subValueSplit[0];
+        if (subValueSetting == "style") {
+            resultColor.fontStyle = subValueSplit[1];
+        }
+    }
+    highlightDecors[name] = vscode.window.createTextEditorDecorationType(resultColor);
 }
 
-function colorSetAdvanced(name : string, color : vscode.DecorationRenderOptions) {
-    highlightDecors[name] = vscode.window.createTextEditorDecorationType(color);
-}
+const colorTypes : string[] = [
+    "comment_header", "comment_normal", "comment_code",
+    "key", "key_inline", "command", "quote_double", "quote_single",
+    "tag", "tag_dot", "tag_param"
+];
 
 function activateHighlighter(context: vscode.ExtensionContext) {
-    colorSet("comment_header", "#FF0000");
-    colorSet("comment_normal", "#007700");
-    colorSet("comment_code", "#DD5500");
-    colorSet("key", "#3377FF");
-    colorSetAdvanced("key_inline", { color: "#1155FF", fontStyle: "italic" });
-    colorSetAdvanced("command", { color: "#DD99FF", fontStyle: "italic" });
-    colorSet("quote_double", "#88CCEE");
-    colorSet("quote_single", "#88DDFF");
-    colorSet("tag", "#AAAAAA");
-    colorSet("tag_dot", "#EEEEFF");
-    colorSet("tag_param", "#7777FF");
+    for (const i in colorTypes) {
+        let str : string = configuration.get("denizenscript.theme_colors." + colorTypes[i]);
+        if (isUndefined(str)) {
+            console.log("Missing color config for " + colorTypes[i]);
+            continue;
+        }
+        colorSet(colorTypes[i], str);
+    }
 }
 
 let refreshTimer: NodeJS.Timer | undefined = undefined;

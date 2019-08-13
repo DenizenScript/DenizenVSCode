@@ -36,6 +36,66 @@
                 "editor.insertSpaces": true
             }
         },
+        "configuration": {
+            "title": "DenizenScript",
+            "properties": {
+                "denizenscript.theme_colors.comment_header": {
+                    "type": "string",
+                    "default": "#FF0000",
+                    "description": "Color of header comments."
+                },
+                "denizenscript.theme_colors.comment_normal": {
+                    "type": "string",
+                    "default": "#007700",
+                    "description": "Color of normal comments."
+                },
+                "denizenscript.theme_colors.comment_code": {
+                    "type": "string",
+                    "default": "#DD5500",
+                    "description": "Color of code comments."
+                },
+                "denizenscript.theme_colors.key": {
+                    "type": "string",
+                    "default": "#3377FF",
+                    "description": "Color of basic keys (lines that end with a colon)."
+                },
+                "denizenscript.theme_colors.key_inline": {
+                    "type": "string",
+                    "default": "#1155FF|style=italic",
+                    "description": "Color of inline keys (lines that contain a colon, and don't start with a dash)."
+                },
+                "denizenscript.theme_colors.command": {
+                    "type": "string",
+                    "default": "#DD99FF|style=italic",
+                    "description": "Color of command names."
+                },
+                "denizenscript.theme_colors.quote_double": {
+                    "type": "string",
+                    "default": "#88CCEE",
+                    "description": "Color of double-quoted sections."
+                },
+                "denizenscript.theme_colors.quote_single": {
+                    "type": "string",
+                    "default": "#88DDFF",
+                    "description": "Color of single-quoted sections."
+                },
+                "denizenscript.theme_colors.tag": {
+                    "type": "string",
+                    "default": "#AAAAAA",
+                    "description": "Color of <tags>."
+                },
+                "denizenscript.theme_colors.tag_dot": {
+                    "type": "string",
+                    "default": "#EEEEFF",
+                    "description": "Color of the dot symbol within tags."
+                },
+                "denizenscript.theme_colors.tag_param": {
+                    "type": "string",
+                    "default": "#7777FF",
+                    "description": "Color of [parameters] within tags."
+                }
+            }
+        },
         "scripts": {
             "vscode:prepublish": "npm run compile",
             "compile": "tsc -p ./ --skipLibCheck"
