@@ -82,6 +82,10 @@ function addDecor(decorations: { [color: string]: vscode.Range[] }, type: string
     decorations[type].push(new vscode.Range(new vscode.Position(lineNumber, startChar), new vscode.Position(lineNumber, endChar)));
 }
 
+function decorateArg(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
+    // TODO: tags, quotes, etc
+}
+
 function decorateLine(line : string, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
     if (line.endsWith("\r")) {
         line = line.substring(0, line.length - 1);
@@ -117,7 +121,10 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         addDecor(decorations, "colons", lineNumber, trimmedEnd.length - 1, trimmedEnd.length);
     }
     else if (trimmed.includes(":")) {
-        // Inline-key
+        const colonIndex = line.indexOf(':');
+        addDecor(decorations, "key", lineNumber, preSpaces, colonIndex);
+        addDecor(decorations, "colons", lineNumber, colonIndex, colonIndex + 1);
+        decorateArg(trimmed.substring(colonIndex + 1), colonIndex + 1, lineNumber, decorations);
     }
 }
 
