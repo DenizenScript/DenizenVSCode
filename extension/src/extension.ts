@@ -241,7 +241,7 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         const colonIndex = line.indexOf(':');
         addDecor(decorations, "key", lineNumber, preSpaces, colonIndex);
         addDecor(decorations, "colons", lineNumber, colonIndex, colonIndex + 1);
-        decorateArg(trimmed.substring(colonIndex + 1), colonIndex + 1, lineNumber, decorations);
+        decorateArg(trimmed.substring(colonIndex - preSpaces + 1), colonIndex + 1, lineNumber, decorations);
     }
     else {
         addDecor(decorations, "bad_space", lineNumber, preSpaces, line.length);
