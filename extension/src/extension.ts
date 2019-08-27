@@ -227,9 +227,14 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         }
         else {
             afterDash = afterDash.substring(1);
-            addDecor(decorations, "command", lineNumber, preSpaces + 2, endIndexCleaned);
-            if (commandEnd > 0) {
-                decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations);
+            if (afterDash.startsWith("'") || afterDash.startsWith("\"")) {
+                decorateArg(trimmed.substring(2), preSpaces + 2, lineNumber, decorations);
+            }
+            else {
+                addDecor(decorations, "command", lineNumber, preSpaces + 2, endIndexCleaned);
+                if (commandEnd > 0) {
+                    decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations);
+                }
             }
         }
     }
