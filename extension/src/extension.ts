@@ -161,7 +161,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 quoteMode = c;
             }
         }
-        else if (c == '<') {
+        else if (c == '<' && i + 1 < len && arg.charAt(i + 1) != '-') {
             inTagCounter++;
             if (inTagCounter == 1) {
                 addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
