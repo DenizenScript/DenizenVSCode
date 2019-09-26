@@ -29,7 +29,7 @@
     ],
     // regex for when to auto-indent
     "indentationRules": {
-      "increaseIndentPattern": "^.*:$",
+      "increaseIndentPattern": "^(This_Should_Never_Happen){5000}$",
       "decreaseIndentPattern": "^(This_Should_Never_Happen){5000}$"
     }
 }
