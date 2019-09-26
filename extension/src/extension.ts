@@ -67,7 +67,6 @@ function activateHighlighter(context: vscode.ExtensionContext) {
 let refreshTimer: NodeJS.Timer | undefined = undefined;
 
 function refreshDecor() {
-    console.log('Denizen extension refreshing');
     refreshTimer = undefined;
     for (const editor of vscode.window.visibleTextEditors) {
         const uri = editor.document.uri.toString();
