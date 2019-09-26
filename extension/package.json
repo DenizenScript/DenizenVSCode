@@ -33,7 +33,8 @@
         ],
         "configurationDefaults": {
             "[denizenscript]": {
-                "editor.insertSpaces": true
+                "editor.insertSpaces": true,
+                "editor.wordBasedSuggestions": false
             }
         },
         "configuration": {
