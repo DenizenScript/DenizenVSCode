@@ -3,7 +3,7 @@
     "displayName": "DenizenScript",
     "description": "The Denizen scripting language.",
     "author": "mcmonkey and the DenizenScript team",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "publisher": "denizenscript",
     "license": "MIT",
     "repository": "https://github.com/DenizenScript/DenizenVSCode",
@@ -105,6 +105,11 @@
                     "type": "string",
                     "default": "#FFFFFF|background=#440000",
                     "description": "Highlighting for bad spaces (eg past end of line)."
+                },
+                "denizenscript.theme_colors.space": {
+                    "type": "string",
+                    "default": "#444444",
+                    "description": "Highlighting for a normal space (incase spaces are rendered)."
                 },
                 "denizenscript.theme_colors.normal": {
                     "type": "string",
