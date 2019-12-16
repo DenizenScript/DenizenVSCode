@@ -129,6 +129,11 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
             lastDecor = i + 1;
             addDecor(decorations, "tag_dot", lineNumber, start + i, start + i + 1);
         }
+        else if (c == ' ' && inTagCounter == 0) {
+            addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
+            addDecor(decorations, "space", lineNumber, start + i, start + i + 1);
+            lastDecor = i + 1;
+        }
     }
     if (lastDecor < len) {
         addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + len);
@@ -178,7 +183,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 lastDecor = i + 1;
             }
         }
-        else if (c == ' ') {
+        else if (c == ' ' && (!quoted || inTagCounter == 0)) {
             addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
             addDecor(decorations, "space", lineNumber, start + i, start + i + 1);
             lastDecor = i + 1;
