@@ -198,6 +198,26 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
     }
 }
 
+function decorateComment(line : string, lineNumber: number, decorType: string, decorations: { [color: string]: vscode.Range[] }) {
+    const len : number = line.length;
+    let quoted : boolean = false;
+    let quoteMode : string = 'x';
+    let inTagCounter : number = 0;
+    let tagStart : number = 0;
+    let lastDecor : number = 0;
+    for (let i = 0; i < len; i++) {
+        const c : string = line.charAt(i);
+        if (c == ' ') {
+            addDecor(decorations, decorType, lineNumber, lastDecor, i);
+            addDecor(decorations, "space", lineNumber, i, i + 1);
+            lastDecor = i + 1;
+        }
+    }
+    if (lastDecor < len) {
+        addDecor(decorations, decorType, lineNumber, lastDecor, len);
+    }
+}
+
 function decorateLine(line : string, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
     if (line.endsWith("\r")) {
         line = line.substring(0, line.length - 1);
@@ -216,13 +236,13 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         if (afterComment.startsWith("|") || afterComment.startsWith("+") || afterComment.startsWith("=")
                 || afterComment.startsWith("#") || afterComment.startsWith("_") || afterComment.startsWith("@")
                 || afterComment.startsWith("/")) {
-            addDecor(decorations, "comment_header", lineNumber, preSpaces, line.length);
+            decorateComment(line, lineNumber, "comment_header", decorations);
         }
         else if (afterComment.startsWith("-")) {
-            addDecor(decorations, "comment_code", lineNumber, preSpaces, line.length);
+            decorateComment(line, lineNumber, "comment_code", decorations);
         }
         else {
-            addDecor(decorations, "comment_normal", lineNumber, preSpaces, line.length);
+            decorateComment(line, lineNumber, "comment_normal", decorations);
         }
     }
     else if (trimmed.startsWith("-")) {
