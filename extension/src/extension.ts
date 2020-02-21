@@ -223,7 +223,7 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         line = line.substring(0, line.length - 1);
     }
     const trimmedEnd : string = line.trimRight();
-    const trimmed : string = trimmedEnd.trimLeft();
+    let trimmed : string = trimmedEnd.trimLeft();
     if (trimmed.length == 0) {
         return;
     }
@@ -247,9 +247,13 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
     }
     else if (trimmed.startsWith("-")) {
         addDecor(decorations, "normal", lineNumber, preSpaces, preSpaces + 1);
+        if (trimmed.endsWith(":")) {
+            addDecor(decorations, "colons", lineNumber, preSpaces + trimmed.length - 1, preSpaces + trimmed.length);
+            trimmed = trimmed.substring(0, trimmed.length - 1);
+        }
         let afterDash : string = trimmed.substring(1);
         const commandEnd : number = afterDash.indexOf(' ', 1) + 1;
-        const endIndexCleaned : number = commandEnd == 0 ? line.length : (preSpaces + commandEnd);
+        const endIndexCleaned : number = commandEnd == 0 ? preSpaces + trimmed.length : (preSpaces + commandEnd);
         const commandText = commandEnd == 0 ? afterDash : afterDash.substring(0, commandEnd);
         if (!afterDash.startsWith(" ")) {
             addDecor(decorations, "bad_space", lineNumber, preSpaces + 1, endIndexCleaned);
@@ -257,7 +261,6 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         }
         else {
             afterDash = afterDash.substring(1);
-            console.log("Command: " + commandText + "=" + (commandText.includes("'") || commandText.includes("\"") || commandText.includes("[")));
             if (commandText.includes("'") || commandText.includes("\"") || commandText.includes("[")) {
                 decorateArg(trimmed.substring(2), preSpaces + 2, lineNumber, decorations, false);
             }
