@@ -140,7 +140,7 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
     }
 }
 
-function decorateArg(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
+function decorateArg(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }, canQuote : boolean) {
     const len : number = arg.length;
     let quoted : boolean = false;
     let quoteMode : string = 'x';
@@ -150,7 +150,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
     let lastDecor : number = 0;
     for (let i = 0; i < len; i++) {
         const c : string = arg.charAt(i);
-        if (c == '"' || c == '\'') {
+        if (canQuote && (c == '"' || c == '\'')) {
             if (quoted && c == quoteMode) {
                 addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i + 1);
                 lastDecor = i + 1;
@@ -250,19 +250,21 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         let afterDash : string = trimmed.substring(1);
         const commandEnd : number = afterDash.indexOf(' ', 1) + 1;
         const endIndexCleaned : number = commandEnd == 0 ? line.length : (preSpaces + commandEnd);
+        const commandText = commandEnd == 0 ? afterDash : afterDash.substring(0, commandEnd);
         if (!afterDash.startsWith(" ")) {
             addDecor(decorations, "bad_space", lineNumber, preSpaces + 1, endIndexCleaned);
-            decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations);
+            decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations, false);
         }
         else {
             afterDash = afterDash.substring(1);
-            if (afterDash.startsWith("'") || afterDash.startsWith("\"")) {
-                decorateArg(trimmed.substring(2), preSpaces + 2, lineNumber, decorations);
+            console.log("Command: " + commandText + "=" + (commandText.includes("'") || commandText.includes("\"") || commandText.includes("[")));
+            if (commandText.includes("'") || commandText.includes("\"") || commandText.includes("[")) {
+                decorateArg(trimmed.substring(2), preSpaces + 2, lineNumber, decorations, false);
             }
             else {
                 addDecor(decorations, "command", lineNumber, preSpaces + 2, endIndexCleaned);
                 if (commandEnd > 0) {
-                    decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations);
+                    decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations, true);
                 }
             }
         }
@@ -275,7 +277,7 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         const colonIndex = line.indexOf(':');
         addDecor(decorations, "key", lineNumber, preSpaces, colonIndex);
         addDecor(decorations, "colons", lineNumber, colonIndex, colonIndex + 1);
-        decorateArg(trimmed.substring(colonIndex - preSpaces + 1), colonIndex + 1, lineNumber, decorations);
+        decorateArg(trimmed.substring(colonIndex - preSpaces + 1), colonIndex + 1, lineNumber, decorations, false);
     }
     else {
         addDecor(decorations, "bad_space", lineNumber, preSpaces, line.length);
