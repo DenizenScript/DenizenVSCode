@@ -199,22 +199,22 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
 }
 
 function decorateComment(line : string, lineNumber: number, decorType: string, decorations: { [color: string]: vscode.Range[] }) {
+    decorateSpaceable(line, 0, lineNumber, decorType, decorations);
+}
+
+function decorateSpaceable(line : string, preLength: number, lineNumber: number, decorType: string, decorations: { [color: string]: vscode.Range[] }) {
     const len : number = line.length;
-    let quoted : boolean = false;
-    let quoteMode : string = 'x';
-    let inTagCounter : number = 0;
-    let tagStart : number = 0;
     let lastDecor : number = 0;
     for (let i = 0; i < len; i++) {
         const c : string = line.charAt(i);
         if (c == ' ') {
-            addDecor(decorations, decorType, lineNumber, lastDecor, i);
-            addDecor(decorations, "space", lineNumber, i, i + 1);
+            addDecor(decorations, decorType, lineNumber, preLength + lastDecor, preLength + i);
+            addDecor(decorations, "space", lineNumber, preLength + i, preLength + i + 1);
             lastDecor = i + 1;
         }
     }
     if (lastDecor < len) {
-        addDecor(decorations, decorType, lineNumber, lastDecor, len);
+        addDecor(decorations, decorType, lineNumber, preLength + lastDecor, preLength + len);
     }
 }
 
@@ -273,12 +273,12 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         }
     }
     else if (trimmed.endsWith(":")) {
-        addDecor(decorations, "key", lineNumber, preSpaces, trimmedEnd.length - 1);
+        decorateSpaceable(trimmed.substring(0, trimmed.length - 1), preSpaces, lineNumber, "key", decorations);
         addDecor(decorations, "colons", lineNumber, trimmedEnd.length - 1, trimmedEnd.length);
     }
     else if (trimmed.includes(":")) {
         const colonIndex = line.indexOf(':');
-        addDecor(decorations, "key", lineNumber, preSpaces, colonIndex);
+        decorateSpaceable(trimmed.substring(0, colonIndex - preSpaces), preSpaces, lineNumber, "key", decorations);
         addDecor(decorations, "colons", lineNumber, colonIndex, colonIndex + 1);
         decorateArg(trimmed.substring(colonIndex - preSpaces + 1), colonIndex + 1, lineNumber, decorations, false);
     }
