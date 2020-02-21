@@ -140,6 +140,8 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
     }
 }
 
+const ifOperators : string[] = [ "<", ">", "<=", ">=", "==", "!=", "||", "&&", "(", ")" ];
+
 function decorateArg(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }, canQuote : boolean) {
     const len : number = arg.length;
     let quoted : boolean = false;
@@ -185,13 +187,19 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             }
         }
         else if (c == ' ' && (!quoted || inTagCounter == 0)) {
-            hasTagEnd = arg.includes(" ", i + 1) ? arg.substring(i, arg.indexOf(" ", i + 1)).includes(">") : arg.includes(">");
+            const nextArg : string = arg.includes(" ", i + 1) ? arg.substring(i + 1, arg.indexOf(" ", i + 1)) : arg.substring(i + 1);
+            hasTagEnd = nextArg.includes(">");
             addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
             addDecor(decorations, "space", lineNumber, start + i, start + i + 1);
             lastDecor = i + 1;
             if (!quoted) {
                 inTagCounter = 0;
                 defaultDecor = "normal";
+            }
+            if (ifOperators.includes(nextArg)) {
+                addDecor(decorations, "colons", lineNumber, start + i + 1, start + i + 1 + nextArg.length);
+                i += nextArg.length;
+                lastDecor = i;
             }
         }
     }
