@@ -3,6 +3,8 @@ DenizenScript VS Code Extension
 
 An extension to [VS Code](https://github.com/microsoft/vscode) to provide general language support for `.dsc` files written for [Denizen](https://github.com/DenizenScript/Denizen).
 
+This can be downloaded from [The Marketplace](https://marketplace.visualstudio.com/items?itemName=DenizenScript.denizenscript).
+
 ### Building
 
 - Within `DenizenLangServer/`, build the C# language server project with `dotnet build`
