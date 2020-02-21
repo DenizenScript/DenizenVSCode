@@ -148,6 +148,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
     let tagStart : number = 0;
     let defaultDecor : string = "normal";
     let lastDecor : number = 0;
+    let hasTagEnd : boolean = arg.includes(" ") ? arg.substring(0, arg.indexOf(" ")).includes(">") : arg.includes(">");
     for (let i = 0; i < len; i++) {
         const c : string = arg.charAt(i);
         if (canQuote && (c == '"' || c == '\'')) {
@@ -165,7 +166,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 quoteMode = c;
             }
         }
-        else if (c == '<' && i + 1 < len && arg.charAt(i + 1) != '-') {
+        else if (hasTagEnd && c == '<' && i + 1 < len && arg.charAt(i + 1) != '-') {
             inTagCounter++;
             if (inTagCounter == 1) {
                 addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
@@ -174,7 +175,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 defaultDecor = "tag";
             }
         }
-        else if (c == '>' && inTagCounter > 0) {
+        else if (hasTagEnd && c == '>' && inTagCounter > 0) {
             inTagCounter--;
             if (inTagCounter == 0) {
                 decorateTag(arg.substring(tagStart + 1, i), start + tagStart + 1, lineNumber, decorations);
@@ -184,6 +185,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             }
         }
         else if (c == ' ' && (!quoted || inTagCounter == 0)) {
+            hasTagEnd = arg.includes(" ", i + 1) ? arg.substring(i, arg.indexOf(" ", i + 1)).includes(">") : arg.includes(">");
             addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
             addDecor(decorations, "space", lineNumber, start + i, start + i + 1);
             lastDecor = i + 1;
