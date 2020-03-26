@@ -142,6 +142,31 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
 
 const ifOperators : string[] = [ "<", ">", "<=", ">=", "==", "!=", "||", "&&", "(", ")" ];
 
+function checkIfHasTagEnd(arg : string, canQuote : boolean) : boolean {
+    const len : number = arg.length;
+    let quoted : boolean = false;
+    let quoteMode : string = 'x';
+    for (let i = 0; i < len; i++) {
+        const c : string = arg.charAt(i);
+        if (canQuote && (c == '"' || c == '\'')) {
+            if (quoted && c == quoteMode) {
+                quoted = false;
+            }
+            else if (!quoted) {
+                quoted = true;
+                quoteMode = c;
+            }
+        }
+        else if (c == '>') {
+            return true;
+        }
+        else if (c == ' ' && !quoted) {
+            return false;
+        }
+    }
+    return false;
+}
+
 function decorateArg(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }, canQuote : boolean) {
     const len : number = arg.length;
     let quoted : boolean = false;
@@ -150,7 +175,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
     let tagStart : number = 0;
     let defaultDecor : string = "normal";
     let lastDecor : number = 0;
-    let hasTagEnd : boolean = arg.includes(" ") ? arg.substring(0, arg.indexOf(" ")).includes(">") : arg.includes(">");
+    let hasTagEnd : boolean = checkIfHasTagEnd(arg, canQuote);
     for (let i = 0; i < len; i++) {
         const c : string = arg.charAt(i);
         if (canQuote && (c == '"' || c == '\'')) {
@@ -187,8 +212,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             }
         }
         else if (c == ' ' && (!quoted || inTagCounter == 0)) {
-            const nextArg : string = arg.includes(" ", i + 1) ? arg.substring(i + 1, arg.indexOf(" ", i + 1)) : arg.substring(i + 1);
-            hasTagEnd = nextArg.includes(">");
+            hasTagEnd = checkIfHasTagEnd(arg.substring(i + 1), canQuote);
             addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
             addDecor(decorations, "space", lineNumber, start + i, start + i + 1);
             lastDecor = i + 1;
@@ -196,6 +220,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 inTagCounter = 0;
                 defaultDecor = "normal";
             }
+            const nextArg : string = arg.includes(" ", i + 1) ? arg.substring(i + 1, arg.indexOf(" ", i + 1)) : arg.substring(i + 1);
             if (ifOperators.includes(nextArg)) {
                 addDecor(decorations, "colons", lineNumber, start + i + 1, start + i + 1 + nextArg.length);
                 i += nextArg.length;
