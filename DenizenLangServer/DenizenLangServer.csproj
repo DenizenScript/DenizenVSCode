@@ -1,14 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <RootNamespace>DenizenLangServer</RootNamespace>
+    <AssemblyName>DenizenLangServer</AssemblyName>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <LangVersion>Latest</LangVersion>
+    <Product>DenizenLangServer</Product>
+    <PackageId>DenizenLangServer</PackageId>
+    <Copyright>Copyright (C) The DenizenScript Team 2019-2020</Copyright>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="CXuesong.JsonRpc.Commons" Version="0.5.2-int1" />
     <PackageReference Include="CXuesong.JsonRpc.Streams" Version="0.5.2" />
     <PackageReference Include="CXuesong.JsonRpc.DynamicProxy" Version="0.5.0" />
+    <PackageReference Include="YamlDotNet" Version="8.1.2" />
   </ItemGroup>
-
+  <ItemGroup>
+    <Compile Remove="FreneticUtilities\*.*" />
+    <Compile Remove="FreneticUtilities\**\*.*" />
+    <Compile Remove="SharpDenizenTools\*.*" />
+    <Compile Remove="SharpDenizenTools\**\*.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="FreneticUtilities\FreneticUtilities\FreneticUtilities.csproj" />
+    <ProjectReference Include="SharpDenizenTools\SharpDenizenTools\SharpDenizenTools.csproj" />
+  </ItemGroup>
 </Project>
