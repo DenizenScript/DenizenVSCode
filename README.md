@@ -11,11 +11,15 @@ This can be downloaded from [The Marketplace](https://marketplace.visualstudio.c
 - Copy the output files (deepest folder under `DenizenLangServer/bin/`) to path `extension/server/`
 - Within `extension/`, build the extension TypeScript files with `tsc -p ./ --skipLibCheck`
 
-### Status
+### Current Features
 
-This project has just been started, but already contains functional basic syntax highlighting!
+- Full syntax highlighting (customizable via settings)
+- Error checking (imperfect but catches a lot of common mistakes)
 
-In the future, we plan to have code completion suggestions and other handy IDE-like functionalities.
+### Planned Future Features
+
+- Autocomplete/suggestions
+- More detailed error checking, including full-workspace-analysis
 
 ## Used Projects
 
