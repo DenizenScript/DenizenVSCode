@@ -9,12 +9,28 @@ using JsonRpc.Contracts;
 using JsonRpc.Server;
 using JsonRpc.Streams;
 using LanguageServer.VsCode;
+using SharpDenizenTools.MetaHandlers;
+using SharpDenizenTools.ScriptAnalysis;
 
 namespace DenizenLangServer
 {
     class Program
     {
         static void Main(string[] args)
+        {
+            InitMetaHelper();
+            InitExtensionServer();
+        }
+
+        static void InitMetaHelper()
+        {
+            ScriptChecker.LogInternalMessage = Console.Error.WriteLine;
+            MetaDocs.CurrentMeta = new MetaDocs();
+            // TODO: CACHING!
+            MetaDocs.CurrentMeta.DownloadAll();
+        }
+
+        static void InitExtensionServer()
         {
             using Stream cin = Console.OpenStandardInput();
             using BufferedStream bcin = new BufferedStream(cin);
@@ -28,24 +44,10 @@ namespace DenizenLangServer
             };
             StreamRpcClientHandler clientHandler = new StreamRpcClientHandler();
             JsonRpcClient client = new JsonRpcClient(clientHandler);
-            clientHandler.MessageSending += (_, e) =>
-            {
-                Console.Error.WriteLine("Sending: " + e.Message);
-            };
-            clientHandler.MessageReceiving += (_, e) =>
-            {
-                Console.Error.WriteLine("Receiving: " + e.Message);
-            };
             LanguageServerSession session = new LanguageServerSession(client, contractResolver);
             JsonRpcServiceHostBuilder builder = new JsonRpcServiceHostBuilder { ContractResolver = contractResolver };
             builder.UseCancellationHandling();
             builder.Register(typeof(Program).GetTypeInfo().Assembly);
-            builder.Intercept(async (context, next) =>
-            {
-                Console.Error.WriteLine("Request: " + context.Request);
-                await next();
-                Console.Error.WriteLine("Response: " + context.Response);
-            });
             IJsonRpcServiceHost host = builder.Build();
             StreamRpcServerHandler serverHandler = new StreamRpcServerHandler(host,
                 StreamRpcServerHandlerOptions.ConsistentResponseSequence | StreamRpcServerHandlerOptions.SupportsRequestCancellation);

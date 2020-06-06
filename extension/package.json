@@ -3,7 +3,7 @@
     "displayName": "DenizenScript",
     "description": "The Denizen scripting language.",
     "author": "mcmonkey and the DenizenScript team",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "publisher": "denizenscript",
     "license": "MIT",
     "repository": "https://github.com/DenizenScript/DenizenVSCode",
@@ -131,8 +131,8 @@
         }
     },
     "devDependencies": {
-        "@types/node": "^12.12.31",
-        "vscode": "^1.1.36"
+        "@types/node": "^12.12.44",
+        "vscode": "^1.1.37"
     },
     "dependencies": {
         "vscode-languageclient": "^5.2.1"

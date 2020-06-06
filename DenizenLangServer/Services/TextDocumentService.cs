@@ -7,6 +7,7 @@ using JsonRpc.Contracts;
 using JsonRpc.Server;
 using LanguageServer.VsCode;
 using LanguageServer.VsCode.Contracts;
+using LanguageServer.VsCode.Contracts.Client;
 using LanguageServer.VsCode.Server;
 
 namespace DenizenLangServer.Services
@@ -29,24 +30,25 @@ namespace DenizenLangServer.Services
         }
 
         [JsonRpcMethod(IsNotification = true)]
-        public async Task DidOpen(TextDocumentItem textDocument)
+        public void DidOpen(TextDocumentItem textDocument)
         {
             var doc = new SessionDocument(textDocument);
             var session = Session;
-            doc.DocumentChanged += async (sender, args) =>
+            doc.DocumentChanged += (sender, args) =>
             {
-                // Lint the document when it's changed.
-                var doc1 = ((SessionDocument) sender).Document;
-                var diag1 = session.DiagnosticProvider.LintDocument(doc1);
-                if (session.Documents.ContainsKey(doc1.Uri))
+                try
                 {
-                    // In case the document has been closed when we were linting…
-                    await session.Client.Document.PublishDiagnostics(doc1.Uri, diag1);
+                    session.DiagnosticProvider.DiagSession = session;
+                    session.DiagnosticProvider.InformNeedsUpdate(((SessionDocument)sender).Document);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(ex);
                 }
             };
             Session.Documents.TryAdd(textDocument.Uri, doc);
-            var diag = Session.DiagnosticProvider.LintDocument(doc.Document);
-            await Client.Document.PublishDiagnostics(textDocument.Uri, diag);
+            Session.DiagnosticProvider.DiagSession = Session;
+            Session.DiagnosticProvider.InformNeedsUpdate(doc.Document);
         }
 
         [JsonRpcMethod(IsNotification = true)]

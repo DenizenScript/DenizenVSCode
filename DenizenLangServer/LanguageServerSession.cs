@@ -26,6 +26,8 @@ namespace DenizenLangServer
             Client = new ClientProxy(builder, rpcClient);
             Documents = new ConcurrentDictionary<Uri, SessionDocument>();
             DiagnosticProvider = new DiagnosticProvider();
+            DiagnosticProvider.CancelToken = CancellationToken;
+            Task.Factory.StartNew(DiagnosticProvider.LintCheckLoopThread);
         }
 
         public CancellationToken CancellationToken => cts.Token;

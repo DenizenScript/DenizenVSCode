@@ -7,7 +7,7 @@ This can be downloaded from [The Marketplace](https://marketplace.visualstudio.c
 
 ### Building
 
-- Within `DenizenLangServer/`, build the C# language server project with `dotnet build`
+- Within `DenizenLangServer/`, build the C# language server project with `dotnet build --configuration=release`
 - Copy the output files (deepest folder under `DenizenLangServer/bin/`) to path `extension/server/`
 - Within `extension/`, build the extension TypeScript files with `tsc -p ./ --skipLibCheck`
 
