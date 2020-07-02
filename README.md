@@ -5,6 +5,10 @@ An extension to [VS Code](https://github.com/microsoft/vscode) to provide genera
 
 This can be downloaded from [The Marketplace](https://marketplace.visualstudio.com/items?itemName=DenizenScript.denizenscript).
 
+### Installation and Usage
+
+Install guide can be found [in the Guides here](https://guide.denizenscript.com/guides/first-steps/script-editor.html).
+
 ### Building
 
 - Within `DenizenLangServer/`, build the C# language server project with `dotnet build --configuration=release`

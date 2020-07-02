@@ -25,8 +25,10 @@ namespace DenizenLangServer
             var builder = new JsonRpcProxyBuilder {ContractResolver = contractResolver};
             Client = new ClientProxy(builder, rpcClient);
             Documents = new ConcurrentDictionary<Uri, SessionDocument>();
-            DiagnosticProvider = new DiagnosticProvider();
-            DiagnosticProvider.CancelToken = CancellationToken;
+            DiagnosticProvider = new DiagnosticProvider
+            {
+                CancelToken = CancellationToken
+            };
             Task.Factory.StartNew(DiagnosticProvider.LintCheckLoopThread);
         }
 
