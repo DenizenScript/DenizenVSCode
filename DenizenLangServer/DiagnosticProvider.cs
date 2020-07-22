@@ -88,14 +88,7 @@ namespace DenizenLangServer
             }
             foreach (ScriptChecker.ScriptWarning warning in checker.Warnings)
             {
-                if (warning.WarningUniqueKey == "event_missing")
-                {
-                    diag.Add(new Diagnostic(DiagnosticSeverity.Hint, GetRange(warning), "Denizen Script Checker", "(Imperfect!!! Event Checking. Likely ignorable) " + warning.CustomMessageForm));
-                }
-                else
-                {
-                    diag.Add(new Diagnostic(DiagnosticSeverity.Error, GetRange(warning), "Denizen Script Checker", "(Likely Error) " + warning.CustomMessageForm));
-                }
+                diag.Add(new Diagnostic(DiagnosticSeverity.Error, GetRange(warning), "Denizen Script Checker", "(Likely Error) " + warning.CustomMessageForm));
             }
             foreach (ScriptChecker.ScriptWarning warning in checker.MinorWarnings)
             {
