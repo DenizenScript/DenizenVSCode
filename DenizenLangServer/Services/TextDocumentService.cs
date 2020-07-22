@@ -32,8 +32,11 @@ namespace DenizenLangServer.Services
         [JsonRpcMethod(IsNotification = true)]
         public void DidOpen(TextDocumentItem textDocument)
         {
-            var doc = new SessionDocument(textDocument);
-            var session = Session;
+            HandleOpen(Session, new SessionDocument(textDocument));
+        }
+
+        public static void HandleOpen(LanguageServerSession session, SessionDocument doc)
+        {
             doc.DocumentChanged += (sender, args) =>
             {
                 try
@@ -46,14 +49,13 @@ namespace DenizenLangServer.Services
                     Console.Error.WriteLine(ex);
                 }
             };
-            Session.Documents.TryAdd(textDocument.Uri, doc);
-            Session.DiagnosticProvider.DiagSession = Session;
-            Session.DiagnosticProvider.InformNeedsUpdate(doc.Document);
+            session.Documents.TryAdd(doc.Document.Uri, doc);
+            session.DiagnosticProvider.DiagSession = session;
+            session.DiagnosticProvider.InformNeedsUpdate(doc.Document);
         }
 
         [JsonRpcMethod(IsNotification = true)]
-        public void DidChange(TextDocumentIdentifier textDocument,
-            ICollection<TextDocumentContentChangeEvent> contentChanges)
+        public void DidChange(TextDocumentIdentifier textDocument, ICollection<TextDocumentContentChangeEvent> contentChanges)
         {
             Session.Documents[textDocument.Uri].NotifyChanges(contentChanges);
         }
@@ -66,10 +68,7 @@ namespace DenizenLangServer.Services
         [JsonRpcMethod(IsNotification = true)]
         public async Task DidClose(TextDocumentIdentifier textDocument)
         {
-            if (textDocument.Uri.IsUntitled())
-            {
-                await Client.Document.PublishDiagnostics(textDocument.Uri, new Diagnostic[0]);
-            }
+            await Client.Document.PublishDiagnostics(textDocument.Uri, new Diagnostic[0]);
             Session.Documents.TryRemove(textDocument.Uri, out _);
         }
 

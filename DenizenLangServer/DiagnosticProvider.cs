@@ -38,15 +38,23 @@ namespace DenizenLangServer
 
         public void LintCheckLoopThread()
         {
+            int loops = 59;
             while (!CancelToken.IsCancellationRequested)
             {
                 lock (DiagUpdateLock)
                 {
                     if (NeedsNewDiag)
                     {
+                        Console.Error.WriteLine("Linting...");
                         CancellationToken timeout = new CancellationTokenSource(new TimeSpan(hours: 0, minutes: 0, seconds: 10)).Token;
                         Task.Factory.StartNew(() => DoDiag(DiagSession, DiagDoc), timeout).Wait(timeout);
                         NeedsNewDiag = false;
+                    }
+                    loops++;
+                    if (loops > 60 && DiagDoc != null && DiagDoc.Uri.AbsolutePath.EndsWith(".dsc"))
+                    {
+                        loops = 0;
+                        NeedsNewDiag = true;
                     }
                 }
                 Task.Delay(new TimeSpan(hours: 0, minutes: 0, seconds: 1), CancelToken).Wait();

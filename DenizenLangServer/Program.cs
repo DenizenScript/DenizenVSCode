@@ -15,6 +15,9 @@ using LanguageServer.VsCode;
 using SharpDenizenTools.MetaHandlers;
 using SharpDenizenTools.ScriptAnalysis;
 using System.Threading.Tasks;
+using DenizenLangServer.Services;
+using LanguageServer.VsCode.Contracts.Client;
+using System.Collections.Generic;
 
 namespace DenizenLangServer
 {
@@ -87,6 +90,7 @@ namespace DenizenLangServer
 
         static void InitExtensionServer()
         {
+            Console.Error.WriteLine("Extension starting...");
             using Stream cin = Console.OpenStandardInput();
             using BufferedStream bcin = new BufferedStream(cin);
             using Stream cout = Console.OpenStandardOutput();

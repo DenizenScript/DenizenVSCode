@@ -29,6 +29,7 @@ namespace DenizenLangServer
             {
                 CancelToken = CancellationToken
             };
+            Console.Error.WriteLine("Linter thread starting...");
             Task.Factory.StartNew(DiagnosticProvider.LintCheckLoopThread);
         }
 
