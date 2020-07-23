@@ -168,7 +168,7 @@ namespace DenizenLangServer.Services
                         }
                         if (relevantTagStart != -1)
                         {
-                            string fullTag = arg[relevantTagStart..];
+                            string fullTag = arg[relevantTagStart..].ToLowerFast();
                             int components = 0;
                             int subTags = 0;
                             int squareBrackets = 0;
@@ -205,12 +205,35 @@ namespace DenizenLangServer.Services
                                         new CompletionItem(tag, CompletionItemKind.Property, Token)).ToArray();
                                 return new CompletionList(results);
                             }
+                            string subComponent = fullTag[lastDot..];
+                            if (!subComponent.Contains('['))
+                            {
+                                CompletionItem[] results = MetaDocs.CurrentMeta.TagParts.Where(tag => tag.StartsWith(subComponent))
+                                    .Select(tag => TryFindLikelyTagForPart(tag, out MetaTag tagDoc) ?
+                                        new CompletionItem(tag, CompletionItemKind.Property, tagDoc.Name, tagDoc.Description, Token) :
+                                        new CompletionItem(tag, CompletionItemKind.Property, Token)).ToArray();
+                                return new CompletionList(results);
+                            }
                         }
                     }
                 }
             }
             // TODO: Actual completion logic for other cases (Type keys, tags, etc)
             return new CompletionList(EmptyCompletionItems);
+        }
+
+        /// <summary>
+        /// Tries to find the tag for the given part.
+        /// </summary>
+        /// <param name="tagText">The tag part text tosearch for.</param>
+        /// <param name="tagOut">The tag object, if the return is true. Otherwise null.</param>
+        /// <returns>True if the tag is found, otherwise false.</returns>
+        public static bool TryFindLikelyTagForPart(string tagText, out MetaTag tagOut)
+        {
+            string dottedText = "." + tagText;
+            KeyValuePair<string, MetaTag> res = MetaDocs.CurrentMeta.Tags.FirstOrDefault(t => t.Key.EndsWith(dottedText));
+            tagOut = res.Value;
+            return tagOut != null;
         }
     }
 }
