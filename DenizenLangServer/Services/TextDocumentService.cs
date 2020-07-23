@@ -118,7 +118,94 @@ namespace DenizenLangServer.Services
                         CompletionItem[] results = cmd.FlatArguments.Where(arg => arg.Item1.StartsWith(argThusFar)).JoinWith(
                             cmd.ArgPrefixes.Where(arg => arg.Item1.StartsWith(argThusFar)).Select(a => new Tuple<string, string>(a.Item1 + ":", a.Item2)))
                             .Select(a => new CompletionItem(a.Item1, CompletionItemKind.Field, a.Item2, Token)).ToArray();
-                        return new CompletionList(results);
+                        if (results.Length > 0)
+                        {
+                            return new CompletionList(results);
+                        }
+                    }
+                }
+            }
+            if (trimmed.StartsWith("-") || trimmed.Contains(":"))
+            {
+                if (trimmed.Contains("<"))
+                {
+                    int argStart = 0;
+                    for (int i = 0; i < trimmed.Length; i++)
+                    {
+                        if (trimmed[i] == '"' || trimmed[i] == '\'')
+                        {
+                            char quote = trimmed[i++];
+                            while (trimmed[i] != quote)
+                            {
+                                i++;
+                            }
+                        }
+                        else if (trimmed[i] == ' ')
+                        {
+                            argStart = i + 1;
+                        }
+                    }
+                    string arg = trimmed[argStart..];
+                    if (arg.Contains("<"))
+                    {
+                        int tagBits = 0;
+                        int relevantTagStart = -1;
+                        for (int i = arg.Length - 1; i >= 0; i--)
+                        {
+                            if (arg[i] == '>')
+                            {
+                                tagBits++;
+                            }
+                            else if (arg[i] == '<')
+                            {
+                                if (tagBits == 0)
+                                {
+                                    relevantTagStart = i + 1;
+                                    break;
+                                }
+                                tagBits--;
+                            }
+                        }
+                        if (relevantTagStart != -1)
+                        {
+                            string fullTag = arg[relevantTagStart..];
+                            int components = 0;
+                            int subTags = 0;
+                            int squareBrackets = 0;
+                            int lastDot = 0;
+                            for (int i = 0; i < fullTag.Length; i++)
+                            {
+                                if (fullTag[i] == '<')
+                                {
+                                    subTags++;
+                                }
+                                else if (fullTag[i] == '>')
+                                {
+                                    subTags--;
+                                }
+                                else if (fullTag[i] == '[' && subTags == 0)
+                                {
+                                    squareBrackets++;
+                                }
+                                else if (fullTag[i] == ']' && subTags == 0)
+                                {
+                                    squareBrackets--;
+                                }
+                                else if (fullTag[i] == '.' && subTags == 0 && squareBrackets == 0)
+                                {
+                                    components++;
+                                    lastDot = i + 1;
+                                }
+                            }
+                            if (components == 0 && !fullTag.Contains('['))
+                            {
+                                CompletionItem[] results = MetaDocs.CurrentMeta.TagBases.Where(tag => tag.StartsWith(fullTag))
+                                    .Select(tag => MetaDocs.CurrentMeta.Tags.TryGetValue(tag, out MetaTag tagDoc) ?
+                                        new CompletionItem(tag, CompletionItemKind.Property, tagDoc.Name, tagDoc.Description, Token) :
+                                        new CompletionItem(tag, CompletionItemKind.Property, Token)).ToArray();
+                                return new CompletionList(results);
+                            }
+                        }
                     }
                 }
             }
