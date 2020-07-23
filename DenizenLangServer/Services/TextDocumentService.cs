@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FreneticUtilities.FreneticExtensions;
 using JsonRpc.Contracts;
 using JsonRpc.Server;
 using LanguageServer.VsCode;
 using LanguageServer.VsCode.Contracts;
 using LanguageServer.VsCode.Contracts.Client;
 using LanguageServer.VsCode.Server;
+using Newtonsoft.Json.Linq;
+using SharpDenizenTools.MetaHandlers;
 
 namespace DenizenLangServer.Services
 {
@@ -72,15 +76,40 @@ namespace DenizenLangServer.Services
             Session.Documents.TryRemove(textDocument.Uri, out _);
         }
 
-        private static readonly CompletionItem[] PredefinedCompletionItems =
+        private static readonly CompletionItem[] EmptyCompletionItems =
         {
         };
 
         [JsonRpcMethod]
         public CompletionList Completion(TextDocumentIdentifier textDocument, Position position, Dictionary<string, object> context)
         {
-            // TODO: Actual completion logic
-            return new CompletionList(PredefinedCompletionItems);
+            TextDocument doc = GetDocument(textDocument);
+            if (doc == null || !textDocument.Uri.AbsolutePath.EndsWith(".dsc"))
+            {
+                return new CompletionList(EmptyCompletionItems);
+            }
+            int offset = doc.OffsetAt(position);
+            string content = doc.Content;
+            if (offset < 0 || offset >= content.Length)
+            {
+                return new CompletionList(EmptyCompletionItems);
+            }
+            int startOfLine = content.LastIndexOf('\n', offset - 1) + 1;
+            string relevantLine = content[startOfLine..(offset - 1)];
+            string trimmed = relevantLine.TrimStart();
+            if (trimmed.StartsWith("- "))
+            {
+                string afterDash = trimmed[2..];
+                if (!afterDash.Contains(" "))
+                {
+                    string possibleCmd = afterDash.ToLowerFast();
+                    CompletionItem[] results = MetaDocs.CurrentMeta.Commands.Where(c => c.Key.StartsWith(possibleCmd))
+                        .Select(c => new CompletionItem(c.Key, CompletionItemKind.Method, c.Value.Short, c.Value.Syntax + "\n\n" + c.Value.Description, JToken.FromObject("Data"))).ToArray();
+                    return new CompletionList(results);
+                }
+            }
+            // TODO: Actual completion logic for other cases (Type keys, tags, etc)
+            return new CompletionList(EmptyCompletionItems);
         }
     }
 }
