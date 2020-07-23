@@ -13,6 +13,7 @@ using LanguageServer.VsCode.Contracts.Client;
 using LanguageServer.VsCode.Server;
 using Newtonsoft.Json.Linq;
 using SharpDenizenTools.MetaHandlers;
+using SharpDenizenTools.MetaObjects;
 
 namespace DenizenLangServer.Services
 {
@@ -80,6 +81,8 @@ namespace DenizenLangServer.Services
         {
         };
 
+        private static readonly JToken Token = JToken.FromObject("Data"); // TODO: ???
+
         [JsonRpcMethod]
         public CompletionList Completion(TextDocumentIdentifier textDocument, Position position, Dictionary<string, object> context)
         {
@@ -104,8 +107,19 @@ namespace DenizenLangServer.Services
                 {
                     string possibleCmd = afterDash.ToLowerFast();
                     CompletionItem[] results = MetaDocs.CurrentMeta.Commands.Where(c => c.Key.StartsWith(possibleCmd))
-                        .Select(c => new CompletionItem(c.Key, CompletionItemKind.Method, c.Value.Short, c.Value.Syntax + "\n\n" + c.Value.Description, JToken.FromObject("Data"))).ToArray();
+                        .Select(c => new CompletionItem(c.Key, CompletionItemKind.Method, c.Value.Short, c.Value.Syntax + "\n\n" + c.Value.Description, Token)).ToArray();
                     return new CompletionList(results);
+                }
+                else
+                {
+                    if (MetaDocs.CurrentMeta.Commands.TryGetValue(afterDash.Before(' ').ToLowerFast(), out MetaCommand cmd))
+                    {
+                        string argThusFar = afterDash.AfterLast(' ').ToLowerFast();
+                        CompletionItem[] results = cmd.FlatArguments.Where(arg => arg.Item1.StartsWith(argThusFar)).JoinWith(
+                            cmd.ArgPrefixes.Where(arg => arg.Item1.StartsWith(argThusFar)).Select(a => new Tuple<string, string>(a.Item1 + ":", a.Item2)))
+                            .Select(a => new CompletionItem(a.Item1, CompletionItemKind.Field, a.Item2, Token)).ToArray();
+                        return new CompletionList(results);
+                    }
                 }
             }
             // TODO: Actual completion logic for other cases (Type keys, tags, etc)
