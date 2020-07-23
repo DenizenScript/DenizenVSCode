@@ -135,7 +135,7 @@ namespace DenizenLangServer.Services
                         if (trimmed[i] == '"' || trimmed[i] == '\'')
                         {
                             char quote = trimmed[i++];
-                            while (trimmed[i] != quote)
+                            while (i < trimmed.Length && trimmed[i] != quote)
                             {
                                 i++;
                             }
