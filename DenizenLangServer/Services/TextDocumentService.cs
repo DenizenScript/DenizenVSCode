@@ -77,14 +77,25 @@ namespace DenizenLangServer.Services
             Session.Documents.TryRemove(textDocument.Uri, out _);
         }
 
-        private static readonly CompletionItem[] EmptyCompletionItems =
-        {
-        };
+        private static readonly CompletionItem[] EmptyCompletionItems = { };
 
         private static readonly JToken Token = JToken.FromObject("Data"); // TODO: ???
 
         [JsonRpcMethod]
         public CompletionList Completion(TextDocumentIdentifier textDocument, Position position, Dictionary<string, object> context)
+        {
+            try
+            {
+                return GetCompletionsFor(textDocument, position, context);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Internal completion handling error: {ex}");
+                return new CompletionList(EmptyCompletionItems);
+            }
+        }
+
+        public CompletionList GetCompletionsFor(TextDocumentIdentifier textDocument, Position position, Dictionary<string, object> context)
         {
             TextDocument doc = GetDocument(textDocument);
             if (doc == null || !textDocument.Uri.AbsolutePath.EndsWith(".dsc"))
