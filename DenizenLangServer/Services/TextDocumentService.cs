@@ -109,6 +109,10 @@ namespace DenizenLangServer.Services
                 return new CompletionList(EmptyCompletionItems);
             }
             int startOfLine = content.LastIndexOf('\n', offset - 1) + 1;
+            if (startOfLine == 0 || (offset - 1) < startOfLine)
+            {
+                return new CompletionList(EmptyCompletionItems);
+            }
             string relevantLine = content[startOfLine..(offset - 1)];
             string trimmed = relevantLine.TrimStart();
             if (trimmed.StartsWith("- "))
