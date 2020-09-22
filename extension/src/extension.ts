@@ -252,7 +252,11 @@ function decorateSpaceable(line : string, preLength: number, lineNumber: number,
     }
 }
 
-function decorateLine(line : string, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
+const definiteNotScriptKeys : string[] = [
+    "interact scripts", "default constants", "data", "constants", "text", "lore", "aliases", "slots", "enchantments", "input"
+];
+
+function decorateLine(line : string, lineNumber: number, decorations: { [color: string]: vscode.Range[] }, lastKey : string) {
     if (line.endsWith("\r")) {
         line = line.substring(0, line.length - 1);
     }
@@ -280,28 +284,34 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         }
     }
     else if (trimmed.startsWith("-")) {
+        const isNonScript : boolean = definiteNotScriptKeys.includes(lastKey);
         addDecor(decorations, "normal", lineNumber, preSpaces, preSpaces + 1);
-        if (trimmed.endsWith(":")) {
-            addDecor(decorations, "colons", lineNumber, preSpaces + trimmed.length - 1, preSpaces + trimmed.length);
-            trimmed = trimmed.substring(0, trimmed.length - 1);
-        }
-        let afterDash : string = trimmed.substring(1);
-        const commandEnd : number = afterDash.indexOf(' ', 1) + 1;
-        const endIndexCleaned : number = commandEnd == 0 ? preSpaces + trimmed.length : (preSpaces + commandEnd);
-        const commandText = commandEnd == 0 ? afterDash : afterDash.substring(0, commandEnd);
-        if (!afterDash.startsWith(" ")) {
-            addDecor(decorations, "bad_space", lineNumber, preSpaces + 1, endIndexCleaned);
-            decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations, false);
+        if (isNonScript) {
+            decorateArg(trimmed.substring(1), preSpaces + 1, lineNumber, decorations, false);
         }
         else {
-            afterDash = afterDash.substring(1);
-            if (commandText.includes("'") || commandText.includes("\"") || commandText.includes("[")) {
-                decorateArg(trimmed.substring(2), preSpaces + 2, lineNumber, decorations, false);
+            if (trimmed.endsWith(":")) {
+                addDecor(decorations, "colons", lineNumber, preSpaces + trimmed.length - 1, preSpaces + trimmed.length);
+                trimmed = trimmed.substring(0, trimmed.length - 1);
+            }
+            let afterDash : string = trimmed.substring(1);
+            const commandEnd : number = afterDash.indexOf(' ', 1) + 1;
+            const endIndexCleaned : number = commandEnd == 0 ? preSpaces + trimmed.length : (preSpaces + commandEnd);
+            const commandText = commandEnd == 0 ? afterDash : afterDash.substring(0, commandEnd);
+            if (!afterDash.startsWith(" ")) {
+                addDecor(decorations, "bad_space", lineNumber, preSpaces + 1, endIndexCleaned);
+                decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations, false);
             }
             else {
-                addDecor(decorations, "command", lineNumber, preSpaces + 2, endIndexCleaned);
-                if (commandEnd > 0) {
-                    decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations, true);
+                afterDash = afterDash.substring(1);
+                if (commandText.includes("'") || commandText.includes("\"") || commandText.includes("[")) {
+                    decorateArg(trimmed.substring(2), preSpaces + 2, lineNumber, decorations, false);
+                }
+                else {
+                    addDecor(decorations, "command", lineNumber, preSpaces + 2, endIndexCleaned);
+                    if (commandEnd > 0) {
+                        decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations, true);
+                    }
                 }
             }
         }
@@ -329,8 +339,15 @@ function decorateFullFile(editor: vscode.TextEditor) {
     const fullText : string = editor.document.getText();
     const splitText : string[] = fullText.split('\n');
     const totalLines = splitText.length;
+    let lastKey : string = "";
     for (let i : number = 0; i < totalLines; i++) {
-        decorateLine(splitText[i], i, decorations);
+        const lineText : string = splitText[i];
+        const trimmedLine = lineText.trim();
+        if (trimmedLine.endsWith(":") && !trimmedLine.startsWith("-"))
+        {
+            lastKey = trimmedLine.substring(0, trimmedLine.length - 1).toLowerCase();
+        }
+        decorateLine(lineText, i, decorations, lastKey);
     }
     for (const c in decorations) {
         editor.setDecorations(highlightDecors[c], decorations[c]);
