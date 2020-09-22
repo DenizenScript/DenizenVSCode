@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import * as languageClient from "vscode-languageclient";
 import * as path from "path";
 import * as fs from "fs";
-import { isUndefined } from 'util';
 
 const languageServerPath : string = "server/DenizenLangServer.dll";
 
@@ -56,7 +55,7 @@ const colorTypes : string[] = [
 function activateHighlighter(context: vscode.ExtensionContext) {
     for (const i in colorTypes) {
         let str : string = configuration.get("denizenscript.theme_colors." + colorTypes[i]);
-        if (isUndefined(str)) {
+        if (str === undefined) {
             console.log("Missing color config for " + colorTypes[i]);
             continue;
         }
