@@ -3,7 +3,7 @@
     "displayName": "DenizenScript",
     "description": "The Denizen scripting language.",
     "author": "mcmonkey and the DenizenScript team",
-    "icon": "/icon.png",
+    "icon": "icon/icon.png",
     "version": "0.3.1",
     "publisher": "denizenscript",
     "license": "MIT",
