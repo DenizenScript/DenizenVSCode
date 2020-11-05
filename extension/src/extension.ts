@@ -208,7 +208,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 lastDecor = i + 1;
             }
         }
-        else if (c == ' ' && (!quoted || inTagCounter == 0)) {
+        else if (c == ' ' && ((!quoted && canQuote) || inTagCounter == 0)) {
             hasTagEnd = checkIfHasTagEnd(arg.substring(i + 1), quoted, quoteMode, canQuote);
             addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
             addDecor(decorations, "space", lineNumber, start + i, start + i + 1);
