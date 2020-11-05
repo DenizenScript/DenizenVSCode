@@ -82,6 +82,13 @@ namespace DenizenLangServer
 
         public Range GetRange(ScriptChecker.ScriptWarning warning)
         {
+            if (warning.Line < 0 || warning.StartChar < 0 || warning.EndChar < warning.StartChar)
+            {
+                Console.Error.WriteLine($"Error handling error: {warning.WarningUniqueKey} '{warning.CustomMessageForm}' invalid range: is on line {warning.Line} from {warning.StartChar} to {warning.EndChar}.");
+                warning.Line = Math.Max(0, warning.Line);
+                warning.StartChar = Math.Max(0, warning.StartChar);
+                warning.EndChar = Math.Max(0, warning.EndChar);
+            }
             return new Range(warning.Line, warning.StartChar, warning.Line, warning.EndChar);
         }
 
@@ -89,7 +96,14 @@ namespace DenizenLangServer
         {
             var diag = new List<Diagnostic>();
             ScriptChecker checker = new ScriptChecker(document.Content);
-            checker.Run();
+            try
+            {
+                checker.Run();
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+            }
             foreach (ScriptChecker.ScriptWarning warning in checker.Errors)
             {
                 diag.Add(new Diagnostic(DiagnosticSeverity.Error, GetRange(warning), "Denizen Script Checker", "(Error) " + warning.CustomMessageForm));
