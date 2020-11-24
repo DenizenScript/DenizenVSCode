@@ -69,9 +69,24 @@ namespace DenizenLangServer
                     {
                         Timeout = new TimeSpan(0, 2, 0)
                     };
-                    byte[] output = client.GetByteArrayAsync(url).Result;
-                    File.WriteAllBytes(cacheFileName, output);
-                    return output;
+                    try
+                    {
+                        byte[] output = client.GetByteArrayAsync(url).Result;
+                        if (output != null && output.Length > 0)
+                        {
+                            File.WriteAllBytes(cacheFileName, output);
+                            return output;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.Write($"Meta update download failed: {ex}");
+                    }
+                    if (File.Exists(cacheFileName))
+                    {
+                        return File.ReadAllBytes(cacheFileName);
+                    }
+                    return null;
                 };
             }
             Console.Error.WriteLine();
