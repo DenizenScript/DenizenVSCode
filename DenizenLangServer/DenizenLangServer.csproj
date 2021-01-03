@@ -7,7 +7,7 @@
     <LangVersion>Latest</LangVersion>
     <Product>DenizenLangServer</Product>
     <PackageId>DenizenLangServer</PackageId>
-    <Copyright>Copyright (C) The DenizenScript Team 2019-2020</Copyright>
+    <Copyright>Copyright (C) The DenizenScript Team 2019-2021</Copyright>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CXuesong.JsonRpc.Commons" Version="0.5.2-int1" />
