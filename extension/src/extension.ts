@@ -7,6 +7,10 @@ const languageServerPath : string = "server/DenizenLangServer.dll";
 
 const configuration : vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
 
+let needRefreshStartLine : number = -1;
+let needRefreshEndLine : number = -1;
+let needRefreshLineShift : number = 0;
+
 function activateLanguageServer(context: vscode.ExtensionContext) {
     let pathFile : string = context.asAbsolutePath(languageServerPath);
     if (!fs.existsSync(pathFile)) {
@@ -294,14 +298,13 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
             }
             let afterDash : string = trimmed.substring(1);
             const commandEnd : number = afterDash.indexOf(' ', 1) + 1;
-            const endIndexCleaned : number = commandEnd == 0 ? preSpaces + trimmed.length : (preSpaces + commandEnd);
+            const endIndexCleaned : number = preSpaces + (commandEnd == 0 ? trimmed.length : commandEnd);
             const commandText = commandEnd == 0 ? afterDash : afterDash.substring(0, commandEnd);
             if (!afterDash.startsWith(" ")) {
                 addDecor(decorations, "bad_space", lineNumber, preSpaces + 1, endIndexCleaned);
                 decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations, false);
             }
             else {
-                afterDash = afterDash.substring(1);
                 if (commandText.includes("'") || commandText.includes("\"") || commandText.includes("[")) {
                     decorateArg(trimmed.substring(2), preSpaces + 2, lineNumber, decorations, false);
                 }
@@ -329,16 +332,49 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
     }
 }
 
+let lastDecorations : { [color: string]: vscode.Range[] } = {};
+
 function decorateFullFile(editor: vscode.TextEditor) {
     let decorations: { [color: string]: vscode.Range[] } = {};
-    for (const c in highlightDecors) {
-        decorations[c] = [];
+    if (Object.keys(lastDecorations).length === 0) {
+        needRefreshStartLine = -1;
+    }
+    if (needRefreshStartLine == -1) {
+        for (const c in highlightDecors) {
+            decorations[c] = [];
+        }
+    }
+    else {
+        if (needRefreshLineShift > 0) {
+            needRefreshEndLine += needRefreshLineShift;
+        }
+        if (needRefreshLineShift < 0) {
+            needRefreshStartLine += needRefreshLineShift;
+        }
+        decorations = lastDecorations;
+        for (const c in highlightDecors) {
+            const rangeSet : vscode.Range[] = decorations[c];
+            if (needRefreshLineShift != 0) {
+                for (let i : number = rangeSet.length - 1; i >= 0; i--) {
+                    if (needRefreshLineShift > 0 ? (rangeSet[i].start.line >= needRefreshEndLine - needRefreshLineShift) : (rangeSet[i].start.line >= needRefreshStartLine - needRefreshLineShift)) {
+                        rangeSet[i] = new vscode.Range(new vscode.Position(rangeSet[i].start.line + needRefreshLineShift, rangeSet[i].start.character), new vscode.Position(rangeSet[i].end.line + needRefreshLineShift, rangeSet[i].end.character));
+                    }
+                }
+            }
+            for (let i : number = rangeSet.length - 1; i >= 0; i--) {
+                if (rangeSet[i].start.line <= needRefreshEndLine && rangeSet[i].end.line >= needRefreshStartLine) {
+                    rangeSet.splice(i, 1);
+                }
+            }
+        }
     }
     const fullText : string = editor.document.getText();
     const splitText : string[] = fullText.split('\n');
     const totalLines = splitText.length;
     let lastKey : string = "";
-    for (let i : number = 0; i < totalLines; i++) {
+    const startLine : number = (needRefreshStartLine == -1 ? 0 : needRefreshStartLine);
+    const endLine : number = (needRefreshStartLine == -1 ? totalLines : Math.min(needRefreshEndLine + 1, totalLines));
+    for (let i : number = startLine; i < endLine; i++) {
         const lineText : string = splitText[i];
         const trimmedLine = lineText.trim();
         if (trimmedLine.endsWith(":") && !trimmedLine.startsWith("-"))
@@ -350,6 +386,10 @@ function decorateFullFile(editor: vscode.TextEditor) {
     for (const c in decorations) {
         editor.setDecorations(highlightDecors[c], decorations[c]);
     }
+    lastDecorations = decorations;
+    needRefreshStartLine = -1;
+    needRefreshEndLine = -1;
+    needRefreshLineShift = 0;
 }
 
 function scheduleRefresh() {
@@ -364,15 +404,33 @@ export function activate(context: vscode.ExtensionContext) {
     activateHighlighter(context);
     vscode.workspace.onDidOpenTextDocument(doc => {
         if (doc.uri.toString().endsWith(".dsc")) {
+            needRefreshLineShift = 0;
+            needRefreshStartLine = 0;
+            needRefreshEndLine = 999999;
+            lastDecorations = {};
             scheduleRefresh();
         }
     }, null, context.subscriptions);
     vscode.workspace.onDidChangeTextDocument(event => {
         if (event.document.uri.toString().endsWith(".dsc")) {
+            event.contentChanges.forEach(change => {
+                if (needRefreshStartLine == -1 || change.range.start.line < needRefreshStartLine) {
+                    needRefreshStartLine = change.range.start.line;
+                }
+                if (needRefreshEndLine == -1 || change.range.end.line > needRefreshEndLine) {
+                    needRefreshEndLine = change.range.end.line;
+                }
+                needRefreshLineShift += change.text.split('\n').length - 1;
+                needRefreshLineShift -= event.document.getText(change.range).split('\n').length - 1;
+            });
             scheduleRefresh();
         }
     }, null, context.subscriptions);
     vscode.window.onDidChangeVisibleTextEditors(editors => {
+        needRefreshLineShift = 0;
+        needRefreshStartLine = 0;
+        needRefreshEndLine = 999999;
+        lastDecorations = {};
         scheduleRefresh();
     }, null, context.subscriptions);
     scheduleRefresh();
