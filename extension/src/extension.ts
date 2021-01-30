@@ -51,7 +51,7 @@ function colorSet(name : string, incolor : string) {
 }
 
 const colorTypes : string[] = [
-    "comment_header", "comment_normal", "comment_code",
+    "comment_header", "comment_normal", "comment_todo", "comment_code",
     "key", "key_inline", "command", "quote_double", "quote_single",
     "tag", "tag_dot", "tag_param", "bad_space", "colons", "space", "normal"
 ];
@@ -280,6 +280,9 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         }
         else if (afterComment.startsWith("-")) {
             decorateComment(line, lineNumber, "comment_code", decorations);
+        }
+        else if (afterComment.toLowerCase().startsWith("todo")) {
+            decorateComment(line, lineNumber, "comment_todo", decorations);
         }
         else {
             decorateComment(line, lineNumber, "comment_normal", decorations);
