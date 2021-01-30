@@ -42,6 +42,11 @@
         "configuration": {
             "title": "DenizenScript",
             "properties": {
+                "denizenscript.header_symbols": {
+                    "type": "string",
+                    "default": "|+=#_@/",
+                    "description": "Header comment symbols."
+                },
                 "denizenscript.theme_colors.comment_todo": {
                     "type": "string",
                     "default": "#FFFF00|style=bold",

@@ -11,6 +11,8 @@ let needRefreshStartLine : number = -1;
 let needRefreshEndLine : number = -1;
 let needRefreshLineShift : number = 0;
 
+let headerSymbols : string = "|+=#_@/";
+
 function activateLanguageServer(context: vscode.ExtensionContext) {
     let pathFile : string = context.asAbsolutePath(languageServerPath);
     if (!fs.existsSync(pathFile)) {
@@ -65,6 +67,7 @@ function activateHighlighter(context: vscode.ExtensionContext) {
         }
         colorSet(colorTypes[i], str);
     }
+    headerSymbols = configuration.get("denizenscript.header_symbols");
 }
 
 let refreshTimer: NodeJS.Timer | undefined = undefined;
@@ -273,9 +276,8 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
     const preSpaces = trimmedEnd.length - trimmed.length;
     if (trimmed.startsWith("#")) {
         const afterComment = trimmed.substring(1).trim();
-        if (afterComment.startsWith("|") || afterComment.startsWith("+") || afterComment.startsWith("=")
-                || afterComment.startsWith("#") || afterComment.startsWith("_") || afterComment.startsWith("@")
-                || afterComment.startsWith("/")) {
+        const symbol = afterComment.length == 0 ? ' ' : afterComment.charAt(0);
+        if (headerSymbols.includes(symbol)) {
             decorateComment(line, lineNumber, "comment_header", decorations);
         }
         else if (afterComment.startsWith("-")) {
