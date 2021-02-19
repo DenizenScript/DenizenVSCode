@@ -338,6 +338,7 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
 }
 
 let lastDecorations : { [color: string]: vscode.Range[] } = {};
+let lastFile : string = "";
 
 function decorateFullFile(editor: vscode.TextEditor) {
     let decorations: { [color: string]: vscode.Range[] } = {};
@@ -417,7 +418,11 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }, null, context.subscriptions);
     vscode.workspace.onDidChangeTextDocument(event => {
-        if (event.document.uri.toString().endsWith(".dsc")) {
+        const curFile : string = event.document.uri.toString();
+        if (curFile.endsWith(".dsc")) {
+            if (curFile != lastFile) {
+                lastDecorations = {};
+            }
             event.contentChanges.forEach(change => {
                 if (needRefreshStartLine == -1 || change.range.start.line < needRefreshStartLine) {
                     needRefreshStartLine = change.range.start.line;
