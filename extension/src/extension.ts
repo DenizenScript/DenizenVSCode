@@ -130,7 +130,7 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
                 lastDecor = i + 1;
             }
         }
-        else if (c == '.' && inTagParamCounter == 0) {
+        else if ((c == '.' || c == '|') && inTagCounter == 0 && inTagParamCounter == 0) {
             addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
             lastDecor = i + 1;
             addDecor(decorations, "tag_dot", lineNumber, start + i, start + i + 1);
