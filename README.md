@@ -19,10 +19,11 @@ Install guide can be found [in the Guides here](https://guide.denizenscript.com/
 
 - Full syntax highlighting (customizable via settings)
 - Error checking (imperfect but catches a lot of common mistakes)
+- Some autocomplete suggestions
 
 ### Planned Future Features
 
-- Autocomplete/suggestions
+- More detailed/thorough autocomplete suggestions
 - More detailed error checking, including full-workspace-analysis
 
 ## Used Projects

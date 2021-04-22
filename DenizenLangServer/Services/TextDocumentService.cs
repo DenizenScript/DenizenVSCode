@@ -95,6 +95,12 @@ namespace DenizenLangServer.Services
             }
         }
 
+        public static Dictionary<string, Func<IEnumerable<string>>> LinePrefixCompleters = new Dictionary<string, Func<IEnumerable<string>>>()
+        {
+            { "material", () => ExtraData.Data.Items },
+            { "entity_type", () => ExtraData.Data.Entities }
+        };
+
         public CompletionList GetCompletionsFor(TextDocumentIdentifier textDocument, Position position, Dictionary<string, object> context)
         {
             TextDocument doc = GetDocument(textDocument);
@@ -104,6 +110,10 @@ namespace DenizenLangServer.Services
             }
             int offset = doc.OffsetAt(position);
             string content = doc.Content;
+            if (offset == content.Length + 1)
+            {
+                offset -= 2;
+            }
             if (offset < 0 || offset >= content.Length)
             {
                 return new CompletionList(EmptyCompletionItems);
@@ -130,13 +140,34 @@ namespace DenizenLangServer.Services
                     if (MetaDocs.CurrentMeta.Commands.TryGetValue(afterDash.Before(' ').ToLowerFast(), out MetaCommand cmd))
                     {
                         string argThusFar = afterDash.AfterLast(' ').ToLowerFast();
+                        int colon = argThusFar.IndexOf(':');
+                        string prefix = colon == -1 ? "" : argThusFar[..colon];
+                        string argValue = colon == -1 ? argThusFar : argThusFar[(colon + 1)..];
                         CompletionItem[] results = cmd.FlatArguments.Where(arg => arg.Item1.StartsWith(argThusFar)).JoinWith(
                             cmd.ArgPrefixes.Where(arg => arg.Item1.StartsWith(argThusFar)).Select(a => new Tuple<string, string>(a.Item1 + ":", a.Item2)))
                             .Select(a => new CompletionItem(a.Item1, CompletionItemKind.Field, a.Item2, Token)).ToArray();
+                        if (CommandTabCompletions.TabCompletions.TryGetValue(cmd.CleanName, out CommandTabCompletions completer) && completer.ByPrefix.TryGetValue(prefix, out Func<IEnumerable<string>> completeFunc))
+                        {
+                            results = results.Concat(completeFunc().Where(text => text.StartsWith(argValue)).Select(text => new CompletionItem(text, CompletionItemKind.Enum, Token))).ToArray();
+                        }
                         if (results.Length > 0)
                         {
                             return new CompletionList(results);
                         }
+                    }
+                }
+            }
+            if (trimmed.Contains(":") && !trimmed.Contains("<"))
+            {
+                string prefix = trimmed.BeforeAndAfter(':', out string val);
+                if (LinePrefixCompleters.TryGetValue(prefix.ToLowerFast(), out Func<IEnumerable<string>> completer))
+                {
+                    val = val.Trim();
+                    CompletionItem[] results = completer().Where(text => text.StartsWith(val))
+                        .Select(text => new CompletionItem(text, CompletionItemKind.Enum, Token)).ToArray();
+                    if (results.Length > 0)
+                    {
+                        return new CompletionList(results);
                     }
                 }
             }

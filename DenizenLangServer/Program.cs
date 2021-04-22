@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using DenizenLangServer.Services;
 using LanguageServer.VsCode.Contracts.Client;
 using System.Collections.Generic;
+using FreneticUtilities.FreneticDataSyntax;
 
 namespace DenizenLangServer
 {
@@ -38,11 +39,13 @@ namespace DenizenLangServer
             string cachePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             bool needsRedownload = false;
             bool shouldIgnoreCache = false;
+            string extraDataCache = null;
             if (Directory.Exists(cachePath)) // Safety with weird OS's.
             {
                 string cacheFolder = cachePath + "/DenizenVSCodeExtension/cache/";
                 Directory.CreateDirectory(cacheFolder);
-                MetaDocs.AlternateZipSourcer = url =>
+                extraDataCache = cacheFolder + "extradata_minecraft.fds";
+                MetaDocsLoader.AlternateZipSourcer = url =>
                 {
                     char[] urlChars = url.ToCharArray();
                     for (int i = 0; i < urlChars.Length; i++)
@@ -80,7 +83,7 @@ namespace DenizenLangServer
                     }
                     catch (Exception ex)
                     {
-                        Console.Error.Write($"Meta update download failed: {ex}");
+                        Console.Error.WriteLine($"Meta update download failed: {ex}");
                     }
                     if (File.Exists(cacheFileName))
                     {
@@ -89,16 +92,16 @@ namespace DenizenLangServer
                     return null;
                 };
             }
-            Console.Error.WriteLine();
-            MetaDocs.CurrentMeta.DownloadAll();
+            MetaDocs.CurrentMeta = MetaDocsLoader.DownloadAll();
+            ExtraData.Load(extraDataCache);
+            Console.Error.WriteLine($"Base meta and extra data loaded");
             if (needsRedownload)
             {
                 shouldIgnoreCache = true;
                 Task.Factory.StartNew(() =>
                 {
-                    MetaDocs newDocs = new MetaDocs();
-                    newDocs.DownloadAll();
-                    MetaDocs.CurrentMeta = newDocs;
+                    MetaDocs.CurrentMeta = MetaDocsLoader.DownloadAll();
+                    Console.Error.WriteLine($"Meta cache refreshed from source");
                 });
             }
         }
