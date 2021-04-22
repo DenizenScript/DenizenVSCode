@@ -73,11 +73,11 @@ namespace DenizenLangServer.Services
         [JsonRpcMethod(IsNotification = true)]
         public async Task DidClose(TextDocumentIdentifier textDocument)
         {
-            await Client.Document.PublishDiagnostics(textDocument.Uri, new Diagnostic[0]);
+            await Client.Document.PublishDiagnostics(textDocument.Uri, Array.Empty<Diagnostic>());
             Session.Documents.TryRemove(textDocument.Uri, out _);
         }
 
-        private static readonly CompletionItem[] EmptyCompletionItems = { };
+        private static readonly CompletionItem[] EmptyCompletionItems = Array.Empty<CompletionItem>();
 
         private static readonly JToken Token = JToken.FromObject("Data"); // TODO: ???
 

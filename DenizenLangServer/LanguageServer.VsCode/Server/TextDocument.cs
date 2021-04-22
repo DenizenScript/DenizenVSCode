@@ -193,7 +193,7 @@ namespace LanguageServer.VsCode.Server
                     // Update the content first.
                     var startOffset = newLineStarts[change.Range.Start.Line] + change.Range.Start.Character;
                     newContent = newContent.Substring(0, startOffset) + change.Text +
-                                 newContent.Substring(startOffset + change.RangeLength);
+                                 newContent[(startOffset + change.RangeLength)..];
                     // Some lines have been removed.
                     if (endPos.Line > startPos.Line)
                         newLineStarts.RemoveRange(startPos.Line + 1, endPos.Line - startPos.Line);

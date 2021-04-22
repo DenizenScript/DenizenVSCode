@@ -13,15 +13,17 @@ let needRefreshLineShift : number = 0;
 
 let headerSymbols : string = "|+=#_@/";
 
-function activateLanguageServer(context: vscode.ExtensionContext) {
+let outputChannel = vscode.window.createOutputChannel("Denizen");
+
+function activateLanguageServer(context: vscode.ExtensionContext, dotnetPath : string) {
     let pathFile : string = context.asAbsolutePath(languageServerPath);
     if (!fs.existsSync(pathFile)) {
         return;
     }
     let pathDir : string = path.dirname(pathFile);
     let serverOptions: languageClient.ServerOptions = {
-        run: { command: "dotnet", args: [pathFile], options: { cwd: pathDir } },
-        debug: { command: "dotnet", args: [pathFile, "--debug"], options: { cwd: pathDir } }
+        run: { command: dotnetPath, args: [pathFile], options: { cwd: pathDir } },
+        debug: { command: dotnetPath, args: [pathFile, "--debug"], options: { cwd: pathDir } }
     }
     let clientOptions: languageClient.LanguageClientOptions = {
         documentSelector: ["denizenscript"],
@@ -62,7 +64,7 @@ function activateHighlighter(context: vscode.ExtensionContext) {
     for (const i in colorTypes) {
         let str : string = configuration.get("denizenscript.theme_colors." + colorTypes[i]);
         if (str === undefined) {
-            console.log("Missing color config for " + colorTypes[i]);
+            outputChannel.appendLine("Missing color config for " + colorTypes[i]);
             continue;
         }
         colorSet(colorTypes[i], str);
@@ -405,8 +407,17 @@ function scheduleRefresh() {
     refreshTimer = setTimeout(refreshDecor, 50);
 }
 
-export function activate(context: vscode.ExtensionContext) {
-    activateLanguageServer(context);
+async function activateDotNet() {
+    outputChannel.appendLine("DenizenScript extension attempting to acquire .NET 5");
+    const requestingExtensionId = 'DenizenScript.denizenscript';
+    const result = await vscode.commands.executeCommand('dotnet.acquire', { version: '5.0', requestingExtensionId });
+    outputChannel.appendLine("DenizenScript extension NET 5 Acquire result: " + result + ": " + result["dotnetPath"]);
+    return result["dotnetPath"];
+}
+
+export async function activate(context: vscode.ExtensionContext) {
+    let path : string = await activateDotNet();
+    activateLanguageServer(context, path);
     activateHighlighter(context);
     vscode.workspace.onDidOpenTextDocument(doc => {
         if (doc.uri.toString().endsWith(".dsc")) {
@@ -444,7 +455,7 @@ export function activate(context: vscode.ExtensionContext) {
         scheduleRefresh();
     }, null, context.subscriptions);
     scheduleRefresh();
-    console.log('Denizen extension has been activated');
+    outputChannel.appendLine('Denizen extension has been activated');
 }
 
 export function deactivate() {
