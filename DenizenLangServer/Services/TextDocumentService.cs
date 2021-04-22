@@ -150,6 +150,26 @@ namespace DenizenLangServer.Services
                         {
                             results = results.Concat(completeFunc().Where(text => text.StartsWith(argValue)).Select(text => new CompletionItem(text, CompletionItemKind.Enum, Token))).ToArray();
                         }
+                        if (cmd.CleanName == "adjust" || cmd.CleanName == "inventory" || cmd.CleanName == "adjustblock")
+                        {
+                            IEnumerable<MetaMechanism> mechs = MetaDocs.CurrentMeta.Mechanisms.Values;
+                            if (cmd.CleanName == "inventory")
+                            {
+                                if (!afterDash.ToLowerFast().Contains("adjust"))
+                                {
+                                    mechs = Array.Empty<MetaMechanism>();
+                                }
+                                else
+                                {
+                                    mechs = mechs.Where(mech => mech.MechObject == "ItemTag");
+                                }
+                            }
+                            else if (cmd.CleanName == "adjustblock")
+                            {
+                                mechs = mechs.Where(mech => mech.MechObject == "MaterialTag");
+                            }
+                            results = results.Concat(mechs.Where(mech => mech.MechName.StartsWith(argValue)).Select(mech => new CompletionItem(mech.MechName, CompletionItemKind.Property, mech.FullName, mech.Description, Token))).ToArray();
+                        }
                         if (results.Length > 0)
                         {
                             return new CompletionList(results);
