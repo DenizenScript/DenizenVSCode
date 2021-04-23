@@ -7,6 +7,7 @@ using JsonRpc.Messages;
 using LanguageServer.VsCode.Contracts;
 using LanguageServer.VsCode.Contracts.Client;
 using Newtonsoft.Json.Linq;
+using FreneticUtilities.FreneticToolkit;
 
 namespace DenizenLangServer.Services
 {
@@ -17,11 +18,12 @@ namespace DenizenLangServer.Services
         public InitializeResult Initialize(int processId, Uri rootUri, ClientCapabilities capabilities,
             JToken initializationOptions = null, string trace = null)
         {
+            SpecialTools.Internationalize();
             return new InitializeResult(new ServerCapabilities
             {
                 HoverProvider = true,
                 SignatureHelpProvider = new SignatureHelpOptions("()"),
-                CompletionProvider = new CompletionOptions(true, "."),
+                CompletionProvider = new CompletionOptions(true, " ."),
                 TextDocumentSync = new TextDocumentSyncOptions
                 {
                     OpenClose = true,
