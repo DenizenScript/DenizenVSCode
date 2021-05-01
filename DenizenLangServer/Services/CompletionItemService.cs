@@ -15,7 +15,7 @@ namespace DenizenLangServer.Services
         [JsonRpcMethod(AllowExtensionData = true)]
         public CompletionItem Resolve()
         {
-            var item = RequestContext.Request.Parameters.ToObject<CompletionItem>(Utilities.CamelCaseJsonSerializer);
+            CompletionItem item = RequestContext.Request.Parameters.ToObject<CompletionItem>(Utilities.CamelCaseJsonSerializer);
             return item;
         }
     }

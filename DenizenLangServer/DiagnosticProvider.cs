@@ -106,15 +106,15 @@ namespace DenizenLangServer
             }
             foreach (ScriptChecker.ScriptWarning warning in checker.Errors)
             {
-                diag.Add(new Diagnostic(DiagnosticSeverity.Error, GetRange(warning), "Denizen Script Checker", "(Error) " + warning.CustomMessageForm));
+                diag.Add(new Diagnostic(DiagnosticSeverity.Error, GetRange(warning), "Denizen Script Checker", $"(Error: {warning.WarningUniqueKey}) {warning.CustomMessageForm}"));
             }
             foreach (ScriptChecker.ScriptWarning warning in checker.Warnings)
             {
-                diag.Add(new Diagnostic(DiagnosticSeverity.Error, GetRange(warning), "Denizen Script Checker", "(Likely Error) " + warning.CustomMessageForm));
+                diag.Add(new Diagnostic(DiagnosticSeverity.Error, GetRange(warning), "Denizen Script Checker", $"(Likely Error: {warning.WarningUniqueKey}) {warning.CustomMessageForm}"));
             }
             foreach (ScriptChecker.ScriptWarning warning in checker.MinorWarnings)
             {
-                diag.Add(new Diagnostic(DiagnosticSeverity.Warning, GetRange(warning), "Denizen Script Checker", "(Warning) " + warning.CustomMessageForm));
+                diag.Add(new Diagnostic(DiagnosticSeverity.Warning, GetRange(warning), "Denizen Script Checker", $"(Warning: {warning.WarningUniqueKey}) {warning.CustomMessageForm}"));
             }
             return diag;
         }
