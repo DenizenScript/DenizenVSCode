@@ -34,6 +34,7 @@ namespace DenizenLangServer
 
         static void InitMetaHelper()
         {
+            Console.Error.WriteLine("Loading meta-documentation...");
             ScriptChecker.LogInternalMessage = Console.Error.WriteLine;
             MetaDocs.CurrentMeta = new MetaDocs();
             string cachePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -117,7 +118,7 @@ namespace DenizenLangServer
             JsonRpcContractResolver contractResolver = new JsonRpcContractResolver
             {
                 NamingStrategy = new CamelCaseJsonRpcNamingStrategy(),
-                ParameterValueConverter = new CamelCaseJsonValueConverter(),
+                ParameterValueConverter = new CamelCaseJsonValueConverter()
             };
             StreamRpcClientHandler clientHandler = new StreamRpcClientHandler();
             JsonRpcClient client = new JsonRpcClient(clientHandler);
@@ -126,8 +127,7 @@ namespace DenizenLangServer
             builder.UseCancellationHandling();
             builder.Register(typeof(Program).GetTypeInfo().Assembly);
             IJsonRpcServiceHost host = builder.Build();
-            StreamRpcServerHandler serverHandler = new StreamRpcServerHandler(host,
-                StreamRpcServerHandlerOptions.ConsistentResponseSequence | StreamRpcServerHandlerOptions.SupportsRequestCancellation);
+            StreamRpcServerHandler serverHandler = new StreamRpcServerHandler(host, StreamRpcServerHandlerOptions.ConsistentResponseSequence | StreamRpcServerHandlerOptions.SupportsRequestCancellation);
             serverHandler.DefaultFeatures.Set(session);
             using (serverHandler.Attach(reader, writer))
             using (clientHandler.Attach(reader, writer))

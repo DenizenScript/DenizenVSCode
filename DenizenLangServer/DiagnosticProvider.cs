@@ -36,28 +36,30 @@ namespace DenizenLangServer
             });
         }
 
-        public void LintCheckLoopThread()
+        public async void LintCheckLoopThread()
         {
             int loops = 59;
             while (!CancelToken.IsCancellationRequested)
             {
+                bool needsUpdate;
                 lock (DiagUpdateLock)
                 {
-                    if (NeedsNewDiag)
-                    {
-                        Console.Error.WriteLine("Linting...");
-                        CancellationToken timeout = new CancellationTokenSource(new TimeSpan(hours: 0, minutes: 0, seconds: 10)).Token;
-                        Task.Factory.StartNew(() => DoDiag(DiagSession, DiagDoc), timeout).Wait(timeout);
-                        NeedsNewDiag = false;
-                    }
+                    needsUpdate = NeedsNewDiag;
+                    NeedsNewDiag = false;
                     loops++;
                     if (loops > 60 && DiagDoc != null && DiagDoc.Uri.AbsolutePath.EndsWith(".dsc"))
                     {
                         loops = 0;
-                        NeedsNewDiag = true;
+                        needsUpdate = true;
                     }
                 }
-                Task.Delay(new TimeSpan(hours: 0, minutes: 0, seconds: 1), CancelToken).Wait();
+                if (needsUpdate)
+                {
+                    Console.Error.WriteLine("Linting...");
+                    CancellationToken timeout = new CancellationTokenSource(new TimeSpan(hours: 0, minutes: 0, seconds: 10)).Token;
+                    Task.Factory.StartNew(() => DoDiag(DiagSession, DiagDoc), timeout).Wait(timeout);
+                }
+                await Task.Delay(new TimeSpan(hours: 0, minutes: 0, seconds: 1), CancelToken);
             }
         }
 

@@ -5,7 +5,6 @@ using JsonRpc.Contracts;
 using JsonRpc.Server;
 using JsonRpc.Messages;
 using LanguageServer.VsCode.Contracts;
-using LanguageServer.VsCode.Contracts.Client;
 using Newtonsoft.Json.Linq;
 using FreneticUtilities.FreneticToolkit;
 
@@ -15,8 +14,7 @@ namespace DenizenLangServer.Services
     {
 
         [JsonRpcMethod(AllowExtensionData = true)]
-        public InitializeResult Initialize(int processId, Uri rootUri, ClientCapabilities capabilities,
-            JToken initializationOptions = null, string trace = null)
+        public InitializeResult Initialize(int processId, Uri rootUri, ClientCapabilities capabilities, JToken initializationOptions = null, string trace = null)
         {
             SpecialTools.Internationalize();
             return new InitializeResult(new ServerCapabilities

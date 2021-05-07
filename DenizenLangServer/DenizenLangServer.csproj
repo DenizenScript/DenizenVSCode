@@ -8,12 +8,13 @@
     <Product>DenizenLangServer</Product>
     <PackageId>DenizenLangServer</PackageId>
     <Copyright>Copyright (C) The DenizenScript Team 2019-2021</Copyright>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CXuesong.JsonRpc.Commons" Version="0.5.2-int1" />
-    <PackageReference Include="CXuesong.JsonRpc.Streams" Version="0.5.2" />
-    <PackageReference Include="CXuesong.JsonRpc.DynamicProxy" Version="0.5.0" />
-    <PackageReference Include="YamlDotNet" Version="8.1.2" />
+    <PackageReference Include="CXuesong.JsonRpc.Commons" Version="0.5.4" />
+    <PackageReference Include="CXuesong.JsonRpc.Streams" Version="0.5.4" />
+    <PackageReference Include="CXuesong.JsonRpc.DynamicProxy" Version="0.5.3" />
+    <PackageReference Include="YamlDotNet" Version="11.1.1" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="FreneticUtilities\*.*" />

@@ -145,7 +145,7 @@
         ]
     },
     "devDependencies": {
-        "@types/node": "^12.12.44",
+        "@types/node": "^12.20.12",
         "vscode": "^1.1.37"
     },
     "dependencies": {
