@@ -15,10 +15,6 @@ using LanguageServer.VsCode;
 using SharpDenizenTools.MetaHandlers;
 using SharpDenizenTools.ScriptAnalysis;
 using System.Threading.Tasks;
-using DenizenLangServer.Services;
-using LanguageServer.VsCode.Contracts.Client;
-using System.Collections.Generic;
-using FreneticUtilities.FreneticDataSyntax;
 
 namespace DenizenLangServer
 {
@@ -26,8 +22,30 @@ namespace DenizenLangServer
     {
         static void Main(string[] args)
         {
+            GrossWorkaround();
             InitMetaHelper();
             InitExtensionServer();
+        }
+
+        /// <summary>
+        /// The language server will fail to run if there has never been a usage of an HttpClient instance to download something.
+        /// How, why, what - I don't know.
+        /// But always intentionally hitting nothing suffices to guarantee the language server receives JsonRpc data.
+        /// </summary>
+        static void GrossWorkaround()
+        {
+            try
+            {
+                using HttpClient webClient = new HttpClient
+                {
+                    Timeout = new TimeSpan(0, 0, 1)
+                };
+                // Random weird localhost port to (hopefully) fail instantly.
+                webClient.GetStringAsync("http://127.0.0.1:3030").Wait();
+            }
+            catch (Exception)
+            {
+            }
         }
 
         public static AsciiMatcher URL_ACCEPTED = new AsciiMatcher(c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'));
@@ -46,7 +64,7 @@ namespace DenizenLangServer
                 string cacheFolder = cachePath + "/DenizenVSCodeExtension/cache/";
                 Directory.CreateDirectory(cacheFolder);
                 extraDataCache = cacheFolder + "extradata_minecraft.fds";
-                MetaDocsLoader.AlternateZipSourcer = url =>
+                MetaDocsLoader.AlternateZipSourcer = (url, client) =>
                 {
                     char[] urlChars = url.ToCharArray();
                     for (int i = 0; i < urlChars.Length; i++)
@@ -69,10 +87,6 @@ namespace DenizenLangServer
                             return File.ReadAllBytes(cacheFileName);
                         }
                     }
-                    HttpClient client = new HttpClient
-                    {
-                        Timeout = new TimeSpan(0, 2, 0)
-                    };
                     try
                     {
                         byte[] output = client.GetByteArrayAsync(url).Result;

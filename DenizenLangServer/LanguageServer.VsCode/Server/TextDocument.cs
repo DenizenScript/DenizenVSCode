@@ -226,7 +226,7 @@ namespace LanguageServer.VsCode.Server
         private static Position PositionAt(IList<int> lineStarts, int offset)
         {
             Debug.Assert(lineStarts != null);
-            // TODO some optimizations…
+            // TODO some optimizations
             int line;
             for (int i = 1; i < lineStarts.Count; i++)
             {
