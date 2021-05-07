@@ -26,11 +26,6 @@ Install guide can be found [in the Guides here](https://guide.denizenscript.com/
 - More detailed/thorough autocomplete suggestions
 - More detailed error checking, including full-workspace-analysis
 
-## Used Projects
-
-The folder path `DenizenLangServer/LanguageServer.VsCode` is copied from https://github.com/CXuesong/LanguageServer.NET and is subject to the Apache license contained there.
-Some compatibility modifications have been made.
-
 ### Licensing pre-note:
 
 This is an open source project, provided entirely freely, for everyone to use and contribute to.
