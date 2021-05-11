@@ -40,8 +40,8 @@ namespace DenizenLangServer
                 {
                     Timeout = new TimeSpan(0, 0, 1)
                 };
-                // Random weird localhost port to (hopefully) fail instantly.
-                webClient.GetStringAsync("http://127.0.0.1:3030").Wait();
+                // Random weird download just to wake the internals or something idk.
+                webClient.GetStringAsync("https://www.cloudflare.com/").Wait();
             }
             catch (Exception)
             {
