@@ -16,6 +16,9 @@ let headerSymbols : string = "|+=#_@/";
 let outputChannel = vscode.window.createOutputChannel("Denizen");
 
 function activateLanguageServer(context: vscode.ExtensionContext, dotnetPath : string) {
+    if (!dotnetPath || dotnetPath.length === 0) {
+        dotnetPath = "dotnet";
+    }
     let pathFile : string = context.asAbsolutePath(languageServerPath);
     if (!fs.existsSync(pathFile)) {
         return;
@@ -408,11 +411,17 @@ function scheduleRefresh() {
 }
 
 async function activateDotNet() {
-    outputChannel.appendLine("DenizenScript extension attempting to acquire .NET 5");
-    const requestingExtensionId = 'DenizenScript.denizenscript';
-    const result = await vscode.commands.executeCommand('dotnet.acquire', { version: '5.0', requestingExtensionId });
-    outputChannel.appendLine("DenizenScript extension NET 5 Acquire result: " + result + ": " + result["dotnetPath"]);
-    return result["dotnetPath"];
+    try {
+        outputChannel.appendLine("DenizenScript extension attempting to acquire .NET 5");
+        const requestingExtensionId = 'DenizenScript.denizenscript';
+        const result = await vscode.commands.executeCommand('dotnet.acquire', { version: '5.0', requestingExtensionId });
+        outputChannel.appendLine("DenizenScript extension NET 5 Acquire result: " + result + ": " + result["dotnetPath"]);
+        return result["dotnetPath"];
+    }
+    catch (error) {
+        outputChannel.appendLine("Error: " + error);
+        return "";
+    }
 }
 
 export async function activate(context: vscode.ExtensionContext) {
