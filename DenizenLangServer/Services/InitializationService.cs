@@ -10,7 +10,7 @@ using FreneticUtilities.FreneticToolkit;
 
 namespace DenizenLangServer.Services
 {
-    public class InitializaionService : DenizenLanguageServiceBase
+    public class InitializationService : DenizenLanguageServiceBase
     {
 
         [JsonRpcMethod(AllowExtensionData = true)]
