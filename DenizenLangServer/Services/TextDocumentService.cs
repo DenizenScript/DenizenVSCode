@@ -23,6 +23,7 @@ namespace DenizenLangServer.Services
         [JsonRpcMethod]
         public Hover Hover(TextDocumentIdentifier textDocument, Position position, CancellationToken ct)
         {
+            // TODO: All this code is a dirty "it works" vertical slice mess that needs to be cleaned up
             TextDocument doc = GetDocument(textDocument);
             if (doc == null || !textDocument.Uri.AbsolutePath.EndsWith(".dsc"))
             {
@@ -59,19 +60,118 @@ namespace DenizenLangServer.Services
             }
             string link(MetaObject obj)
             {
-                return $"[Click To Open Denizen Meta Documentation: {obj.Type.WebPath} {obj.Name}](https://" + $"meta.denizenscript.com/Docs/{obj.Type.WebPath}/{obj.CleanName})";
+                return $"[Click To Open Denizen Meta Documentation: {obj.Type.WebPath} {DescriptionClean(obj.Name)}](https://" + $"meta.denizenscript.com/Docs/{obj.Type.WebPath}/{obj.CleanName})";
             }
             string trimmed = relevantLine.TrimStart();
+            int spaces = relevantLine.Length - trimmed.Length;
             if (trimmed.StartsWith("- "))
             {
                 string commandText = trimmed[2..];
-                int dashPos = relevantLine.IndexOf('-');
                 string commandName = commandText.Before(' ');
-                if (position.Character > dashPos && position.Character <= dashPos + 2 + commandName.Length)
+                if (position.Character > spaces && position.Character <= spaces + 2 + commandName.Length)
                 {
                     if (MetaDocs.CurrentMeta.Commands.TryGetValue(commandName.ToLowerFast(), out MetaCommand command))
                     {
-                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Command {command.Name}\n{DescriptionClean(command.Short)}\n```xml\n- {command.Syntax}\n```\n{link(command)}\n\n{DescriptionClean(command.Description)}"), range(dashPos, dashPos + commandName.Length + 2));
+                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Command {command.Name}\n{DescriptionClean(command.Short)}\n```xml\n- {command.Syntax}\n```\n{link(command)}\n\n{DescriptionClean(command.Description)}"), range(spaces, spaces + commandName.Length + 2));
+                    }
+                }
+            }
+            if (trimmed.StartsWith("-") || trimmed.Contains(":"))
+            {
+                if (trimmed.Contains("<"))
+                {
+                    int argStart = 0, argEnd = trimmed.Length;
+                    for (int i = 0; i < trimmed.Length; i++)
+                    {
+                        if (trimmed[i] == '"' || trimmed[i] == '\'')
+                        {
+                            char quote = trimmed[i++];
+                            while (i < trimmed.Length && trimmed[i] != quote)
+                            {
+                                i++;
+                            }
+                        }
+                        else if (trimmed[i] == ' ')
+                        {
+                            if (i + spaces < position.Character)
+                            {
+                                argStart = i + 1;
+                            }
+                            else
+                            {
+                                argEnd = i;
+                                break;
+                            }
+                        }
+                    }
+                    string arg = trimmed[argStart..argEnd];
+                    int posInArg = position.Character - (spaces + argStart);
+                    if (arg.Contains("<"))
+                    {
+                        int tagBits = 0;
+                        int relevantTagStart = -1;
+                        for (int i = posInArg; i >= 0; i--)
+                        {
+                            if (arg[i] == '>')
+                            {
+                                tagBits++;
+                            }
+                            else if (arg[i] == '<')
+                            {
+                                if (tagBits == 0)
+                                {
+                                    relevantTagStart = i + 1;
+                                    break;
+                                }
+                                tagBits--;
+                            }
+                        }
+                        if (relevantTagStart != -1)
+                        {
+                            int posInTag = posInArg - relevantTagStart;
+                            string fullTag = arg[relevantTagStart..].ToLowerFast();
+                            int subTags = 0;
+                            int squareBrackets = 0;
+                            for (int i = 0; i < fullTag.Length; i++)
+                            {
+                                if (fullTag[i] == '<')
+                                {
+                                    subTags++;
+                                }
+                                else if (fullTag[i] == '>')
+                                {
+                                    if (subTags == 0)
+                                    {
+                                        fullTag = fullTag[..i];
+                                        break;
+                                    }
+                                    subTags--;
+                                }
+                                else if (fullTag[i] == '[' && subTags == 0)
+                                {
+                                    squareBrackets++;
+                                }
+                                else if (fullTag[i] == ']' && subTags == 0)
+                                {
+                                    squareBrackets--;
+                                }
+                            }
+                            SingleTag parsed = TagHelper.Parse(fullTag, (s) => { /* Ignore errors */ });
+                            TagTracer tracer = new TagTracer() { Docs = MetaDocs.CurrentMeta, Error = (s) => { /* Ignore errors */ }, Tag = parsed };
+                            tracer.Trace();
+                            foreach (SingleTag.Part part in parsed.Parts)
+                            {
+                                if (posInTag >= part.StartChar && posInTag <= part.EndChar)
+                                {
+                                    if (part.PossibleTags.Any())
+                                    {
+                                        MetaTag tag = part.PossibleTags[0];
+                                        int startIndex = spaces + argStart + relevantTagStart;
+                                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Tag {DescriptionClean(tag.Name)}\n{link(tag)}\n\nReturns: {tag.Returns}\n{DescriptionClean(tag.Description)}"), range(startIndex + part.StartChar, startIndex + part.EndChar + 1));
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -353,7 +453,7 @@ namespace DenizenLangServer.Services
         /// <summary>
         /// Tries to find the tag for the given part.
         /// </summary>
-        /// <param name="tagText">The tag part text tosearch for.</param>
+        /// <param name="tagText">The tag part text to search for.</param>
         /// <param name="tagOut">The tag object, if the return is true. Otherwise null.</param>
         /// <returns>True if the tag is found, otherwise false.</returns>
         public static bool TryFindLikelyTagForPart(string tagText, out MetaTag tagOut)
