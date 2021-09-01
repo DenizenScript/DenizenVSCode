@@ -78,7 +78,8 @@ namespace DenizenLangServer.Services
                 {
                     if (MetaDocs.CurrentMeta.Commands.TryGetValue(commandName.ToLowerFast(), out MetaCommand command))
                     {
-                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Command {command.Name}\n{DescriptionClean(command.Short)}\n```xml\n- {command.Syntax}\n```\n{link(command)}\n\n{DescriptionClean(command.Description)}{ObligatoryText(command)}"), range(spaces, spaces + commandName.Length + 2));
+                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Command {command.Name}\n{DescriptionClean(command.Short)}\n```xml\n- {command.Syntax}\n```\n{link(command)}"
+                            + $"\n\n{DescriptionClean(command.Description)}{ObligatoryText(command)}Related Tags:\n- {DescriptionClean(string.Join("\n- ", command.Tags))}"), range(spaces, spaces + commandName.Length + 2));
                     }
                 }
                 // TODO: Mechanisms
@@ -210,7 +211,8 @@ namespace DenizenLangServer.Services
                     }
                     if (action != null)
                     {
-                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Action {DescriptionClean(action.Name)}\n\n{link(action)}\n\nTriggers: {DescriptionClean(action.Triggers)}\n\nContexts: {DescriptionClean(string.Join("\n- ", action.Context))}{ObligatoryText(action)}"), range(spaces, spaces + actionName.Length + 1));
+                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Action {DescriptionClean(action.Name)}\n\n{link(action)}\n\nTriggers: {DescriptionClean(action.Triggers)}"
+                            + $"\n\nContexts:\n- {DescriptionClean(string.Join("\n- ", action.Context))}{ObligatoryText(action)}"), range(spaces, spaces + actionName.Length + 1));
                     }
                 }
                 else // is World
@@ -252,8 +254,17 @@ namespace DenizenLangServer.Services
                     }
                     if (realEvt != null)
                     {
-                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Event {DescriptionClean(realEvt.Name)}\n{link(realEvt)}\n\nTriggers: {DescriptionClean(realEvt.Triggers)}\n\nContexts: {DescriptionClean(string.Join("\n- ", realEvt.Context))}{ObligatoryText(realEvt)}"), range(spaces, spaces + trimmed.Length));
+                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Event {DescriptionClean(realEvt.Name)}\n{link(realEvt)}\n\nTriggers: {DescriptionClean(realEvt.Triggers)}\n\n"
+                            + $"Contexts:\n- {DescriptionClean(string.Join("\n- ", realEvt.Context))}{ObligatoryText(realEvt)}"), range(spaces, spaces + trimmed.Length));
                     }
+                }
+            }
+            if (trimmed.StartsWith("type: "))
+            {
+                string containerType = trimmed["type: ".Length..].ToLowerFast() + " script containers";
+                if (MetaDocs.CurrentMeta.Languages.TryGetValue(containerType, out MetaLanguage lang))
+                {
+                    return new Hover(new MarkupContent(MarkupKind.Markdown, $"### {DescriptionClean(lang.Name)}\n{link(lang)}\n\n{DescriptionClean(lang.Description)}{ObligatoryText(lang)}"), range(spaces, spaces + trimmed.Length));
                 }
             }
             return null;
@@ -272,18 +283,23 @@ namespace DenizenLangServer.Services
             }
             if (obj.Warnings != null && obj.Warnings.Any())
             {
-                result += "### WARNING\n" + DescriptionClean(string.Join("\n- ", obj.Warnings));
+                result += "### WARNING\n" + DescriptionClean(string.Join("\n- ", obj.Warnings)) + "\n\n";
             }
             return result;
         }
 
         public static string DescriptionClean(string input)
         {
-            if (input.Length > 800)
+            int codeStart = input.IndexOf("<code>");
+            if (codeStart != -1)
             {
-                input = input.Substring(0, 750) + "...";
+                int codeEnd = input.IndexOf("</code>", codeStart);
+                if (codeEnd != -1)
+                {
+                    return DescriptionClean(input[..codeStart]) + "\n```yml\n" + input[(codeStart + "<code>".Length)..(codeEnd)].Replace('`', '\'') + "\n```\n" + DescriptionClean(input[(codeEnd + "</code>".Length)..]);
+                }
             }
-            input = input.Replace('`', '\'').Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+            input = input.Replace('`', '\'').Replace("&", "&amp;").Replace("#", "&#35;").Replace("<", "&lt;").Replace(">", "&gt;");
             return input;
         }
 
