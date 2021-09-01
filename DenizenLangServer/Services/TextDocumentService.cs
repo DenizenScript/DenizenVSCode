@@ -73,16 +73,34 @@ namespace DenizenLangServer.Services
             if (trimmed.StartsWith("- "))
             {
                 string commandText = trimmed[2..];
-                string commandName = commandText.Before(' ');
+                string commandName = commandText.Before(' ').ToLowerFast();
                 if (position.Character > spaces && position.Character <= spaces + 2 + commandName.Length)
                 {
-                    if (MetaDocs.CurrentMeta.Commands.TryGetValue(commandName.ToLowerFast(), out MetaCommand command))
+                    if (MetaDocs.CurrentMeta.Commands.TryGetValue(commandName, out MetaCommand command))
                     {
                         return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Command {command.Name}\n{DescriptionClean(command.Short)}\n```xml\n- {command.Syntax}\n```\n{link(command)}"
                             + $"\n\n{DescriptionClean(command.Description)}{ObligatoryText(command)}Related Tags:\n- {DescriptionClean(string.Join("\n- ", command.Tags))}"), range(spaces, spaces + commandName.Length + 2));
                     }
                 }
-                // TODO: Mechanisms
+                if (commandName == "adjust" || commandName == "adjustblock" || commandName == "inventory")
+                {
+                    int lastSpace = relevantLine.LastIndexOf(' ', position.Character) + 1;
+                    if (lastSpace != 0)
+                    {
+                        int nextSpace = relevantLine.IndexOf(' ', position.Character);
+                        if (nextSpace == -1)
+                        {
+                            nextSpace = relevantLine.Length;
+                        }
+                        string arg = relevantLine[lastSpace..nextSpace].Before(':').ToLowerFast();
+                        MetaMechanism mechanism = MetaDocs.CurrentMeta.Mechanisms.Values.FirstOrDefault(mech => mech.MechName == arg);
+                        if (mechanism != null)
+                        {
+                            return new Hover(new MarkupContent(MarkupKind.Markdown, $"### {mechanism.MechObject} Mechanism {mechanism.MechName}\n{link(mechanism)}\n\nInput: {mechanism.Input}"
+                                + $"\n\n{DescriptionClean(mechanism.Description)}{ObligatoryText(mechanism)}Related Tags:\n- {DescriptionClean(string.Join("\n- ", mechanism.Tags))}"), range(lastSpace, nextSpace));
+                        }
+                    }
+                }
             }
             if (trimmed.StartsWith("-") || trimmed.Contains(":"))
             {
