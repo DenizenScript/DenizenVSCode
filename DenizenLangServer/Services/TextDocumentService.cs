@@ -23,7 +23,69 @@ namespace DenizenLangServer.Services
         [JsonRpcMethod]
         public Hover Hover(TextDocumentIdentifier textDocument, Position position, CancellationToken ct)
         {
+            TextDocument doc = GetDocument(textDocument);
+            if (doc == null || !textDocument.Uri.AbsolutePath.EndsWith(".dsc"))
+            {
+                return null;
+            }
+            int offset = doc.OffsetAt(position);
+            string content = doc.Content;
+            if (offset == content.Length + 1)
+            {
+                offset -= 2;
+            }
+            if (offset < 0 || offset >= content.Length)
+            {
+                return null;
+            }
+            int startOfLine = content.LastIndexOf('\n', offset - 1) + 1;
+            if (startOfLine == 0 || (offset - 1) < startOfLine)
+            {
+                return null;
+            }
+            int endOfLine = content.IndexOf('\n', offset);
+            if (endOfLine == -1)
+            {
+                endOfLine = content.Length;
+            }
+            string relevantLine = content[startOfLine..endOfLine];
+            if (relevantLine == null)
+            {
+                return null;
+            }
+            LanguageServer.VsCode.Contracts.Range range(int start, int end)
+            {
+                return new LanguageServer.VsCode.Contracts.Range(position.Line, start, position.Line, end);
+            }
+            string link(MetaObject obj)
+            {
+                return $"[Click To Open Denizen Meta Documentation: {obj.Type.WebPath} {obj.Name}](https://" + $"meta.denizenscript.com/Docs/{obj.Type.WebPath}/{obj.CleanName})";
+            }
+            string trimmed = relevantLine.TrimStart();
+            if (trimmed.StartsWith("- "))
+            {
+                string commandText = trimmed[2..];
+                int dashPos = relevantLine.IndexOf('-');
+                string commandName = commandText.Before(' ');
+                if (position.Character > dashPos && position.Character <= dashPos + 2 + commandName.Length)
+                {
+                    if (MetaDocs.CurrentMeta.Commands.TryGetValue(commandName.ToLowerFast(), out MetaCommand command))
+                    {
+                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Command {command.Name}\n{DescriptionClean(command.Short)}\n```xml\n- {command.Syntax}\n```\n{link(command)}\n\n{DescriptionClean(command.Description)}"), range(dashPos, dashPos + commandName.Length + 2));
+                    }
+                }
+            }
             return null;
+        }
+
+        public static string DescriptionClean(string input)
+        {
+            if (input.Length > 800)
+            {
+                input = input.Substring(0, 750) + "...";
+            }
+            input = input.Replace('`', '\'').Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+            return input;
         }
 
         [JsonRpcMethod]

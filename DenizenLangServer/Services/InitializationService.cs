@@ -19,8 +19,8 @@ namespace DenizenLangServer.Services
             SpecialTools.Internationalize();
             return new InitializeResult(new ServerCapabilities
             {
-                HoverProvider = new HoverOptions(),
-                SignatureHelpProvider = new SignatureHelpOptions("()"),
+                HoverProvider = new HoverOptions() { WorkDoneProgress = false },
+                SignatureHelpProvider = new SignatureHelpOptions(""),
                 CompletionProvider = new CompletionOptions(true, " ."),
                 TextDocumentSync = new TextDocumentSyncOptions
                 {
