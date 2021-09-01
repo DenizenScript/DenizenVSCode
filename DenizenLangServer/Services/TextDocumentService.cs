@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using FreneticUtilities.FreneticExtensions;
 using JsonRpc.Contracts;
 using JsonRpc.Server;
@@ -14,6 +15,7 @@ using LanguageServer.VsCode.Server;
 using Newtonsoft.Json.Linq;
 using SharpDenizenTools.MetaHandlers;
 using SharpDenizenTools.MetaObjects;
+using SharpDenizenTools.ScriptAnalysis;
 
 namespace DenizenLangServer.Services
 {
@@ -49,6 +51,10 @@ namespace DenizenLangServer.Services
             {
                 endOfLine = content.Length;
             }
+            else
+            {
+                endOfLine--;
+            }
             string relevantLine = content[startOfLine..endOfLine];
             if (relevantLine == null)
             {
@@ -60,7 +66,7 @@ namespace DenizenLangServer.Services
             }
             string link(MetaObject obj)
             {
-                return $"[Click To Open Denizen Meta Documentation: {obj.Type.WebPath} {DescriptionClean(obj.Name)}](https://" + $"meta.denizenscript.com/Docs/{obj.Type.WebPath}/{obj.CleanName})";
+                return $"[Meta Docs: {obj.Type.WebPath} {DescriptionClean(obj.Name)}](https://" + $"meta.denizenscript.com/Docs/{obj.Type.WebPath}/{HttpUtility.UrlEncode(obj.CleanName)})";
             }
             string trimmed = relevantLine.TrimStart();
             int spaces = relevantLine.Length - trimmed.Length;
@@ -72,9 +78,10 @@ namespace DenizenLangServer.Services
                 {
                     if (MetaDocs.CurrentMeta.Commands.TryGetValue(commandName.ToLowerFast(), out MetaCommand command))
                     {
-                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Command {command.Name}\n{DescriptionClean(command.Short)}\n```xml\n- {command.Syntax}\n```\n{link(command)}\n\n{DescriptionClean(command.Description)}"), range(spaces, spaces + commandName.Length + 2));
+                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Command {command.Name}\n{DescriptionClean(command.Short)}\n```xml\n- {command.Syntax}\n```\n{link(command)}\n\n{DescriptionClean(command.Description)}{ObligatoryText(command)}"), range(spaces, spaces + commandName.Length + 2));
                     }
                 }
+                // TODO: Mechanisms
             }
             if (trimmed.StartsWith("-") || trimmed.Contains(":"))
             {
@@ -167,7 +174,7 @@ namespace DenizenLangServer.Services
                                     {
                                         MetaTag tag = part.PossibleTags[0];
                                         int startIndex = spaces + argStart + relevantTagStart;
-                                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Tag {DescriptionClean(tag.Name)}\n{link(tag)}\n\nReturns: {tag.Returns}\n{DescriptionClean(tag.Description)}"), range(startIndex + part.StartChar, startIndex + part.EndChar + 1));
+                                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Tag {DescriptionClean(tag.Name)}\n{link(tag)}\n\nReturns: {tag.Returns}\n\n{DescriptionClean(tag.Description)}{ObligatoryText(tag)}"), range(startIndex + part.StartChar, startIndex + part.EndChar + 1));
                                     }
                                 }
                             }
@@ -175,7 +182,99 @@ namespace DenizenLangServer.Services
                     }
                 }
             }
+            if (trimmed.EndsWith(":") && (trimmed.StartsWith("on ") || trimmed.StartsWith("after ")))
+            {
+                bool isAction = false;
+                if (trimmed.StartsWith("on "))
+                {
+                    int assignIndex = doc.Content.LastIndexOf("type: assignment", offset);
+                    if (assignIndex != -1)
+                    {
+                        int worldIndex = doc.Content.LastIndexOf("type: world", offset);
+                        isAction = assignIndex > worldIndex;
+                    }
+                }
+                if (isAction)
+                {
+                    string actionName = trimmed.BeforeLast(":");
+                    if (!MetaDocs.CurrentMeta.Actions.TryGetValue(actionName, out MetaAction action))
+                    {
+                        foreach (MetaAction possibleAction in MetaDocs.CurrentMeta.Actions.Values)
+                        {
+                            if (possibleAction.RegexMatcher.IsMatch(actionName))
+                            {
+                                action = possibleAction;
+                                break;
+                            }
+                        }
+                    }
+                    if (action != null)
+                    {
+                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Action {DescriptionClean(action.Name)}\n\n{link(action)}\n\nTriggers: {DescriptionClean(action.Triggers)}\n\nContexts: {DescriptionClean(string.Join("\n- ", action.Context))}{ObligatoryText(action)}"), range(spaces, spaces + actionName.Length + 1));
+                    }
+                }
+                else // is World
+                {
+                    string eventName = trimmed.BeforeLast(":");
+                    if (eventName.StartsWith("after "))
+                    {
+                        eventName = "on " + eventName["after ".Length..];
+                    }
+                    eventName = ScriptChecker.SeparateSwitches(eventName, out List<KeyValuePair<string, string>> switches);
+                    if (!MetaDocs.CurrentMeta.Events.TryGetValue(eventName, out MetaEvent realEvt))
+                    {
+                        int matchQuality = 0;
+                        foreach (MetaEvent evt in MetaDocs.CurrentMeta.Events.Values)
+                        {
+                            int potentialMatch = 0;
+                            if (evt.RegexMatcher.IsMatch(eventName))
+                            {
+                                potentialMatch = 1;
+                                if (evt.MultiNames.Any(name => ScriptChecker.AlphabetMatcher.TrimToMatches(name).Contains(eventName)))
+                                {
+                                    potentialMatch++;
+                                }
+                                if (switches.All(s => evt.IsValidSwitch(s.Key)))
+                                {
+                                    potentialMatch++;
+                                }
+                            }
+                            if (potentialMatch > matchQuality)
+                            {
+                                matchQuality = potentialMatch;
+                                realEvt = evt;
+                                if (matchQuality == 3)
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (realEvt != null)
+                    {
+                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Event {DescriptionClean(realEvt.Name)}\n{link(realEvt)}\n\nTriggers: {DescriptionClean(realEvt.Triggers)}\n\nContexts: {DescriptionClean(string.Join("\n- ", realEvt.Context))}{ObligatoryText(realEvt)}"), range(spaces, spaces + trimmed.Length));
+                    }
+                }
+            }
             return null;
+        }
+
+        public static string ObligatoryText(MetaObject obj)
+        {
+            string result = "\n\n";
+            if (!string.IsNullOrWhiteSpace(obj.Plugin))
+            {
+                result += $"Required plugin(s) or platform(s): {DescriptionClean(obj.Plugin)}\n\n";
+            }
+            if (!string.IsNullOrWhiteSpace(obj.Deprecated))
+            {
+                result += $"Deprecation notice: {DescriptionClean(obj.Deprecated)}\n\n";
+            }
+            if (obj.Warnings != null && obj.Warnings.Any())
+            {
+                result += "### WARNING\n" + DescriptionClean(string.Join("\n- ", obj.Warnings));
+            }
+            return result;
         }
 
         public static string DescriptionClean(string input)
