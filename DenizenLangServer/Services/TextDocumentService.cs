@@ -56,10 +56,27 @@ namespace DenizenLangServer.Services
                 endOfLine--;
             }
             string relevantLine = content[startOfLine..endOfLine];
-            if (relevantLine == null)
+            if (position.Character < 0 || position.Character >= relevantLine.Length)
             {
                 return null;
             }
+            if (string.IsNullOrWhiteSpace(relevantLine))
+            {
+                return null;
+            }
+            try
+            {
+                return GetHoverAt(doc, offset, relevantLine, position);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Exception processing hover input for '{relevantLine}' at {position.Character}: {ex}");
+                return null;
+            }
+        }
+
+        public Hover GetHoverAt(TextDocument doc, int offset, string relevantLine, Position position)
+        {
             LanguageServer.VsCode.Contracts.Range range(int start, int end)
             {
                 return new LanguageServer.VsCode.Contracts.Range(position.Line, start, position.Line, end);
