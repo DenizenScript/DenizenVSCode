@@ -25,6 +25,10 @@ namespace DenizenLangServer.Services
         [JsonRpcMethod]
         public Hover Hover(TextDocumentIdentifier textDocument, Position position, CancellationToken ct)
         {
+            if (!ClientConfiguration.DoHoverDocs)
+            {
+                return null;
+            }
             // TODO: All this code is a dirty "it works" vertical slice mess that needs to be cleaned up
             TextDocument doc = GetDocument(textDocument);
             if (doc == null || !textDocument.Uri.AbsolutePath.EndsWith(".dsc"))
@@ -60,7 +64,7 @@ namespace DenizenLangServer.Services
             {
                 return null;
             }
-            if (string.IsNullOrWhiteSpace(relevantLine))
+            if (string.IsNullOrWhiteSpace(relevantLine) || relevantLine[position.Character] == ' ')
             {
                 return null;
             }
@@ -415,6 +419,10 @@ namespace DenizenLangServer.Services
 
         public CompletionList GetCompletionsFor(TextDocumentIdentifier textDocument, Position position, Dictionary<string, object> context)
         {
+            if (!ClientConfiguration.DoTabCompletes)
+            {
+                return null;
+            }
             TextDocument doc = GetDocument(textDocument);
             if (doc == null || !textDocument.Uri.AbsolutePath.EndsWith(".dsc"))
             {

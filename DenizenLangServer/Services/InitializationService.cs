@@ -27,7 +27,7 @@ namespace DenizenLangServer.Services
                     OpenClose = true,
                     WillSave = true,
                     Change = TextDocumentSyncKind.Incremental
-                },
+                }
             });
         }
 

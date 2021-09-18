@@ -31,7 +31,7 @@ function activateLanguageServer(context: vscode.ExtensionContext, dotnetPath : s
     let clientOptions: languageClient.LanguageClientOptions = {
         documentSelector: ["denizenscript"],
         synchronize: {
-            configurationSection: "DenizenLangServer",
+            configurationSection: "denizenscript",
         },
     }
     let client = new languageClient.LanguageClient("DenizenLangServer", "Denizen Language Server", serverOptions, clientOptions);
