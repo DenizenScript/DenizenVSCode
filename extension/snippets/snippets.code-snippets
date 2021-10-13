@@ -1,0 +1,273 @@
+{
+  "Item Script": {
+    "prefix": "item",
+    "body": [
+      "${1:item}:",
+      "  type: item",
+      "  material: ${2:stick}",
+      "  display name: ${3:Stick}"
+    ],
+    "description": "An item script."
+  },
+  "Item Script with Shaped Recipe": {
+    "prefix": "item-craft",
+    "body": [
+      "${1:item}:",
+      "  type: item",
+      "  material: ${2:stick}",
+      "  display name: ${3:Stick}",
+      "  recipes:",
+      "    1:",
+      "      type: shaped",
+      "      input:",
+      "      - ${4:air}|${5:air}|${6:air}",
+      "      - ${7:air}|${8:air}|${9:air}",
+      "      - ${10:air}|${11:air}|${12:air}"
+    ],
+    "description": "An item script with an empty shaped recipe."
+  },
+  "Task Script": {
+    "prefix": "task",
+    "body": [
+      "${1:task}:",
+      "  type: task",
+      "  script:",
+      "  - narrate \"${0:Hello, world!}\""
+    ],
+    "description": "An empty task script."
+  },
+  "Task Script with Definitions": {
+    "prefix": "task-def",
+    "body": [
+      "${1:task}:",
+      "  type: task",
+      "  definitions: ${2:def}",
+      "  script:",
+      "  - narrate \"${0:Hello, world!}\""
+    ],
+    "description": "An empty task script with definitions."
+  },
+  "Procedure Script": {
+    "prefix": "proc",
+    "body": [
+      "${1:proc}:",
+      "  type: procedure",
+      "  script:",
+      "  - determine ${0:true}"
+    ],
+    "description": "An empty procedure script."
+  },
+  "Procedure Script with Definitions": {
+    "prefix": "proc-def",
+    "body": [
+      "${1:proc}:",
+      "  type: procedure",
+      "  definitions: ${2:def}",
+      "  script:",
+      "  - determine ${0:true}"
+    ],
+    "description": "An empty procedure script with definitions."
+  },
+  "Data Script": {
+    "prefix": "data",
+    "body": [
+      "${1:data}:",
+      "  type: data",
+      "  ${2:key}: ${3:value}"
+    ],
+    "description": "A data script."
+  },
+  "Inventory Script": {
+    "prefix": "inventory",
+    "body": [
+      "${1:inventory}:",
+      "  type: inventory",
+      "  inventory: ${2|chest,brewing,dispenser,enchanting,ender_chest,hopper,workbench|}",
+      "  slots:",
+      "  - [] [] [] [] [] [] [] [] []",
+      "  - [] [] [] [] [] [] [] [] []",
+      "  - [] [] [] [] [] [] [] [] []"
+    ],
+    "description": "An empty inventory script."
+  },
+  "GUI Inventory Script": {
+    "prefix": "inventory-gui",
+    "body": [
+      "${1:inventory}:",
+      "  type: inventory",
+      "  inventory: ${2|chest,brewing,dispenser,enchanting,ender_chest,hopper,workbench|}",
+      "  gui: true",
+      "  definitions:",
+      "    ${3:name}: ${4:item}",
+      "  procedural items:",
+      "  - define result <list>",
+      "  # Add some logic!",
+      "  - determine <[result]>",
+      "  slots:",
+      "  - [] [] [] [] [] [] [] [] []",
+      "  - [] [] [] [] [] [] [] [] []",
+      "  - [] [] [] [] [] [] [] [] []"
+    ],
+    "description": "A GUI inventory script with placeholder procedural logic."
+  },
+  "Book Script": {
+    "prefix": "book",
+    "body": [
+      "${1:book}:",
+      "  type: book",
+      "  title: ${2:Title}",
+      "  author: ${3:Author}",
+      "  text:",
+      "  - ${4:Once upon a time...}"
+    ],
+    "description": "A book script."
+  },
+  "Command Script": {
+    "prefix": "command",
+    "body": [
+      "${1:command}:",
+      "  type: command",
+      "  name: ${2:mycmd}",
+      "  description: ${3:Does something}",
+      "  usage: /mycmd <&lt>${3:arg}<&gt>",
+      "  script:",
+      "  - narrate Hello!"
+    ],
+    "description": "A command script."
+  },
+  "Custom Script": {
+    "prefix": "custom",
+    "body": [
+      "${1:custom}:",
+      "  type: custom",
+      "  ${2:field}: ${3:value}",
+      "  tags:",
+      "    ${4:tag}:",
+      "    - determine true",
+      "  mechanisms:",
+      "    ${5:mech}:",
+      "    - adjust <context.this> field:<context.value> save:new",
+      "    - determine <entry[new].result>"
+    ],
+    "description": "A custom script."
+  },
+  "Enchantment Script": {
+    "prefix": "enchantment",
+    "body": [
+      "${1:enchantment}:",
+      "  type: enchantment",
+      "  id: ${2:enchantment_id}",
+      "  slots:",
+      "  - ${3:mainhand}",
+      "  rarity: ${4|common,uncommon,rare,very_rare|}",
+      "  category: ${5|weapon,armor,armor_feet,armor_legs,armor_chest,armor_head,digger,fishing_rod,trident,breakable,bow,wearable,crossbow,vanishable|}",
+      "  full_name: ${6:Enchantment Name} <context.level>",
+      "  max_level: ${7:3}",
+      "  min_cost: <context.level>",
+      "  max_cost: <context.level.mul[1.5]>"
+    ],
+    "description": "An enchantment script." 
+  },
+  "Entity Script": {
+    "prefix": "entity",
+    "body": [
+      "${1:entity}:",
+      "  type: entity",
+      "  entity_type: ${2:type}",
+      "  ${3:mech}: ${4:value}"
+    ],
+    "description": "An empty entity script."
+  },
+  "Format Script": {
+    "prefix": "format",
+    "body": [
+      "${1:format}:",
+      "  type: format",
+      "  format: $0<text>"
+    ],
+    "description": "A format script."
+  },
+  "Map Script": {
+    "prefix": "map",
+    "body": [
+      "${1:map}:",
+      "  type: map",
+      "  objects:",
+      "    1:",
+      "      type: image",
+      "      image: ${2:image.png}",
+      "    2:",
+      "      type: cursor",
+      "      cursor: red_marker",
+      "      direction: 180",
+      "      x: 10",
+      "      y: 10"
+    ],
+    "description": "A map script with an image and a cursor."
+  },
+  "Economy Script": {
+    "prefix": "economy",
+    "body": [
+      "${1:economy}:",
+      "  type: economy",
+      "  priority: ${2|lowest,low,normal,high,highest|}",
+      "  name single: ${3:Singular}",
+      "  name plural: ${4:Plural}",
+      "  digits: ${5:2}",
+      "  format: ${6:$}<amount>",
+      "  balance: <player.flag[balance]>",
+      "  has: <player.flag[balance].is[or_more].than[<amount>]>",
+      "  withdraw:",
+      "  - flag <player> balance:-:<amount>",
+      "  deposit:",
+      "  - flag <player> balance:+:<amount>"
+    ],
+    "description": "An economy script."
+  },
+  "Main Event Script": {
+    "prefix": "main",
+    "body": [
+      "${TM_FILENAME/(.*)\\..+$/$1/}:",
+      "  type: world",
+      "  events:",
+      "    on reload scripts:",
+      "    - debug log \"Hello, world!\""
+    ],
+    "description": "A world script corresponding to the filename."
+  },
+  "Config Script": {
+    "prefix": "config",
+    "body": [
+      "${TM_FILENAME/(.*)\\..+$/$1/}_config:",
+      "  type: data",
+      "  ${1:key}: ${2:value}"
+    ],
+    "description": "A data script corresponding to the filename."
+  },
+  "dDoc Def Comment": {
+    "prefix": "#d",
+    "body": [
+      "# ${1:Script Name}",
+      "# @def {${2:type}} ${3:name}: ${4:Description}",
+    ],
+    "description": "A dDoc definition comment."
+  },
+  "dDoc Procedure Comment": {
+    "prefix": "#p",
+    "body": [
+      "# ${1:Procedure Name}",
+      "# @def {${2:type}} ${3:name}: ${4:Description}",
+      "# @determine {${5:type}} ${6:Description}",
+      "# @usage $0"
+    ],
+    "description": "A collection of dDoc comments for a procedure."
+  },
+  "dDoc Key Comment": {
+    "prefix": "#d",
+    "body": [
+      "# ${1:Script Name}",
+      "# @key {${2:type}} ${3:name}: ${4:Description}",
+    ],
+    "description": "A dDoc key comment."
+  },
+}
