@@ -151,7 +151,7 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
     }
 }
 
-const ifOperators : string[] = [ "<", ">", "<=", ">=", "==", "!=", "||", "&&", "(", ")" ];
+const ifOperators : string[] = [ "<", ">", "<=", ">=", "==", "!=", "||", "&&", "(", ")", "or", "not", "and", "in", "contains", "!in", "!contains" ];
 
 function checkIfHasTagEnd(arg : string, quoted: boolean, quoteMode: string, canQuote : boolean) : boolean {
     const len : number = arg.length;
