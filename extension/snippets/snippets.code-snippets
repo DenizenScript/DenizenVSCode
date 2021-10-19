@@ -3,9 +3,9 @@
     "prefix": "item",
     "body": [
       "${1:my_item}:",
-      "  type: item",
-      "  material: ${2:stick}",
-      "  display name: ${3:Stick}"
+      "\ttype: item",
+      "\tmaterial: ${2:stick}",
+      "\tdisplay name: ${3:Stick}"
     ],
     "description": "An item script."
   },
@@ -13,16 +13,16 @@
     "prefix": "item-craft",
     "body": [
       "${1:my_item}:",
-      "  type: item",
-      "  material: ${2:stick}",
-      "  display name: ${3:Stick}",
-      "  recipes:",
-      "    1:",
-      "      type: shaped",
-      "      input:",
-      "      - ${4:air}|${5:air}|${6:air}",
-      "      - ${7:air}|${8:air}|${9:air}",
-      "      - ${10:air}|${11:air}|${12:air}"
+      "\ttype: item",
+      "\tmaterial: ${2:stick}",
+      "\tdisplay name: ${3:Stick}",
+      "\trecipes:",
+      "\t\t1:",
+      "\t\t\ttype: shaped",
+      "\t\t\tinput:",
+      "\t\t\t- ${4:air}|${5:air}|${6:air}",
+      "\t\t\t- ${7:air}|${8:air}|${9:air}",
+      "\t\t\t- ${10:air}|${11:air}|${12:air}"
     ],
     "description": "An item script with an empty shaped recipe."
   },
@@ -30,9 +30,9 @@
     "prefix": "task",
     "body": [
       "${1:my_task}:",
-      "  type: task",
-      "  script:",
-      "  - ${2:narrate \"Hello, world!\"}"
+      "\ttype: task",
+      "\tscript:",
+      "\t- ${2:narrate \"Hello, world!\"}"
     ],
     "description": "An empty task script."
   },
@@ -40,10 +40,10 @@
     "prefix": "task-def",
     "body": [
       "${1:my_task}:",
-      "  type: task",
-      "  definitions: ${2:def}",
-      "  script:",
-      "  - ${3:narrate \"Hello, world!\"}"
+      "\ttype: task",
+      "\tdefinitions: ${2:def}",
+      "\tscript:",
+      "\t- ${3:narrate \"Hello, world!\"}"
     ],
     "description": "An empty task script with definitions."
   },
@@ -51,9 +51,9 @@
     "prefix": "proc",
     "body": [
       "${1:my_proc}:",
-      "  type: procedure",
-      "  script:",
-      "  - ${2:determine true}"
+      "\ttype: procedure",
+      "\tscript:",
+      "\t- ${2:determine true}"
     ],
     "description": "An empty procedure script."
   },
@@ -61,10 +61,10 @@
     "prefix": "proc-def",
     "body": [
       "${1:my_proc}:",
-      "  type: procedure",
-      "  definitions: ${2:def}",
-      "  script:",
-      "  - ${3:determine true}"
+      "\ttype: procedure",
+      "\tdefinitions: ${2:def}",
+      "\tscript:",
+      "\t- ${3:determine true}"
     ],
     "description": "An empty procedure script with definitions."
   },
@@ -72,8 +72,8 @@
     "prefix": "data",
     "body": [
       "${1:my_data}:",
-      "  type: data",
-      "  ${2:key}: ${3:value}"
+      "\ttype: data",
+      "\t${2:key}: ${3:value}"
     ],
     "description": "A data script."
   },
@@ -81,12 +81,12 @@
     "prefix": "inventory",
     "body": [
       "${1:my_inventory}:",
-      "  type: inventory",
-      "  inventory: ${2|chest,brewing,dispenser,enchanting,ender_chest,hopper,workbench|}",
-      "  slots:",
-      "  - [] [] [] [] [] [] [] [] []",
-      "  - [] [] [] [] [] [] [] [] []",
-      "  - [] [] [] [] [] [] [] [] []"
+      "\ttype: inventory",
+      "\tinventory: ${2|chest,brewing,dispenser,enchanting,ender_chest,hopper,workbench|}",
+      "\tslots:",
+      "\t- [] [] [] [] [] [] [] [] []",
+      "\t- [] [] [] [] [] [] [] [] []",
+      "\t- [] [] [] [] [] [] [] [] []"
     ],
     "description": "An empty inventory script."
   },
@@ -94,19 +94,19 @@
     "prefix": "inventory-gui",
     "body": [
       "${1:my_inventory}:",
-      "  type: inventory",
-      "  inventory: ${2|chest,brewing,dispenser,enchanting,ender_chest,hopper,workbench|}",
-      "  gui: true",
-      "  definitions:",
-      "    ${3:name}: ${4:item}",
-      "  procedural items:",
-      "  - define result <list>",
-      "  # Add some logic!",
-      "  - determine <[result]>",
-      "  slots:",
-      "  - [] [] [] [] [] [] [] [] []",
-      "  - [] [] [] [] [] [] [] [] []",
-      "  - [] [] [] [] [] [] [] [] []"
+      "\ttype: inventory",
+      "\tinventory: ${2|chest,brewing,dispenser,enchanting,ender_chest,hopper,workbench|}",
+      "\tgui: true",
+      "\tdefinitions:",
+      "\t  ${3:name}: ${4:item}",
+      "\tprocedural items:",
+      "\t- define result <list>",
+      "\t# Add some logic!",
+      "\t- determine <[result]>",
+      "\tslots:",
+      "\t- [] [] [] [] [] [] [] [] []",
+      "\t- [] [] [] [] [] [] [] [] []",
+      "\t- [] [] [] [] [] [] [] [] []"
     ],
     "description": "A GUI inventory script with placeholder procedural logic."
   },
@@ -114,11 +114,11 @@
     "prefix": "book",
     "body": [
       "${1:my_book}:",
-      "  type: book",
-      "  title: ${2:Title}",
-      "  author: ${3:Author}",
-      "  text:",
-      "  - ${4:Once upon a time...}"
+      "\ttype: book",
+      "\ttitle: ${2:Title}",
+      "\tauthor: ${3:Author}",
+      "\ttext:",
+      "\t- ${4:Once upon a time...}"
     ],
     "description": "A book script."
   },
@@ -126,12 +126,12 @@
     "prefix": "command",
     "body": [
       "${1:my_command}:",
-      "  type: command",
-      "  name: ${2:mycmd}",
-      "  description: ${3:Does something}",
-      "  usage: /mycmd <&lt>${4:arg}<&gt>",
-      "  script:",
-      "  - ${5:narrate Hello!}"
+      "\ttype: command",
+      "\tname: ${2:mycmd}",
+      "\tdescription: ${3:Does something}",
+      "\tusage: /mycmd <&lt>${4:arg}<&gt>",
+      "\tscript:",
+      "\t- ${5:narrate Hello!}"
     ],
     "description": "A command script."
   },
@@ -139,16 +139,16 @@
     "prefix": "enchantment",
     "body": [
       "${1:my_enchantment}:",
-      "  type: enchantment",
-      "  id: ${2:enchantment_id}",
-      "  slots:",
-      "  - ${3:mainhand}",
-      "  rarity: ${4|common,uncommon,rare,very_rare|}",
-      "  category: ${5|weapon,armor,armor_feet,armor_legs,armor_chest,armor_head,digger,fishing_rod,trident,breakable,bow,wearable,crossbow,vanishable|}",
-      "  full_name: ${6:Enchantment Name} <context.level>",
-      "  max_level: ${7:3}",
-      "  min_cost: <context.level>",
-      "  max_cost: <context.level.mul[1.5]>"
+      "\ttype: enchantment",
+      "\tid: ${2:enchantment_id}",
+      "\tslots:",
+      "\t- ${3:mainhand}",
+      "\trarity: ${4|common,uncommon,rare,very_rare|}",
+      "\tcategory: ${5|weapon,armor,armor_feet,armor_legs,armor_chest,armor_head,digger,fishing_rod,trident,breakable,bow,wearable,crossbow,vanishable|}",
+      "\tfull_name: ${6:Enchantment Name} <context.level>",
+      "\tmax_level: ${7:3}",
+      "\tmin_cost: <context.level>",
+      "\tmax_cost: <context.level.mul[1.5]>"
     ],
     "description": "An enchantment script." 
   },
@@ -156,9 +156,9 @@
     "prefix": "entity",
     "body": [
       "${1:my_entity}:",
-      "  type: entity",
-      "  entity_type: ${2:type}",
-      "  ${3:mech}: ${4:value}"
+      "\ttype: entity",
+      "\tentity_type: ${2:type}",
+      "\t${3:mech}: ${4:value}"
     ],
     "description": "An empty entity script."
   },
@@ -166,8 +166,8 @@
     "prefix": "format",
     "body": [
       "${1:my_format}:",
-      "  type: format",
-      "  format: $0<text>"
+      "\ttype: format",
+      "\tformat: $0<text>"
     ],
     "description": "A format script."
   },
@@ -175,17 +175,17 @@
     "prefix": "map",
     "body": [
       "${1:my_map}:",
-      "  type: map",
-      "  objects:",
-      "    1:",
-      "      type: image",
-      "      image: ${2:image.png}",
-      "    2:",
-      "      type: cursor",
-      "      cursor: red_marker",
-      "      direction: 180",
-      "      x: 10",
-      "      y: 10"
+      "\ttype: map",
+      "\tobjects:",
+      "\t\t1:",
+      "\t\t\ttype: image",
+      "\t\t\timage: ${2:image.png}",
+      "\t\t2:",
+      "\t\t\ttype: cursor",
+      "\t\t\tcursor: red_marker",
+      "\t\t\tdirection: 180",
+      "\t\t\tx: 10",
+      "\t\t\ty: 10"
     ],
     "description": "A map script with an image and a cursor."
   },
@@ -193,19 +193,30 @@
     "prefix": "economy",
     "body": [
       "${1:my_economy}:",
-      "  type: economy",
-      "  priority: ${2|lowest,low,normal,high,highest|}",
-      "  name single: ${3:Dollar}",
-      "  name plural: ${4:Dollars}",
-      "  digits: ${5:2}",
-      "  format: ${6:$}<amount>",
-      "  balance: <player.flag[balance]>",
-      "  has: <player.flag[balance].is[or_more].than[<amount>]>",
-      "  withdraw:",
-      "  - flag <player> balance:-:<amount>",
-      "  deposit:",
-      "  - flag <player> balance:+:<amount>"
+      "\ttype: economy",
+      "\tpriority: ${2|lowest,low,normal,high,highest|}",
+      "\tname single: ${3:Dollar}",
+      "\tname plural: ${4:Dollars}",
+      "\tdigits: ${5:2}",
+      "\tformat: ${6:$}<amount>",
+      "\tbalance: <player.flag[balance]>",
+      "\thas: <player.flag[balance].is[or_more].than[<amount>]>",
+      "\twithdraw:",
+      "\t- flag <player> balance:-:<amount>",
+      "\tdeposit:",
+      "\t- flag <player> balance:+:<amount>"
     ],
     "description": "An economy script."
-  }
+  },
+  "World Script": {
+    "prefix": "world",
+    "body": [
+      "${1:my_world}:",
+      "\ttype: world",
+      "\tevents:",
+      "\t\tafter ${2:player breaks block}:",
+      "\t\t- ${3:narrate \"Nice <context.material>\"}"
+    ],
+    "description": "A world script."
+  },
 }
