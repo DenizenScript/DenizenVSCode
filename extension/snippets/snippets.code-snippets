@@ -1,6 +1,6 @@
 {
   "Item Script": {
-    "prefix": "item",
+    "prefix": "snipitem",
     "body": [
       "${1:my_item}:",
       "\ttype: item",
@@ -10,7 +10,7 @@
     "description": "An item script."
   },
   "Item Script with Shaped Recipe": {
-    "prefix": "item-craft",
+    "prefix": "snipitem_craft",
     "body": [
       "${1:my_item}:",
       "\ttype: item",
@@ -27,7 +27,7 @@
     "description": "An item script with an empty shaped recipe."
   },
   "Task Script": {
-    "prefix": "task",
+    "prefix": "sniptask",
     "body": [
       "${1:my_task}:",
       "\ttype: task",
@@ -37,7 +37,7 @@
     "description": "An empty task script."
   },
   "Task Script with Definitions": {
-    "prefix": "task-def",
+    "prefix": "sniptask_def",
     "body": [
       "${1:my_task}:",
       "\ttype: task",
@@ -48,7 +48,7 @@
     "description": "An empty task script with definitions."
   },
   "Procedure Script": {
-    "prefix": "proc",
+    "prefix": "snipproc",
     "body": [
       "${1:my_proc}:",
       "\ttype: procedure",
@@ -58,7 +58,7 @@
     "description": "An empty procedure script."
   },
   "Procedure Script with Definitions": {
-    "prefix": "proc-def",
+    "prefix": "snipproc_def",
     "body": [
       "${1:my_proc}:",
       "\ttype: procedure",
@@ -69,7 +69,7 @@
     "description": "An empty procedure script with definitions."
   },
   "Data Script": {
-    "prefix": "data",
+    "prefix": "snipdata",
     "body": [
       "${1:my_data}:",
       "\ttype: data",
@@ -78,7 +78,7 @@
     "description": "A data script."
   },
   "Inventory Script": {
-    "prefix": "inventory",
+    "prefix": "snipinventory",
     "body": [
       "${1:my_inventory}:",
       "\ttype: inventory",
@@ -91,7 +91,7 @@
     "description": "An empty inventory script."
   },
   "GUI Inventory Script": {
-    "prefix": "inventory-gui",
+    "prefix": "snipinventory_gui",
     "body": [
       "${1:my_inventory}:",
       "\ttype: inventory",
@@ -111,7 +111,7 @@
     "description": "A GUI inventory script with placeholder procedural logic."
   },
   "Book Script": {
-    "prefix": "book",
+    "prefix": "snipbook",
     "body": [
       "${1:my_book}:",
       "\ttype: book",
@@ -123,7 +123,7 @@
     "description": "A book script."
   },
   "Command Script": {
-    "prefix": "command",
+    "prefix": "snipcommand",
     "body": [
       "${1:my_command}:",
       "\ttype: command",
@@ -136,7 +136,7 @@
     "description": "A command script."
   },
   "Enchantment Script": {
-    "prefix": "enchantment",
+    "prefix": "snipenchantment",
     "body": [
       "${1:my_enchantment}:",
       "\ttype: enchantment",
@@ -153,7 +153,7 @@
     "description": "An enchantment script." 
   },
   "Entity Script": {
-    "prefix": "entity",
+    "prefix": "snipentity",
     "body": [
       "${1:my_entity}:",
       "\ttype: entity",
@@ -164,7 +164,7 @@
     "description": "An empty entity script."
   },
   "Format Script": {
-    "prefix": "format",
+    "prefix": "snipformat",
     "body": [
       "${1:my_format}:",
       "\ttype: format",
@@ -173,7 +173,7 @@
     "description": "A format script."
   },
   "Map Script": {
-    "prefix": "map",
+    "prefix": "snipmap",
     "body": [
       "${1:my_map}:",
       "\ttype: map",
@@ -191,7 +191,7 @@
     "description": "A map script with an image and a cursor."
   },
   "Economy Script": {
-    "prefix": "economy",
+    "prefix": "snipeconomy",
     "body": [
       "${1:my_economy}:",
       "\ttype: economy",
@@ -210,7 +210,7 @@
     "description": "An economy script."
   },
   "World Script": {
-    "prefix": "world",
+    "prefix": "snipworld",
     "body": [
       "${1:my_world}:",
       "\ttype: world",
