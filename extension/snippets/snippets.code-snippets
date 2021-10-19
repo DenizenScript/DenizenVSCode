@@ -158,7 +158,8 @@
       "${1:my_entity}:",
       "\ttype: entity",
       "\tentity_type: ${2:type}",
-      "\t${3:mech}: ${4:value}"
+      "\tmechanisms:",
+      "\t\t${3:mech}: ${4:value}"
     ],
     "description": "An empty entity script."
   },
