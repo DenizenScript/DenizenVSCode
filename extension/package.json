@@ -143,12 +143,6 @@
             "vscode:prepublish": "npm run compile",
             "compile": "tsc -p ./ --skipLibCheck"
         },
-        "snippets": [
-            {
-                "language": "denizenscript",
-                "path": "./snippets/snippets.code-snippets"
-            }
-        ],
         "devDependencies": {
             "@types/node": "^8.10.25",
             "typescript": "^2.6.1"
