@@ -434,7 +434,7 @@ namespace DenizenLangServer.Services
             {
                 offset -= 2;
             }
-            if (offset < 0 || offset >= content.Length)
+            if (offset < 0 || offset > content.Length)
             {
                 return new CompletionList(EmptyCompletionItems);
             }
@@ -443,8 +443,20 @@ namespace DenizenLangServer.Services
             {
                 return new CompletionList(EmptyCompletionItems);
             }
-            string relevantLine = content[startOfLine..(offset - 1)];
+            string relevantLine = content[startOfLine..offset];
+            if (relevantLine.EndsWithFast('\n') || relevantLine.EndsWithFast('\r'))
+            {
+                relevantLine = relevantLine[..^1];
+            }
             string trimmed = relevantLine.TrimStart();
+            if (!relevantLine.Contains(' '))
+            {
+                CompletionItem[] results = SnippetHelper.GetSnippetsFor(trimmed.TrimEnd(), Token);
+                if (results is not null && results.Any())
+                {
+                    return new CompletionList(results);
+                }
+            }
             if (trimmed.StartsWith("- "))
             {
                 string afterDash = trimmed[2..];

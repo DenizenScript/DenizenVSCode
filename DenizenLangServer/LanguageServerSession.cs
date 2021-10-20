@@ -52,21 +52,12 @@ namespace DenizenLangServer
 
     public class SessionDocument
     {
-        /// <summary>
-        /// Actually makes the changes to the inner document per this milliseconds.
-        /// </summary>
-        private const int RenderChangesDelay = 100;
-
         public SessionDocument(TextDocumentItem doc)
         {
             Document = TextDocument.Load<FullTextDocument>(doc);
         }
 
-        private Task updateChangesDelayTask;
-
         private readonly object syncLock = new object();
-
-        private List<TextDocumentContentChangeEvent> impendingChanges = new List<TextDocumentContentChangeEvent>();
 
         public event EventHandler DocumentChanged;
 
@@ -76,42 +67,7 @@ namespace DenizenLangServer
         {
             lock (syncLock)
             {
-                if (impendingChanges == null)
-                {
-                    impendingChanges = changes.ToList();
-                }
-                else
-                {
-                    impendingChanges.AddRange(changes);
-                }
-            }
-            if (updateChangesDelayTask == null || updateChangesDelayTask.IsCompleted)
-            {
-                updateChangesDelayTask = Task.Delay(RenderChangesDelay);
-                updateChangesDelayTask.ContinueWith(t => Task.Run((Action)MakeChanges));
-            }
-        }
-
-        private void MakeChanges()
-        {
-            List<TextDocumentContentChangeEvent> localChanges;
-            lock (syncLock)
-            {
-                localChanges = impendingChanges;
-                if (localChanges == null || localChanges.Count == 0)
-                {
-                    return;
-                }
-                impendingChanges = null;
-            }
-            Document = Document.ApplyChanges(localChanges);
-            localChanges.Clear();
-            lock (syncLock)
-            {
-                if (impendingChanges == null)
-                {
-                    impendingChanges = localChanges;
-                }
+                Document = Document.ApplyChanges(changes.ToList());
             }
             OnDocumentChanged();
         }
