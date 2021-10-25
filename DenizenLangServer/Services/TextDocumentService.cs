@@ -460,7 +460,7 @@ namespace DenizenLangServer.Services
             if (trimmed.StartsWith("- "))
             {
                 string afterDash = trimmed[2..];
-                if (!afterDash.Contains(" "))
+                if (!afterDash.Contains(' '))
                 {
                     string possibleCmd = afterDash.ToLowerFast();
                     CompletionItem[] results = MetaDocs.CurrentMeta.Commands.Where(c => c.Key.StartsWith(possibleCmd))
@@ -509,7 +509,7 @@ namespace DenizenLangServer.Services
                     }
                 }
             }
-            if (trimmed.Contains(":") && !trimmed.Contains("<"))
+            if (trimmed.Contains(':') && !trimmed.Contains('<'))
             {
                 string prefix = trimmed.BeforeAndAfter(':', out string val);
                 if (LinePrefixCompleters.TryGetValue(prefix.ToLowerFast(), out Func<IEnumerable<string>> completer))
@@ -523,9 +523,9 @@ namespace DenizenLangServer.Services
                     }
                 }
             }
-            if (trimmed.StartsWith("-") || trimmed.Contains(":"))
+            if (trimmed.StartsWithFast('-') || trimmed.Contains(':'))
             {
-                if (trimmed.Contains("<"))
+                if (trimmed.Contains('<'))
                 {
                     int argStart = 0;
                     for (int i = 0; i < trimmed.Length; i++)
@@ -544,7 +544,7 @@ namespace DenizenLangServer.Services
                         }
                     }
                     string arg = trimmed[argStart..];
-                    if (arg.Contains("<"))
+                    if (arg.Contains('<'))
                     {
                         int tagBits = 0;
                         int relevantTagStart = -1;

@@ -230,7 +230,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 defaultDecor = "normal";
             }
             const nextArg : string = arg.includes(" ", i + 1) ? arg.substring(i + 1, arg.indexOf(" ", i + 1)) : arg.substring(i + 1);
-            if (ifOperators.includes(nextArg)) {
+            if (!quoted && canQuote && ifOperators.includes(nextArg)) {
                 addDecor(decorations, "colons", lineNumber, start + i + 1, start + i + 1 + nextArg.length);
                 i += nextArg.length;
                 lastDecor = i;
