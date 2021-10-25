@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FreneticUtilities.FreneticExtensions;
 using JsonRpc.Contracts;
 using LanguageServer.VsCode.Contracts;
 using Newtonsoft.Json.Linq;
+using SharpDenizenTools.MetaHandlers;
 
 namespace DenizenLangServer.Services
 {
@@ -24,6 +27,8 @@ namespace DenizenLangServer.Services
         public class DenizenSettings
         {
             public DenizenBehaviorSettings Behaviors { get; } = new DenizenBehaviorSettings();
+
+            public string Extra_sources { get; set; }
         }
 
         public class DenizenBehaviorSettings
@@ -36,8 +41,35 @@ namespace DenizenLangServer.Services
         [JsonRpcMethod(IsNotification = true, AllowExtensionData = true)]
         public void DidChangeConfiguration(SettingsRoot settings)
         {
-            ClientConfiguration.DoHoverDocs = settings.Denizenscript.Behaviors.Do_hover_docs;
-            ClientConfiguration.DoTabCompletes = settings.Denizenscript.Behaviors.Do_tab_completes;
+            try
+            {
+                ClientConfiguration.DoHoverDocs = settings.Denizenscript.Behaviors.Do_hover_docs;
+                ClientConfiguration.DoTabCompletes = settings.Denizenscript.Behaviors.Do_tab_completes;
+                if (ClientConfiguration.ExtraSources != settings.Denizenscript.Extra_sources)
+                {
+                    Console.Error.WriteLine($"Alternate meta sources detected, scanning...");
+                    ClientConfiguration.ExtraSources = settings.Denizenscript.Extra_sources ?? "";
+                    IEnumerable<string> newSources = ClientConfiguration.ExtraSources.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                    MetaDocsLoader.SourcesToUse = MetaDocsLoader.DENIZEN_SOURCES.JoinWith(MetaDocsLoader.DENIZEN_ADDON_SOURCES).JoinWith(newSources).Distinct().ToArray();
+                    Task.Factory.StartNew(() =>
+                    {
+                        try
+                        {
+                            Console.Error.WriteLine($"Reloading meta docs...");
+                            MetaDocs.CurrentMeta = MetaDocsLoader.DownloadAll();
+                            Console.Error.WriteLine($"Meta reloaded due to custom sources listed");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.Write($"Alternate meta source loading error: {ex}");
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to scan config change: {ex}");
+            }
         }
     }
 }

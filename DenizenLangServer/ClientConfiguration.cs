@@ -14,5 +14,7 @@ namespace DenizenLangServer
         public static bool DoHoverDocs = true;
 
         public static bool DoTabCompletes = true;
+
+        public static string ExtraSources = "";
     }
 }

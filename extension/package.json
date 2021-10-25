@@ -3,7 +3,7 @@
     "displayName": "DenizenScript",
     "description": "The Denizen scripting language.",
     "author": "mcmonkey and the DenizenScript team",
-    "version": "0.7.9",
+    "version": "0.8.0",
     "publisher": "denizenscript",
     "license": "MIT",
     "repository": "https://github.com/DenizenScript/DenizenVSCode",
@@ -136,6 +136,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Whether to suggest tab completions."
+                },
+                "denizenscript.extra_sources": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Optional list of extra meta sources (direct zip links), separated by | pipes."
                 }
             }
         },
