@@ -204,7 +204,7 @@ namespace DenizenLangServer.Services
                                 }
                             }
                             SingleTag parsed = TagHelper.Parse(fullTag, (s) => { /* Ignore errors */ });
-                            TagTracer tracer = new TagTracer() { Docs = MetaDocs.CurrentMeta, Error = (s) => { /* Ignore errors */ }, Tag = parsed };
+                            TagTracer tracer = new TagTracer() { Docs = MetaDocs.CurrentMeta, Error = (s) => { /* Ignore errors */ }, DeprecationError = (s, p) => { }, Tag = parsed };
                             tracer.Trace();
                             foreach (SingleTag.Part part in parsed.Parts)
                             {
@@ -439,7 +439,7 @@ namespace DenizenLangServer.Services
                 return new CompletionList(EmptyCompletionItems);
             }
             int startOfLine = content.LastIndexOf('\n', offset - 1) + 1;
-            if (startOfLine == 0 || (offset - 1) < startOfLine)
+            if ((offset - 1) < startOfLine)
             {
                 return new CompletionList(EmptyCompletionItems);
             }
