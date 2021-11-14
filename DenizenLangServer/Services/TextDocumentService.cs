@@ -272,11 +272,11 @@ namespace DenizenLangServer.Services
                         int matchQuality = 0;
                         foreach (MetaEvent evt in MetaDocs.CurrentMeta.Events.Values)
                         {
-                            int potentialMatch = 0;
-                            if (evt.CouldMatchers.Any(c => c.DoesMatch(parts, true, false)))
+                            int potentialMatch = evt.CouldMatchers.Select(c => c.TryMatch(parts, true, false)).Max();
+                            if (potentialMatch > 0)
                             {
-                                potentialMatch = 1;
-                                if (evt.CouldMatchers.Any(c => c.DoesMatch(parts, false, true)))
+                                potentialMatch = potentialMatch == 10 ? 2 : 1;
+                                if (evt.CouldMatchers.Any(c => c.TryMatch(parts, false, true) > 0))
                                 {
                                     potentialMatch++;
                                 }
@@ -293,7 +293,7 @@ namespace DenizenLangServer.Services
                             {
                                 matchQuality = potentialMatch;
                                 realEvt = evt;
-                                if (matchQuality == 4)
+                                if (matchQuality == 5)
                                 {
                                     break;
                                 }
@@ -660,7 +660,7 @@ namespace DenizenLangServer.Services
                     List<CompletionItem> completions = new List<CompletionItem>();
                     foreach (MetaEvent evt in MetaDocs.CurrentMeta.Events.Values)
                     {
-                        foreach (ScriptEventCouldMatcher matcher in evt.CouldMatchers.Where(c => c.DoesMatch(parts, true, false)))
+                        foreach (ScriptEventCouldMatcher matcher in evt.CouldMatchers.Where(c => c.TryMatch(parts, true, false) > 0))
                         {
                             string switchText = evt.Switches.IsEmpty() ? "" : $"\n\nSwitches:\n{string.Join('\n', evt.Switches)}";
                             string warnText = evt.Warnings.IsEmpty() ? "" : $"\nWARNING: {string.Join('\n', evt.Warnings)}\n\n";
