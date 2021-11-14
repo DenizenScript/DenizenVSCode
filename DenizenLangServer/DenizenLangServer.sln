@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29001.49
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DenizenLangServer", "DenizenLangServer.csproj", "{4FA2F4F5-7180-4DDE-A1E5-67365D69375C}"
 EndProject
@@ -28,8 +28,8 @@ Global
 		{3DB47D69-4228-4F22-1763-152292496865}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3DB47D69-4228-4F22-1763-152292496865}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3DB47D69-4228-4F22-1763-152292496865}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1DB47D6A-4225-4F25-8559-2C6292496953}.Debug|Any CPU.ActiveCfg = DebugNetCore|Any CPU
-		{1DB47D6A-4225-4F25-8559-2C6292496953}.Debug|Any CPU.Build.0 = DebugNetCore|Any CPU
+		{1DB47D6A-4225-4F25-8559-2C6292496953}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1DB47D6A-4225-4F25-8559-2C6292496953}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1DB47D6A-4225-4F25-8559-2C6292496953}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1DB47D6A-4225-4F25-8559-2C6292496953}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection

@@ -13,7 +13,10 @@ Install guide can be found [in the Guides here](https://guide.denizenscript.com/
 
 - Within `DenizenLangServer/`, build the C# language server project with `dotnet build --configuration=release`
 - Copy the output files (deepest folder under `DenizenLangServer/bin/`) to path `extension/server/`
+- You will need NodeJS and NPM: https://nodejs.org/en/
+- Within `extension/`, run `npm install` and `npm install -g typescript`
 - Within `extension/`, build the extension TypeScript files with `tsc -p ./ --skipLibCheck`
+- You can test by just hitting F5 (it helps to have the `extension.ts` file open so VS knows what you're trying to run)
 
 ### Current Features
 

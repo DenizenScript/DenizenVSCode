@@ -259,18 +259,27 @@ namespace DenizenLangServer.Services
                     string eventName = trimmed.BeforeLast(":");
                     if (eventName.StartsWith("after "))
                     {
-                        eventName = "on " + eventName["after ".Length..];
+                        eventName = eventName["after ".Length..];
                     }
-                    eventName = ScriptChecker.SeparateSwitches(eventName, out List<KeyValuePair<string, string>> switches);
+                    else if (eventName.StartsWith("on "))
+                    {
+                        eventName = eventName["on ".Length..];
+                    }
+                    eventName = EventTools.SeparateSwitches(eventName, out List<KeyValuePair<string, string>> switches);
                     if (!MetaDocs.CurrentMeta.Events.TryGetValue(eventName, out MetaEvent realEvt))
                     {
+                        string[] parts = eventName.Split(' ');
                         int matchQuality = 0;
                         foreach (MetaEvent evt in MetaDocs.CurrentMeta.Events.Values)
                         {
                             int potentialMatch = 0;
-                            if (evt.RegexMatcher.IsMatch(eventName))
+                            if (evt.CouldMatchers.Any(c => c.DoesMatch(parts, true, false)))
                             {
                                 potentialMatch = 1;
+                                if (evt.CouldMatchers.Any(c => c.DoesMatch(parts, false, true)))
+                                {
+                                    potentialMatch++;
+                                }
                                 if (evt.MultiNames.Any(name => ScriptChecker.AlphabetMatcher.TrimToMatches(name).Contains(eventName)))
                                 {
                                     potentialMatch++;
@@ -284,7 +293,7 @@ namespace DenizenLangServer.Services
                             {
                                 matchQuality = potentialMatch;
                                 realEvt = evt;
-                                if (matchQuality == 3)
+                                if (matchQuality == 4)
                                 {
                                     break;
                                 }
