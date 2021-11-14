@@ -625,6 +625,55 @@ namespace DenizenLangServer.Services
                     }
                 }
             }
+            if (trimmed.StartsWith("on ") || trimmed.StartsWith("after "))
+            {
+                bool isAction = false;
+                if (trimmed.StartsWith("on "))
+                {
+                    int assignIndex = doc.Content.LastIndexOf("type: assignment", offset);
+                    if (assignIndex != -1)
+                    {
+                        int worldIndex = doc.Content.LastIndexOf("type: world", offset);
+                        isAction = assignIndex > worldIndex;
+                    }
+                }
+                if (isAction)
+                {
+                    string actionName = trimmed;
+                    // TODO
+                }
+                else // is World
+                {
+                    string eventName = trimmed;
+                    string prefix = "on ";
+                    if (eventName.StartsWith("after "))
+                    {
+                        prefix = "after ";
+                        eventName = eventName["after ".Length..];
+                    }
+                    else if (eventName.StartsWith("on "))
+                    {
+                        eventName = eventName["on ".Length..];
+                    }
+                    eventName = EventTools.SeparateSwitches(eventName, out List<KeyValuePair<string, string>> switches);
+                    string[] parts = eventName.Split(' ');
+                    List<CompletionItem> completions = new List<CompletionItem>();
+                    foreach (MetaEvent evt in MetaDocs.CurrentMeta.Events.Values)
+                    {
+                        foreach (ScriptEventCouldMatcher matcher in evt.CouldMatchers.Where(c => c.DoesMatch(parts, true, false)))
+                        {
+                            string switchText = evt.Switches.IsEmpty() ? "" : $"\n\nSwitches:\n{string.Join('\n', evt.Switches)}";
+                            string warnText = evt.Warnings.IsEmpty() ? "" : $"\nWARNING: {string.Join('\n', evt.Warnings)}\n\n";
+                            completions.Add(new CompletionItem(matcher.Format.Replace("'", ""), CompletionItemKind.Snippet, trimmed, $"{warnText}Triggers: {evt.Triggers}{switchText}", Token)
+                            {
+                                InsertText = EventHelper.Snippetify(matcher.Format, string.IsNullOrWhiteSpace(eventName) ? 0 : parts.Length),
+                                InsertTextFormat = InsertTextFormat.Snippet
+                            });
+                        }
+                    }
+                    return new CompletionList(completions);
+                }
+            }
             // TODO: Actual completion logic for other cases (Type keys, tags, etc)
             return new CompletionList(EmptyCompletionItems);
         }
