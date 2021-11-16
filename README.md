@@ -11,7 +11,7 @@ Install guide can be found [in the Guides here](https://guide.denizenscript.com/
 
 ### Building
 
-- Within `DenizenLangServer/`, build the C# language server project with `dotnet build --configuration=release`
+- Within `DenizenLangServer/`, build the C# language server project with `dotnet build --configuration=release`, or in Visual Studio 2022.
 - Copy the output files (deepest folder under `DenizenLangServer/bin/`) to path `extension/server/`
 - You will need NodeJS and NPM: https://nodejs.org/en/
 - Within `extension/`, run `npm install` and `npm install -g typescript`

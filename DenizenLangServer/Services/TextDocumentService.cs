@@ -676,9 +676,7 @@ namespace DenizenLangServer.Services
             return new CompletionList(EmptyCompletionItems);
         }
 
-        /// <summary>
-        /// Tries to find the tag for the given part.
-        /// </summary>
+        /// <summary>Tries to find the tag for the given part.</summary>
         /// <param name="tagText">The tag part text to search for.</param>
         /// <param name="tagOut">The tag object, if the return is true. Otherwise null.</param>
         /// <returns>True if the tag is found, otherwise false.</returns>
