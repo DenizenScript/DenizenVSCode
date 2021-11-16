@@ -107,9 +107,8 @@ namespace DenizenLangServer
                     return null;
                 };
             }
-            MetaDocs.CurrentMeta = MetaDocsLoader.DownloadAll();
             ExtraData.CachePath = extraDataCache;
-            ExtraData.Load();
+            MetaDocs.CurrentMeta = MetaDocsLoader.DownloadAll();
             Console.Error.WriteLine($"Base meta and extra data loaded");
             if (needsRedownload)
             {

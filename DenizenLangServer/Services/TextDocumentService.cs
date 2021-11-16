@@ -645,10 +645,8 @@ namespace DenizenLangServer.Services
                 else // is World
                 {
                     string eventName = trimmed;
-                    string prefix = "on ";
                     if (eventName.StartsWith("after "))
                     {
-                        prefix = "after ";
                         eventName = eventName["after ".Length..];
                     }
                     else if (eventName.StartsWith("on "))
