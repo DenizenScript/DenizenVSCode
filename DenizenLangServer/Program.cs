@@ -36,7 +36,7 @@ namespace DenizenLangServer
         {
             try
             {
-                using HttpClient webClient = new HttpClient
+                using HttpClient webClient = new()
                 {
                     Timeout = new TimeSpan(0, 0, 1)
                 };
@@ -48,7 +48,7 @@ namespace DenizenLangServer
             }
         }
 
-        public static AsciiMatcher URL_ACCEPTED = new AsciiMatcher(c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'));
+        public static AsciiMatcher URL_ACCEPTED = new(c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'));
 
         static void InitMetaHelper()
         {
@@ -74,7 +74,7 @@ namespace DenizenLangServer
                             urlChars[i] = '_';
                         }
                     }
-                    string cachableName = new string(urlChars);
+                    string cachableName = new(urlChars);
                     string cacheFileName = cacheFolder + cachableName + ".zip";
                     if (!shouldIgnoreCache)
                     {
@@ -125,23 +125,23 @@ namespace DenizenLangServer
         {
             Console.Error.WriteLine("Extension starting...");
             using Stream cin = Console.OpenStandardInput();
-            using BufferedStream bcin = new BufferedStream(cin);
+            using BufferedStream bcin = new(cin);
             using Stream cout = Console.OpenStandardOutput();
-            using PartwiseStreamMessageReader reader = new PartwiseStreamMessageReader(bcin);
-            using PartwiseStreamMessageWriter writer = new PartwiseStreamMessageWriter(cout);
-            JsonRpcContractResolver contractResolver = new JsonRpcContractResolver
+            using PartwiseStreamMessageReader reader = new(bcin);
+            using PartwiseStreamMessageWriter writer = new(cout);
+            JsonRpcContractResolver contractResolver = new()
             {
                 NamingStrategy = new CamelCaseJsonRpcNamingStrategy(),
                 ParameterValueConverter = new CamelCaseJsonValueConverter()
             };
-            StreamRpcClientHandler clientHandler = new StreamRpcClientHandler();
-            JsonRpcClient client = new JsonRpcClient(clientHandler);
-            LanguageServerSession session = new LanguageServerSession(client, contractResolver);
-            JsonRpcServiceHostBuilder builder = new JsonRpcServiceHostBuilder { ContractResolver = contractResolver };
+            StreamRpcClientHandler clientHandler = new();
+            JsonRpcClient client = new(clientHandler);
+            LanguageServerSession session = new(client, contractResolver);
+            JsonRpcServiceHostBuilder builder = new() { ContractResolver = contractResolver };
             builder.UseCancellationHandling();
             builder.Register(typeof(Program).GetTypeInfo().Assembly);
             IJsonRpcServiceHost host = builder.Build();
-            StreamRpcServerHandler serverHandler = new StreamRpcServerHandler(host, StreamRpcServerHandlerOptions.ConsistentResponseSequence | StreamRpcServerHandlerOptions.SupportsRequestCancellation);
+            StreamRpcServerHandler serverHandler = new(host, StreamRpcServerHandlerOptions.ConsistentResponseSequence | StreamRpcServerHandlerOptions.SupportsRequestCancellation);
             serverHandler.DefaultFeatures.Set(session);
             using (serverHandler.Attach(reader, writer))
             using (clientHandler.Attach(reader, writer))
