@@ -412,10 +412,10 @@ function scheduleRefresh() {
 
 async function activateDotNet() {
     try {
-        outputChannel.appendLine("DenizenScript extension attempting to acquire .NET 5");
+        outputChannel.appendLine("DenizenScript extension attempting to acquire .NET 6");
         const requestingExtensionId = 'DenizenScript.denizenscript';
-        const result = await vscode.commands.executeCommand('dotnet.acquire', { version: '5.0', requestingExtensionId });
-        outputChannel.appendLine("DenizenScript extension NET 5 Acquire result: " + result + ": " + result["dotnetPath"]);
+        const result = await vscode.commands.executeCommand('dotnet.acquire', { version: '6.0', requestingExtensionId });
+        outputChannel.appendLine("DenizenScript extension NET 6 Acquire result: " + result + ": " + result["dotnetPath"]);
         return result["dotnetPath"];
     }
     catch (error) {
