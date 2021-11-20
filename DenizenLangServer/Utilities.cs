@@ -17,7 +17,7 @@ namespace DenizenLangServer
 {
     public static class Utilities
     {
-        public static readonly JsonSerializer CamelCaseJsonSerializer = new JsonSerializer
+        public static readonly JsonSerializer CamelCaseJsonSerializer = new()
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver()
         };

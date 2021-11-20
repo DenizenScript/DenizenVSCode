@@ -9,9 +9,9 @@ namespace DenizenLangServer
 {
     public class CommandTabCompletions
     {
-        public static Dictionary<string, CommandTabCompletions> TabCompletions = new Dictionary<string, CommandTabCompletions>();
+        public static Dictionary<string, CommandTabCompletions> TabCompletions = new();
 
-        public Dictionary<string, Func<IEnumerable<string>>> ByPrefix = new Dictionary<string, Func<IEnumerable<string>>>();
+        public Dictionary<string, Func<IEnumerable<string>>> ByPrefix = new();
 
         public static void Register(string command, string prefix, Func<IEnumerable<string>> options)
         {

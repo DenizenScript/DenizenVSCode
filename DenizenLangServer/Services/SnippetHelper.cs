@@ -27,7 +27,7 @@ namespace DenizenLangServer.Services
         }
 
         /// <summary>All available snippets, as a map of first character to list.</summary>
-        public static Dictionary<char, List<Snippet>> Snippets = new Dictionary<char, List<Snippet>>();
+        public static Dictionary<char, List<Snippet>> Snippets = new();
 
         public static void RegisterSnippet(string name, string description, string[] prefixes, string body)
         {
@@ -65,7 +65,7 @@ namespace DenizenLangServer.Services
             {
                 return null;
             }
-            List<CompletionItem> results = new List<CompletionItem>();
+            List<CompletionItem> results = new();
             prefix = prefix.ToLowerFast();
             foreach (Snippet snippet in list)
             {

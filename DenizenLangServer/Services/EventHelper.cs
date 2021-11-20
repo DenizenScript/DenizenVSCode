@@ -13,7 +13,7 @@ namespace DenizenLangServer.Services
         {
             string[] parts = eventLine.SplitFast(' ');
             int index = 1;
-            StringBuilder snippetBuilder = new StringBuilder(eventLine.Length * 2);
+            StringBuilder snippetBuilder = new(eventLine.Length * 2);
             for (int i = skipArgs; i < parts.Length; i++)
             {
                 string part = parts[i];

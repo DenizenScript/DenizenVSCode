@@ -12,12 +12,13 @@ using JsonRpc.Server;
 using LanguageServer.VsCode.Contracts;
 using LanguageServer.VsCode.Contracts.Client;
 using LanguageServer.VsCode.Server;
+using FreneticUtilities.FreneticToolkit;
 
 namespace DenizenLangServer
 {
     public class LanguageServerSession
     {
-        private readonly CancellationTokenSource cts = new CancellationTokenSource();
+        private readonly CancellationTokenSource cts = new();
 
         public LanguageServerSession(JsonRpcClient rpcClient, IJsonRpcContractResolver contractResolver)
         {
@@ -57,7 +58,7 @@ namespace DenizenLangServer
             Document = TextDocument.Load<FullTextDocument>(doc);
         }
 
-        private readonly object syncLock = new object();
+        private readonly LockObject SyncLock = new();
 
         public event EventHandler DocumentChanged;
 
@@ -65,7 +66,7 @@ namespace DenizenLangServer
 
         public void NotifyChanges(IEnumerable<TextDocumentContentChangeEvent> changes)
         {
-            lock (syncLock)
+            lock (SyncLock)
             {
                 Document = Document.ApplyChanges(changes.ToList());
             }

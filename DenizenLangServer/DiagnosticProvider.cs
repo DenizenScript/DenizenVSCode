@@ -20,9 +20,9 @@ namespace DenizenLangServer
 
         public LanguageServerSession DiagSession = null;
 
-        public CancellationToken CancelToken = new CancellationToken();
+        public CancellationToken CancelToken = new();
 
-        public LockObject DiagUpdateLock = new LockObject();
+        public LockObject DiagUpdateLock = new();
 
         public void InformNeedsUpdate(TextDocument document)
         {
@@ -97,7 +97,7 @@ namespace DenizenLangServer
         public ICollection<Diagnostic> LintDocument(TextDocument document)
         {
             var diag = new List<Diagnostic>();
-            ScriptChecker checker = new ScriptChecker(document.Content);
+            ScriptChecker checker = new(document.Content);
             try
             {
                 checker.Run();

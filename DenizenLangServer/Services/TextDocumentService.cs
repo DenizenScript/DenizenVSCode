@@ -41,7 +41,7 @@ namespace DenizenLangServer.Services
             {
                 offset -= 2;
             }
-            if (offset < 0 || offset >= content.Length)
+            if (offset <= 0 || offset >= content.Length)
             {
                 return null;
             }
@@ -123,9 +123,9 @@ namespace DenizenLangServer.Services
                     }
                 }
             }
-            if (trimmed.StartsWith("-") || trimmed.Contains(":"))
+            if (trimmed.StartsWith("-") || trimmed.Contains(':'))
             {
-                if (trimmed.Contains("<"))
+                if (trimmed.Contains('<'))
                 {
                     int argStart = 0, argEnd = trimmed.Length;
                     for (int i = 0; i < trimmed.Length; i++)
@@ -153,7 +153,7 @@ namespace DenizenLangServer.Services
                     }
                     string arg = trimmed[argStart..argEnd];
                     int posInArg = position.Character - (spaces + argStart);
-                    if (arg.Contains("<"))
+                    if (arg.Contains('<'))
                     {
                         int tagBits = 0;
                         int relevantTagStart = -1;
@@ -204,7 +204,7 @@ namespace DenizenLangServer.Services
                                 }
                             }
                             SingleTag parsed = TagHelper.Parse(fullTag, (s) => { /* Ignore errors */ });
-                            TagTracer tracer = new TagTracer() { Docs = MetaDocs.CurrentMeta, Error = (s) => { /* Ignore errors */ }, DeprecationError = (s, p) => { }, Tag = parsed };
+                            TagTracer tracer = new() { Docs = MetaDocs.CurrentMeta, Error = (s) => { /* Ignore errors */ }, DeprecationError = (s, p) => { }, Tag = parsed };
                             tracer.Trace();
                             foreach (SingleTag.Part part in parsed.Parts)
                             {
@@ -420,7 +420,7 @@ namespace DenizenLangServer.Services
             }
         }
 
-        public static Dictionary<string, Func<IEnumerable<string>>> LinePrefixCompleters = new Dictionary<string, Func<IEnumerable<string>>>()
+        public static Dictionary<string, Func<IEnumerable<string>>> LinePrefixCompleters = new()
         {
             { "material", () => ExtraData.Data.Items },
             { "entity_type", () => ExtraData.Data.Entities }
@@ -655,7 +655,7 @@ namespace DenizenLangServer.Services
                     }
                     eventName = EventTools.SeparateSwitches(eventName, out List<KeyValuePair<string, string>> switches);
                     string[] parts = eventName.Split(' ');
-                    List<CompletionItem> completions = new List<CompletionItem>();
+                    List<CompletionItem> completions = new();
                     foreach (MetaEvent evt in MetaDocs.CurrentMeta.Events.Values)
                     {
                         foreach (ScriptEventCouldMatcher matcher in evt.CouldMatchers.Where(c => c.TryMatch(parts, true, false) > 0))
