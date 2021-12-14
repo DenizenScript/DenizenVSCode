@@ -59,7 +59,7 @@ function colorSet(name : string, incolor : string) {
 
 const colorTypes : string[] = [
     "comment_header", "comment_normal", "comment_todo", "comment_code",
-    "key", "key_inline", "command", "quote_double", "quote_single",
+    "key", "key_inline", "command", "quote_double", "quote_single", "def_name",
     "tag", "tag_dot", "tag_param", "tag_param_bracket", "bad_space", "colons", "space", "normal"
 ];
 
@@ -130,7 +130,12 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
                 addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
                 addDecor(decorations, "tag_param_bracket", lineNumber, start + i, start + i + 1);
                 lastDecor = i + 1;
-                defaultDecor = "tag_param";
+                if (i == 0) {
+                    defaultDecor = "def_name";
+                }
+                else {
+                    defaultDecor = "tag_param";
+                }
             }
         }
         else if (c == ']' && inTagCounter == 0) {
@@ -160,6 +165,8 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
 
 const ifOperators : string[] = [ "<", ">", "<=", ">=", "==", "!=", "||", "&&", "(", ")", "or", "not", "and", "in", "contains", "!in", "!contains" ];
 
+const ifCmdLabels : string[] = [ "cmd:if", "cmd:while", "cmd:waituntil" ];
+
 function checkIfHasTagEnd(arg : string, quoted: boolean, quoteMode: string, canQuote : boolean) : boolean {
     const len : number = arg.length;
     for (let i = 0; i < len; i++) {
@@ -183,22 +190,24 @@ function checkIfHasTagEnd(arg : string, quoted: boolean, quoteMode: string, canQ
     return false;
 }
 
-function decorateArg(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }, canQuote : boolean) {
+function decorateArg(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }, canQuote : boolean, contextualLabel : string) {
     const len : number = arg.length;
     let quoted : boolean = false;
     let quoteMode : string = 'x';
     let inTagCounter : number = 0;
     let tagStart : number = 0;
-    let defaultDecor : string = "normal";
+    const referenceDefault = contextualLabel == "key:definitions" ? "def_name" : "normal";
+    let defaultDecor : string = referenceDefault;
     let lastDecor : number = 0;
     let hasTagEnd : boolean = checkIfHasTagEnd(arg, false, 'x', canQuote);
+    let spaces : number = 0;
     for (let i = 0; i < len; i++) {
         const c : string = arg.charAt(i);
         if (canQuote && (c == '"' || c == '\'')) {
             if (quoted && c == quoteMode) {
                 addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i + 1);
                 lastDecor = i + 1;
-                defaultDecor = "normal";
+                defaultDecor = referenceDefault;
                 quoted = false;
             }
             else if (!quoted) {
@@ -223,9 +232,14 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             if (inTagCounter == 0) {
                 decorateTag(arg.substring(tagStart + 1, i), start + tagStart + 1, lineNumber, decorations);
                 addDecor(decorations, "tag", lineNumber, start + i, start + i + 1);
-                defaultDecor = quoted ? (quoteMode == '"' ? "quote_double" : "quote_single") : "normal";
+                defaultDecor = quoted ? (quoteMode == '"' ? "quote_double" : "quote_single") : referenceDefault;
                 lastDecor = i + 1;
             }
+        }
+        else if (inTagCounter == 0 && c == '|' && contextualLabel == "key:definitions") {
+            addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
+            addDecor(decorations, "normal", lineNumber, start + i, start + i + 1);
+            lastDecor = i + 1;
         }
         else if (c == ' ' && ((!quoted && canQuote) || inTagCounter == 0)) {
             hasTagEnd = checkIfHasTagEnd(arg.substring(i + 1), quoted, quoteMode, canQuote);
@@ -234,13 +248,28 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             lastDecor = i + 1;
             if (!quoted) {
                 inTagCounter = 0;
-                defaultDecor = "normal";
+                defaultDecor = (spaces == 0 && (contextualLabel == "cmd:define" || contextualLabel == "cmd:definemap")) ? "def_name" : referenceDefault;
+                spaces++;
             }
             const nextArg : string = arg.includes(" ", i + 1) ? arg.substring(i + 1, arg.indexOf(" ", i + 1)) : arg.substring(i + 1);
-            if (!quoted && canQuote && ifOperators.includes(nextArg)) {
-                addDecor(decorations, "colons", lineNumber, start + i + 1, start + i + 1 + nextArg.length);
-                i += nextArg.length;
-                lastDecor = i;
+            if (!quoted && canQuote) {
+                if (ifOperators.includes(nextArg) && ifCmdLabels.includes(contextualLabel)) {
+                    addDecor(decorations, "colons", lineNumber, start + i + 1, start + i + 1 + nextArg.length);
+                    i += nextArg.length;
+                    lastDecor = i;
+                }
+                else if (nextArg.startsWith("as:") && !nextArg.includes("<") && (contextualLabel == "cmd:foreach" || contextualLabel == "cmd:repeat")) {
+                    addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "as:".length);
+                    addDecor(decorations, "def_name", lineNumber, start + i + 1 + "as:".length, start + i + 1 + nextArg.length);
+                    i += nextArg.length;
+                    lastDecor = i;
+                }
+                else if (nextArg.startsWith("key:") && !nextArg.includes("<") && contextualLabel == "cmd:foreach") {
+                    addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "key:".length);
+                    addDecor(decorations, "def_name", lineNumber, start + i + 1 + "key:".length, start + i + 1 + nextArg.length);
+                    i += nextArg.length;
+                    lastDecor = i;
+                }
             }
         }
     }
@@ -306,7 +335,7 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         const isNonScript : boolean = definiteNotScriptKeys.includes(lastKey);
         addDecor(decorations, "normal", lineNumber, preSpaces, preSpaces + 1);
         if (isNonScript) {
-            decorateArg(trimmed.substring(1), preSpaces + 1, lineNumber, decorations, false);
+            decorateArg(trimmed.substring(1), preSpaces + 1, lineNumber, decorations, false, "non-script");
         }
         else {
             if (trimmed.endsWith(":")) {
@@ -319,16 +348,16 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
             const commandText = commandEnd == 0 ? afterDash : afterDash.substring(0, commandEnd);
             if (!afterDash.startsWith(" ")) {
                 addDecor(decorations, "bad_space", lineNumber, preSpaces + 1, endIndexCleaned);
-                decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations, false);
+                decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations, false, "cmd:" + commandText.trim());
             }
             else {
                 if (commandText.includes("'") || commandText.includes("\"") || commandText.includes("[")) {
-                    decorateArg(trimmed.substring(2), preSpaces + 2, lineNumber, decorations, false);
+                    decorateArg(trimmed.substring(2), preSpaces + 2, lineNumber, decorations, false, "non-cmd");
                 }
                 else {
                     addDecor(decorations, "command", lineNumber, preSpaces + 2, endIndexCleaned);
                     if (commandEnd > 0) {
-                        decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations, true);
+                        decorateArg(trimmed.substring(commandEnd), preSpaces + commandEnd, lineNumber, decorations, true, "cmd:" + commandText.trim());
                     }
                 }
             }
@@ -340,9 +369,10 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
     }
     else if (trimmed.includes(":")) {
         const colonIndex = line.indexOf(':');
-        decorateSpaceable(trimmed.substring(0, colonIndex - preSpaces), preSpaces, lineNumber, "key", decorations);
+        const key = trimmed.substring(0, colonIndex - preSpaces);
+        decorateSpaceable(key, preSpaces, lineNumber, "key", decorations);
         addDecor(decorations, "colons", lineNumber, colonIndex, colonIndex + 1);
-        decorateArg(trimmed.substring(colonIndex - preSpaces + 1), colonIndex + 1, lineNumber, decorations, false);
+        decorateArg(trimmed.substring(colonIndex - preSpaces + 1), colonIndex + 1, lineNumber, decorations, false, "key:" + key);
     }
     else {
         addDecor(decorations, "bad_space", lineNumber, preSpaces, line.length);

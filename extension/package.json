@@ -92,6 +92,11 @@
                     "default": "#88DDFF",
                     "description": "Color of single-quoted sections."
                 },
+                "denizenscript.theme_colors.def_name": {
+                    "type": "string",
+                    "default": "#33CCFF|style=italic",
+                    "description": "Color of definition names."
+                },
                 "denizenscript.theme_colors.tag": {
                     "type": "string",
                     "default": "#AAAAAA",
