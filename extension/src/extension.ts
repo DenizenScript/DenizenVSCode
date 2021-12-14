@@ -167,6 +167,8 @@ const ifOperators : string[] = [ "<", ">", "<=", ">=", "==", "!=", "||", "&&", "
 
 const ifCmdLabels : string[] = [ "cmd:if", "cmd:while", "cmd:waituntil" ];
 
+const deffableCmdLabels : string[] = [ "cmd:run", "cmd:runlater", "cmd:clickable", "cmd:bungeerun" ];
+
 function checkIfHasTagEnd(arg : string, quoted: boolean, quoteMode: string, canQuote : boolean) : boolean {
     const len : number = arg.length;
     for (let i = 0; i < len; i++) {
@@ -240,6 +242,14 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
             addDecor(decorations, "normal", lineNumber, start + i, start + i + 1);
             lastDecor = i + 1;
+        }
+        else if (inTagCounter == 0 && c == ':' && deffableCmdLabels.includes(contextualLabel)) {
+            const part : string = arg.substring(lastDecor, i);
+            if (part.startsWith("def.") && !part.includes('<') && !part.includes(' ')) {
+                addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + "def.".length);
+                addDecor(decorations, "def_name", lineNumber, start + lastDecor + "def.".length, start + i);
+                lastDecor = i;
+            }
         }
         else if (c == ' ' && ((!quoted && canQuote) || inTagCounter == 0)) {
             hasTagEnd = checkIfHasTagEnd(arg.substring(i + 1), quoted, quoteMode, canQuote);
