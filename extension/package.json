@@ -105,7 +105,12 @@
                 "denizenscript.theme_colors.tag_param": {
                     "type": "string",
                     "default": "#7777FF",
-                    "description": "Color of [parameters] within tags."
+                    "description": "Color of [parameters] within tags, inside the brackets."
+                },
+                "denizenscript.theme_colors.tag_param_bracket": {
+                    "type": "string",
+                    "default": "#7777FF",
+                    "description": "Color of the brackets for [parameters] within tags."
                 },
                 "denizenscript.theme_colors.colons": {
                     "type": "string",

@@ -60,7 +60,7 @@ function colorSet(name : string, incolor : string) {
 const colorTypes : string[] = [
     "comment_header", "comment_normal", "comment_todo", "comment_code",
     "key", "key_inline", "command", "quote_double", "quote_single",
-    "tag", "tag_dot", "tag_param", "bad_space", "colons", "space", "normal"
+    "tag", "tag_dot", "tag_param", "tag_param_bracket", "bad_space", "colons", "space", "normal"
 ];
 
 function loadAllColors() {
@@ -124,18 +124,20 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
                 lastDecor = i + 1;
             }
         }
-        else if (c == '[' && inTagCounter == 0) {
+        else if (c == '[' && inTagCounter == 0 && i + 1 < len) {
             inTagParamCounter++;
             if (inTagParamCounter == 1) {
                 addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
-                lastDecor = i;
+                addDecor(decorations, "tag_param_bracket", lineNumber, start + i, start + i + 1);
+                lastDecor = i + 1;
                 defaultDecor = "tag_param";
             }
         }
         else if (c == ']' && inTagCounter == 0) {
             inTagParamCounter--;
             if (inTagParamCounter == 0) {
-                addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i + 1);
+                addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
+                addDecor(decorations, "tag_param_bracket", lineNumber, start + i, start + i + 1);
                 defaultDecor = "tag";
                 lastDecor = i + 1;
             }
