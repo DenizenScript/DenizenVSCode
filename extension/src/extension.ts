@@ -258,7 +258,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             lastDecor = i + 1;
             if (!quoted) {
                 inTagCounter = 0;
-                defaultDecor = (spaces == 0 && (contextualLabel == "cmd:define" || contextualLabel == "cmd:definemap")) ? "def_name" : referenceDefault;
+                defaultDecor = referenceDefault;
                 spaces++;
             }
             const nextArg : string = arg.includes(" ", i + 1) ? arg.substring(i + 1, arg.indexOf(" ", i + 1)) : arg.substring(i + 1);
@@ -268,17 +268,28 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                     i += nextArg.length;
                     lastDecor = i;
                 }
-                else if (nextArg.startsWith("as:") && !nextArg.includes("<") && (contextualLabel == "cmd:foreach" || contextualLabel == "cmd:repeat")) {
-                    addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "as:".length);
-                    addDecor(decorations, "def_name", lineNumber, start + i + 1 + "as:".length, start + i + 1 + nextArg.length);
-                    i += nextArg.length;
-                    lastDecor = i;
-                }
-                else if (nextArg.startsWith("key:") && !nextArg.includes("<") && contextualLabel == "cmd:foreach") {
-                    addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "key:".length);
-                    addDecor(decorations, "def_name", lineNumber, start + i + 1 + "key:".length, start + i + 1 + nextArg.length);
-                    i += nextArg.length;
-                    lastDecor = i;
+                else if (!nextArg.includes("<")) {
+                    if (nextArg.startsWith("as:") && (contextualLabel == "cmd:foreach" || contextualLabel == "cmd:repeat")) {
+                        addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "as:".length);
+                        addDecor(decorations, "def_name", lineNumber, start + i + 1 + "as:".length, start + i + 1 + nextArg.length);
+                        i += nextArg.length;
+                        lastDecor = i;
+                    }
+                    else if (nextArg.startsWith("key:") && contextualLabel == "cmd:foreach") {
+                        addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "key:".length);
+                        addDecor(decorations, "def_name", lineNumber, start + i + 1 + "key:".length, start + i + 1 + nextArg.length);
+                        i += nextArg.length;
+                        lastDecor = i;
+                    }
+                    else if (spaces == 1 && (contextualLabel == "cmd:define" || contextualLabel == "cmd:definemap")) {
+                        let colonIndex : number = nextArg.indexOf(':');
+                        if (colonIndex == -1) {
+                            colonIndex = nextArg.length;
+                        }
+                        addDecor(decorations, "def_name", lineNumber, start + i + 1, start + i + 1 + colonIndex);
+                        i += colonIndex;
+                        lastDecor = i;
+                    }
                 }
             }
         }
