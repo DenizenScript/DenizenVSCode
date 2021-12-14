@@ -5,7 +5,7 @@ import * as fs from "fs";
 
 const languageServerPath : string = "server/DenizenLangServer.dll";
 
-const configuration : vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
+let configuration : vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
 
 let needRefreshStartLine : number = -1;
 let needRefreshEndLine : number = -1;
@@ -63,7 +63,8 @@ const colorTypes : string[] = [
     "tag", "tag_dot", "tag_param", "bad_space", "colons", "space", "normal"
 ];
 
-function activateHighlighter(context: vscode.ExtensionContext) {
+function loadAllColors() {
+    configuration = vscode.workspace.getConfiguration();
     for (const i in colorTypes) {
         let str : string = configuration.get("denizenscript.theme_colors." + colorTypes[i]);
         if (str === undefined) {
@@ -73,6 +74,10 @@ function activateHighlighter(context: vscode.ExtensionContext) {
         colorSet(colorTypes[i], str);
     }
     headerSymbols = configuration.get("denizenscript.header_symbols");
+}
+
+function activateHighlighter(context: vscode.ExtensionContext) {
+    loadAllColors();
 }
 
 let refreshTimer: NodeJS.Timer | undefined = undefined;
@@ -424,17 +429,21 @@ async function activateDotNet() {
     }
 }
 
+function forceRefresh() {
+    needRefreshLineShift = 0;
+    needRefreshStartLine = 0;
+    needRefreshEndLine = 999999;
+    lastDecorations = {};
+    scheduleRefresh();
+}
+
 export async function activate(context: vscode.ExtensionContext) {
     let path : string = await activateDotNet();
     activateLanguageServer(context, path);
     activateHighlighter(context);
     vscode.workspace.onDidOpenTextDocument(doc => {
         if (doc.uri.toString().endsWith(".dsc")) {
-            needRefreshLineShift = 0;
-            needRefreshStartLine = 0;
-            needRefreshEndLine = 999999;
-            lastDecorations = {};
-            scheduleRefresh();
+            forceRefresh();
         }
     }, null, context.subscriptions);
     vscode.workspace.onDidChangeTextDocument(event => {
@@ -457,12 +466,12 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     }, null, context.subscriptions);
     vscode.window.onDidChangeVisibleTextEditors(editors => {
-        needRefreshLineShift = 0;
-        needRefreshStartLine = 0;
-        needRefreshEndLine = 999999;
-        lastDecorations = {};
-        scheduleRefresh();
+        forceRefresh();
     }, null, context.subscriptions);
+    vscode.workspace.onDidChangeConfiguration(event => {
+        loadAllColors();
+        forceRefresh();
+    });
     scheduleRefresh();
     outputChannel.appendLine('Denizen extension has been activated');
 }
