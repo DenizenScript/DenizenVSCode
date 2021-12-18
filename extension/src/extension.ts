@@ -268,24 +268,25 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                     i += nextArg.length;
                     lastDecor = i;
                 }
-                else if (!nextArg.includes("<")) {
-                    if (nextArg.startsWith("as:") && (contextualLabel == "cmd:foreach" || contextualLabel == "cmd:repeat")) {
-                        addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "as:".length);
-                        addDecor(decorations, "def_name", lineNumber, start + i + 1 + "as:".length, start + i + 1 + nextArg.length);
-                        i += nextArg.length;
-                        lastDecor = i;
+                if (nextArg.startsWith("as:") && !nextArg.includes("<") && (contextualLabel == "cmd:foreach" || contextualLabel == "cmd:repeat")) {
+                    addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "as:".length);
+                    addDecor(decorations, "def_name", lineNumber, start + i + 1 + "as:".length, start + i + 1 + nextArg.length);
+                    i += nextArg.length;
+                    lastDecor = i;
+                }
+                else if (nextArg.startsWith("key:") && !nextArg.includes("<") && contextualLabel == "cmd:foreach") {
+                    addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "key:".length);
+                    addDecor(decorations, "def_name", lineNumber, start + i + 1 + "key:".length, start + i + 1 + nextArg.length);
+                    i += nextArg.length;
+                    lastDecor = i;
+                }
+                else if (spaces == 1 && (contextualLabel == "cmd:define" || contextualLabel == "cmd:definemap")) {
+                    let colonIndex : number = nextArg.indexOf(':');
+                    if (colonIndex == -1) {
+                        colonIndex = nextArg.length;
                     }
-                    else if (nextArg.startsWith("key:") && contextualLabel == "cmd:foreach") {
-                        addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "key:".length);
-                        addDecor(decorations, "def_name", lineNumber, start + i + 1 + "key:".length, start + i + 1 + nextArg.length);
-                        i += nextArg.length;
-                        lastDecor = i;
-                    }
-                    else if (spaces == 1 && (contextualLabel == "cmd:define" || contextualLabel == "cmd:definemap")) {
-                        let colonIndex : number = nextArg.indexOf(':');
-                        if (colonIndex == -1) {
-                            colonIndex = nextArg.length;
-                        }
+                    const tagMark : number = nextArg.indexOf('<');
+                    if (tagMark == -1 || tagMark > colonIndex) {
                         addDecor(decorations, "def_name", lineNumber, start + i + 1, start + i + 1 + colonIndex);
                         i += colonIndex;
                         lastDecor = i;
@@ -363,7 +364,7 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
                 addDecor(decorations, "colons", lineNumber, preSpaces + trimmed.length - 1, preSpaces + trimmed.length);
                 trimmed = trimmed.substring(0, trimmed.length - 1);
             }
-            let afterDash : string = trimmed.substring(1);
+            const afterDash : string = trimmed.substring(1);
             const commandEnd : number = afterDash.indexOf(' ', 1) + 1;
             const endIndexCleaned : number = preSpaces + (commandEnd == 0 ? trimmed.length : commandEnd);
             const commandText = commandEnd == 0 ? afterDash : afterDash.substring(0, commandEnd);
