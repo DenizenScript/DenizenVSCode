@@ -268,7 +268,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                     i += nextArg.length;
                     lastDecor = i;
                 }
-                if (nextArg.startsWith("as:") && !nextArg.includes("<") && (contextualLabel == "cmd:foreach" || contextualLabel == "cmd:repeat")) {
+                else if (nextArg.startsWith("as:") && !nextArg.includes("<") && (contextualLabel == "cmd:foreach" || contextualLabel == "cmd:repeat")) {
                     addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "as:".length);
                     addDecor(decorations, "def_name", lineNumber, start + i + 1 + "as:".length, start + i + 1 + nextArg.length);
                     i += nextArg.length;

@@ -7,7 +7,7 @@
     <LangVersion>Latest</LangVersion>
     <Product>DenizenLangServer</Product>
     <PackageId>DenizenLangServer</PackageId>
-    <Copyright>Copyright (C) The DenizenScript Team 2019-2021</Copyright>
+    <Copyright>Copyright (C) The DenizenScript Team 2019-2022</Copyright>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
   </PropertyGroup>
   <ItemGroup>
