@@ -288,6 +288,12 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                     const tagMark : number = nextArg.indexOf('<');
                     if (tagMark == -1 || tagMark > colonIndex) {
                         addDecor(decorations, "def_name", lineNumber, start + i + 1, start + i + 1 + colonIndex);
+                        const argStart : string = nextArg.charAt(0);
+                        if (!quoted && canQuote && (argStart == '"' || argStart == '\'')) {
+                            quoted = true;
+                            defaultDecor = argStart == '"' ? "quote_double" : "quote_single";
+                            quoteMode = argStart;
+                        }
                         i += colonIndex;
                         lastDecor = i;
                     }
