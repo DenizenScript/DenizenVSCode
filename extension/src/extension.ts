@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as languageClient from "vscode-languageclient";
+import * as languageClientNode from "vscode-languageclient/node";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -24,7 +25,7 @@ function activateLanguageServer(context: vscode.ExtensionContext, dotnetPath : s
         return;
     }
     let pathDir : string = path.dirname(pathFile);
-    let serverOptions: languageClient.ServerOptions = {
+    let serverOptions: languageClientNode.ServerOptions = {
         run: { command: dotnetPath, args: [pathFile], options: { cwd: pathDir } },
         debug: { command: dotnetPath, args: [pathFile, "--debug"], options: { cwd: pathDir } }
     }
@@ -34,7 +35,7 @@ function activateLanguageServer(context: vscode.ExtensionContext, dotnetPath : s
             configurationSection: "denizenscript",
         },
     }
-    let client = new languageClient.LanguageClient("DenizenLangServer", "Denizen Language Server", serverOptions, clientOptions);
+    let client = new languageClientNode.LanguageClient("DenizenLangServer", "Denizen Language Server", serverOptions, clientOptions);
     let disposable = client.start();
     context.subscriptions.push(disposable);
 }
