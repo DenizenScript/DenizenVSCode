@@ -16,6 +16,8 @@ let headerSymbols : string = "|+=#_@/";
 
 let outputChannel = vscode.window.createOutputChannel("Denizen");
 
+let debugHighlighting : boolean = false;
+
 function activateLanguageServer(context: vscode.ExtensionContext, dotnetPath : string) {
     if (!dotnetPath || dotnetPath.length === 0) {
         dotnetPath = "dotnet";
@@ -75,6 +77,7 @@ function loadAllColors() {
         colorSet(colorTypes[i], str);
     }
     headerSymbols = configuration.get("denizenscript.header_symbols");
+    debugHighlighting = configuration.get("denizenscript.debug.highlighting");
 }
 
 function activateHighlighter(context: vscode.ExtensionContext) {
@@ -451,6 +454,32 @@ function decorateFullFile(editor: vscode.TextEditor) {
     let lastKey : string = "";
     const startLine : number = (needRefreshStartLine == -1 ? 0 : needRefreshStartLine);
     const endLine : number = (needRefreshStartLine == -1 ? totalLines : Math.min(needRefreshEndLine + 1, totalLines));
+    if (debugHighlighting) {
+        if (needRefreshStartLine == -1) {
+            let type : String = "normal";
+            if (needRefreshEndLine == 999999) {
+                type = "forced";
+            }
+            else if (Object.keys(lastDecorations).length === 0) {
+                type = "missing-keys-induced";
+            }
+            outputChannel.appendLine("Doing " + type + " full highlight of entire file, for file: " + editor.document.fileName);
+        }
+        else {
+            outputChannel.appendLine("Doing partial highlight of file from start " + startLine + " to end " + endLine + ", for file: " + editor.document.fileName);
+        }
+    }
+    // Figure out the initial lastKey if needed
+    for (let i : number = startLine - 1; i >= 0; i--) {
+        const lineText : string = splitText[i];
+        const trimmedLine = lineText.trim();
+        if (trimmedLine.endsWith(":") && !trimmedLine.startsWith("-"))
+        {
+            lastKey = trimmedLine.substring(0, trimmedLine.length - 1).toLowerCase();
+            break;
+        }
+    }
+    // Actually choose colors
     for (let i : number = startLine; i < endLine; i++) {
         const lineText : string = splitText[i];
         const trimmedLine = lineText.trim();
@@ -460,6 +489,7 @@ function decorateFullFile(editor: vscode.TextEditor) {
         }
         decorateLine(lineText, i, decorations, lastKey);
     }
+    // Apply them
     for (const c in decorations) {
         editor.setDecorations(highlightDecors[c], decorations[c]);
     }
@@ -490,7 +520,10 @@ async function activateDotNet() {
     }
 }
 
-function forceRefresh() {
+function forceRefresh(reason: String) {
+    if (debugHighlighting) {
+        outputChannel.appendLine("Scheduled a force full refresh of syntax highlighting because: " + reason);
+    }
     needRefreshLineShift = 0;
     needRefreshStartLine = 0;
     needRefreshEndLine = 999999;
@@ -504,7 +537,7 @@ export async function activate(context: vscode.ExtensionContext) {
     activateHighlighter(context);
     vscode.workspace.onDidOpenTextDocument(doc => {
         if (doc.uri.toString().endsWith(".dsc")) {
-            forceRefresh();
+            forceRefresh("onDidOpenTextDocument");
         }
     }, null, context.subscriptions);
     vscode.workspace.onDidChangeTextDocument(event => {
@@ -512,6 +545,7 @@ export async function activate(context: vscode.ExtensionContext) {
         if (curFile.endsWith(".dsc")) {
             if (curFile != lastFile) {
                 lastDecorations = {};
+                lastFile = curFile;
             }
             event.contentChanges.forEach(change => {
                 if (needRefreshStartLine == -1 || change.range.start.line < needRefreshStartLine) {
@@ -523,15 +557,18 @@ export async function activate(context: vscode.ExtensionContext) {
                 needRefreshLineShift += change.text.split('\n').length - 1;
                 needRefreshLineShift -= event.document.getText(change.range).split('\n').length - 1;
             });
+            if (debugHighlighting) {
+                outputChannel.appendLine("Scheduled a partial refresh of syntax highlighting because onDidChangeTextDocument, from " + needRefreshStartLine + " to " + needRefreshEndLine + " with shift " + needRefreshLineShift);
+            }
             scheduleRefresh();
         }
     }, null, context.subscriptions);
     vscode.window.onDidChangeVisibleTextEditors(editors => {
-        forceRefresh();
+        forceRefresh("onDidChangeVisibleTextEditors");
     }, null, context.subscriptions);
     vscode.workspace.onDidChangeConfiguration(event => {
         loadAllColors();
-        forceRefresh();
+        forceRefresh("onDidChangeConfiguration");
     });
     scheduleRefresh();
     outputChannel.appendLine('Denizen extension has been activated');

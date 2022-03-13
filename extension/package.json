@@ -3,7 +3,7 @@
     "displayName": "DenizenScript",
     "description": "The Denizen scripting language.",
     "author": "mcmonkey and the DenizenScript team",
-    "version": "0.9.2",
+    "version": "0.9.4",
     "publisher": "denizenscript",
     "license": "MIT",
     "repository": "https://github.com/DenizenScript/DenizenVSCode",
@@ -151,6 +151,11 @@
                     "type": "string",
                     "default": "",
                     "description": "Optional list of extra meta sources (direct zip links), separated by | pipes."
+                },
+                "denizenscript.debug.highlighting": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to output debug logs for syntax highlighting."
                 }
             }
         },
