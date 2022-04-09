@@ -169,7 +169,7 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
 
 const ifOperators : string[] = [ "<", ">", "<=", ">=", "==", "!=", "||", "&&", "(", ")", "or", "not", "and", "in", "contains", "!in", "!contains" ];
 
-const ifCmdLabels : string[] = [ "cmd:if", "cmd:while", "cmd:waituntil" ];
+const ifCmdLabels : string[] = [ "cmd:if", "cmd:else", "cmd:while", "cmd:waituntil" ];
 
 const deffableCmdLabels : string[] = [ "cmd:run", "cmd:runlater", "cmd:clickable", "cmd:bungeerun" ];
 
