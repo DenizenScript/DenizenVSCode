@@ -95,6 +95,10 @@ namespace DenizenLangServer.Services
             {
                 string commandText = trimmed[2..];
                 string commandName = commandText.Before(' ').ToLowerFast();
+                if (commandName.StartsWith("~"))
+                {
+                    commandName = commandName[1..];
+                }
                 if (position.Character > spaces && position.Character <= spaces + 2 + commandName.Length)
                 {
                     if (MetaDocs.CurrentMeta.Commands.TryGetValue(commandName, out MetaCommand command))
@@ -469,6 +473,10 @@ namespace DenizenLangServer.Services
             if (trimmed.StartsWith("- "))
             {
                 string afterDash = trimmed[2..];
+                if (afterDash.StartsWith("~"))
+                {
+                    afterDash = afterDash[1..];
+                }
                 if (!afterDash.Contains(' '))
                 {
                     string possibleCmd = afterDash.ToLowerFast();
