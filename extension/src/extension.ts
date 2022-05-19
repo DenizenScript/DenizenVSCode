@@ -8,15 +8,30 @@ const languageServerPath : string = "server/DenizenLangServer.dll";
 
 let configuration : vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
 
-let needRefreshStartLine : number = -1;
-let needRefreshEndLine : number = -1;
-let needRefreshLineShift : number = 0;
-
 let headerSymbols : string = "|+=#_@/";
 
 let outputChannel = vscode.window.createOutputChannel("Denizen");
 
 let debugHighlighting : boolean = false;
+
+class HighlightCache {
+    needRefreshStartLine : number = -1;
+    needRefreshEndLine : number = -1;
+    needRefreshLineShift : number = 0;
+    lastDecorations : { [color: string]: vscode.Range[] } = {};
+}
+
+let HLCaches : Map<string, HighlightCache> = new Map<string, HighlightCache>();
+
+function getCache(path : string) {
+    let result : HighlightCache = HLCaches.get(path);
+    if (result) {
+        return result;
+    }
+    result = new HighlightCache();
+    HLCaches.set(path, result);
+    return result;
+}
 
 function activateLanguageServer(context: vscode.ExtensionContext, dotnetPath : string) {
     if (!dotnetPath || dotnetPath.length === 0) {
@@ -411,38 +426,36 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
     }
 }
 
-let lastDecorations : { [color: string]: vscode.Range[] } = {};
-let lastFile : string = "";
-
 function decorateFullFile(editor: vscode.TextEditor) {
     let decorations: { [color: string]: vscode.Range[] } = {};
-    if (Object.keys(lastDecorations).length === 0) {
-        needRefreshStartLine = -1;
+    let highlight : HighlightCache = getCache(editor.document.uri.toString());
+    if (Object.keys(highlight.lastDecorations).length === 0) {
+        highlight.needRefreshStartLine = -1;
     }
-    if (needRefreshStartLine == -1) {
+    if (highlight.needRefreshStartLine == -1) {
         for (const c in highlightDecors) {
             decorations[c] = [];
         }
     }
     else {
-        if (needRefreshLineShift > 0) {
-            needRefreshEndLine += needRefreshLineShift;
+        if (highlight.needRefreshLineShift > 0) {
+            highlight.needRefreshEndLine += highlight.needRefreshLineShift;
         }
-        if (needRefreshLineShift < 0) {
-            needRefreshStartLine += needRefreshLineShift;
+        if (highlight.needRefreshLineShift < 0) {
+            highlight.needRefreshStartLine += highlight.needRefreshLineShift;
         }
-        decorations = lastDecorations;
+        decorations = highlight.lastDecorations;
         for (const c in highlightDecors) {
             const rangeSet : vscode.Range[] = decorations[c];
-            if (needRefreshLineShift != 0) {
+            if (highlight.needRefreshLineShift != 0) {
                 for (let i : number = rangeSet.length - 1; i >= 0; i--) {
-                    if (needRefreshLineShift > 0 ? (rangeSet[i].start.line >= needRefreshEndLine - needRefreshLineShift) : (rangeSet[i].start.line >= needRefreshStartLine - needRefreshLineShift)) {
-                        rangeSet[i] = new vscode.Range(new vscode.Position(rangeSet[i].start.line + needRefreshLineShift, rangeSet[i].start.character), new vscode.Position(rangeSet[i].end.line + needRefreshLineShift, rangeSet[i].end.character));
+                    if (highlight.needRefreshLineShift > 0 ? (rangeSet[i].start.line >= highlight.needRefreshEndLine - highlight.needRefreshLineShift) : (rangeSet[i].start.line >= highlight.needRefreshStartLine - highlight.needRefreshLineShift)) {
+                        rangeSet[i] = new vscode.Range(new vscode.Position(rangeSet[i].start.line + highlight.needRefreshLineShift, rangeSet[i].start.character), new vscode.Position(rangeSet[i].end.line + highlight.needRefreshLineShift, rangeSet[i].end.character));
                     }
                 }
             }
             for (let i : number = rangeSet.length - 1; i >= 0; i--) {
-                if (rangeSet[i].start.line <= needRefreshEndLine && rangeSet[i].end.line >= needRefreshStartLine) {
+                if (rangeSet[i].start.line <= highlight.needRefreshEndLine && rangeSet[i].end.line >= highlight.needRefreshStartLine) {
                     rangeSet.splice(i, 1);
                 }
             }
@@ -452,15 +465,15 @@ function decorateFullFile(editor: vscode.TextEditor) {
     const splitText : string[] = fullText.split('\n');
     const totalLines = splitText.length;
     let lastKey : string = "";
-    const startLine : number = (needRefreshStartLine == -1 ? 0 : needRefreshStartLine);
-    const endLine : number = (needRefreshStartLine == -1 ? totalLines : Math.min(needRefreshEndLine + 1, totalLines));
+    const startLine : number = (highlight.needRefreshStartLine == -1 ? 0 : highlight.needRefreshStartLine);
+    const endLine : number = (highlight.needRefreshStartLine == -1 ? totalLines : Math.min(highlight.needRefreshEndLine + 1, totalLines));
     if (debugHighlighting) {
-        if (needRefreshStartLine == -1) {
+        if (highlight.needRefreshStartLine == -1) {
             let type : String = "normal";
-            if (needRefreshEndLine == 999999) {
+            if (highlight.needRefreshEndLine == 999999) {
                 type = "forced";
             }
-            else if (Object.keys(lastDecorations).length === 0) {
+            else if (Object.keys(highlight.lastDecorations).length === 0) {
                 type = "missing-keys-induced";
             }
             outputChannel.appendLine("Doing " + type + " full highlight of entire file, for file: " + editor.document.fileName);
@@ -493,10 +506,10 @@ function decorateFullFile(editor: vscode.TextEditor) {
     for (const c in decorations) {
         editor.setDecorations(highlightDecors[c], decorations[c]);
     }
-    lastDecorations = decorations;
-    needRefreshStartLine = -1;
-    needRefreshEndLine = -1;
-    needRefreshLineShift = 0;
+    highlight.lastDecorations = decorations;
+    highlight.needRefreshStartLine = -1;
+    highlight.needRefreshEndLine = -1;
+    highlight.needRefreshLineShift = 0;
 }
 
 function scheduleRefresh() {
@@ -524,10 +537,7 @@ function forceRefresh(reason: String) {
     if (debugHighlighting) {
         outputChannel.appendLine("Scheduled a force full refresh of syntax highlighting because: " + reason);
     }
-    needRefreshLineShift = 0;
-    needRefreshStartLine = 0;
-    needRefreshEndLine = 999999;
-    lastDecorations = {};
+    HLCaches.clear();
     scheduleRefresh();
 }
 
@@ -543,22 +553,19 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidChangeTextDocument(event => {
         const curFile : string = event.document.uri.toString();
         if (curFile.endsWith(".dsc")) {
-            if (curFile != lastFile) {
-                lastDecorations = {};
-                lastFile = curFile;
-            }
+            let highlight : HighlightCache = getCache(curFile);
             event.contentChanges.forEach(change => {
-                if (needRefreshStartLine == -1 || change.range.start.line < needRefreshStartLine) {
-                    needRefreshStartLine = change.range.start.line;
+                if (highlight.needRefreshStartLine == -1 || change.range.start.line < highlight.needRefreshStartLine) {
+                    highlight.needRefreshStartLine = change.range.start.line;
                 }
-                if (needRefreshEndLine == -1 || change.range.end.line > needRefreshEndLine) {
-                    needRefreshEndLine = change.range.end.line;
+                if (highlight.needRefreshEndLine == -1 || change.range.end.line > highlight.needRefreshEndLine) {
+                    highlight.needRefreshEndLine = change.range.end.line;
                 }
-                needRefreshLineShift += change.text.split('\n').length - 1;
-                needRefreshLineShift -= event.document.getText(change.range).split('\n').length - 1;
+                highlight.needRefreshLineShift += change.text.split('\n').length - 1;
+                highlight.needRefreshLineShift -= event.document.getText(change.range).split('\n').length - 1;
             });
             if (debugHighlighting) {
-                outputChannel.appendLine("Scheduled a partial refresh of syntax highlighting because onDidChangeTextDocument, from " + needRefreshStartLine + " to " + needRefreshEndLine + " with shift " + needRefreshLineShift);
+                outputChannel.appendLine("Scheduled a partial refresh of syntax highlighting because onDidChangeTextDocument, from " + highlight.needRefreshStartLine + " to " + highlight.needRefreshEndLine + " with shift " + highlight.needRefreshLineShift);
             }
             scheduleRefresh();
         }
