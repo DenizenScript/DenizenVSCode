@@ -43,6 +43,8 @@ namespace DenizenLangServer
             Register("take", "item", () => Data.Items);
             Register("cast", "", () => Data.PotionEffects);
             Register("statistic", "", () => Data.Statistics);
+            HashSet<string> determineCompletions = new() { "cancelled", "cancelled:false" };
+            Register("determine", "", () => determineCompletions);
         }
     }
 }
