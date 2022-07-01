@@ -531,10 +531,11 @@ function denizenScriptFoldingProvider(document: vscode.TextDocument, context: vs
         }
         const spaces : number = line.length - preTrimmed.length;
         const fullTrimmed : string = preTrimmed.trimEnd();
-        const isBlock : boolean = fullTrimmed.endsWith(":") && !fullTrimmed.startsWith("-");
+        const isBlock : boolean = fullTrimmed.endsWith(":");
+        const isCommand : boolean = fullTrimmed.startsWith("-");
         while (processing.length > 0) {
             const lastFold : InProcFold = processing[processing.length - 1];
-            if (lastFold.spacing > spaces || spaces == 0 || (isBlock && lastFold.spacing == spaces)) {
+            if (lastFold.spacing > spaces || spaces == 0 || (lastFold.spacing == spaces && ((isBlock && !isCommand) || lastFold.isCommand))) {
                 processing.pop();
                 output.push(new vscode.FoldingRange(lastFold.start, i - 1));
                 if (debugFolding) {
@@ -546,7 +547,7 @@ function denizenScriptFoldingProvider(document: vscode.TextDocument, context: vs
             }
         }
         if (isBlock) {
-            processing.push(new InProcFold(i, spaces));
+            processing.push(new InProcFold(i, spaces, isCommand));
             if (debugFolding) {
                 outputChannel.appendLine("(FOLDING) Found a start at " + i);
             }
@@ -639,9 +640,11 @@ export async function activate(context: vscode.ExtensionContext) {
 class InProcFold {
     start : number;
     spacing : number;
-    constructor(start: number, spacing: number) {
+    isCommand : boolean;
+    constructor(start: number, spacing: number, isCommand : boolean) {
         this.start = start;
         this.spacing = spacing;
+        this.isCommand = isCommand;
     }
 }
 
