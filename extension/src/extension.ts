@@ -262,7 +262,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             addDecor(decorations, "normal", lineNumber, start + i, start + i + 1);
             lastDecor = i + 1;
         }
-        else if (inTagCounter == 0 && c == ':' && deffableCmdLabels.includes(contextualLabel)) {
+        else if (inTagCounter == 0 && c == ':' && deffableCmdLabels.includes(contextualLabel.replace("~", ""))) {
             const part : string = arg.substring(lastDecor, i);
             if (part.startsWith("def.") && !part.includes('<') && !part.includes(' ')) {
                 addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + "def.".length);
