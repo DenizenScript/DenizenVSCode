@@ -13,6 +13,7 @@ let headerSymbols : string = "|+=#_@/";
 let outputChannel = vscode.window.createOutputChannel("Denizen");
 
 let debugHighlighting : boolean = false;
+let debugFolding : boolean = false;
 
 class HighlightCache {
     needRefreshStartLine : number = -1;
@@ -93,6 +94,7 @@ function loadAllColors() {
     }
     headerSymbols = configuration.get("denizenscript.header_symbols");
     debugHighlighting = configuration.get("denizenscript.debug.highlighting");
+    debugFolding = configuration.get("denizenscript.debug.folding");
 }
 
 function activateHighlighter(context: vscode.ExtensionContext) {
@@ -512,6 +514,54 @@ function decorateFullFile(editor: vscode.TextEditor) {
     highlight.needRefreshLineShift = 0;
 }
 
+function denizenScriptFoldingProvider(document: vscode.TextDocument, context: vscode.FoldingContext, token: vscode.CancellationToken) : vscode.ProviderResult<vscode.FoldingRange[]> {
+    const fullText : string = document.getText();
+    const splitText : string[] = fullText.split('\n');
+    const totalLines = splitText.length;
+    const output : vscode.FoldingRange[] = [];
+    const processing : InProcFold[] = [];
+    if (debugFolding) {
+        outputChannel.appendLine("(FOLDING) Begin");
+    }
+    for (let i : number = 0; i < totalLines; i++) {
+        const line : string = splitText[i];
+        const preTrimmed : string = line.trimStart();
+        if (preTrimmed.length == 0) {
+            continue;
+        }
+        const spaces : number = line.length - preTrimmed.length;
+        const fullTrimmed : string = preTrimmed.trimEnd();
+        const isBlock : boolean = fullTrimmed.endsWith(":") && !fullTrimmed.startsWith("-");
+        while (processing.length > 0) {
+            const lastFold : InProcFold = processing[processing.length - 1];
+            if (lastFold.spacing > spaces || spaces == 0 || (isBlock && lastFold.spacing == spaces)) {
+                processing.pop();
+                output.push(new vscode.FoldingRange(lastFold.start, i - 1));
+                if (debugFolding) {
+                    outputChannel.appendLine("(FOLDING) Found an end at " + i);
+                }
+            }
+            else {
+                break;
+            }
+        }
+        if (isBlock) {
+            processing.push(new InProcFold(i, spaces));
+            if (debugFolding) {
+                outputChannel.appendLine("(FOLDING) Found a start at " + i);
+            }
+        }
+    }
+    if (debugFolding) {
+        outputChannel.appendLine("(FOLDING) Folds calculated with " + output.length + " normal and " + processing.length + " left");
+    }
+    for (let i : number = 0; i < processing.length; i++) { // for-each style loop bugs out and thinks the value is a String, so have to do 'i' counter style loop
+        const extraFold : InProcFold = processing[i];
+        output.push(new vscode.FoldingRange(extraFold.start, totalLines - 1));
+    }
+    return output;
+}
+
 function scheduleRefresh() {
     if (refreshTimer) {
         return;
@@ -577,8 +627,22 @@ export async function activate(context: vscode.ExtensionContext) {
         loadAllColors();
         forceRefresh("onDidChangeConfiguration");
     });
+    vscode.languages.registerFoldingRangeProvider('denizenscript', {
+        provideFoldingRanges(document: vscode.TextDocument, context: vscode.FoldingContext, token: vscode.CancellationToken) : vscode.ProviderResult<vscode.FoldingRange[]> {
+            return denizenScriptFoldingProvider(document, context, token);
+        }
+    });
     scheduleRefresh();
     outputChannel.appendLine('Denizen extension has been activated');
+}
+
+class InProcFold {
+    start : number;
+    spacing : number;
+    constructor(start: number, spacing: number) {
+        this.start = start;
+        this.spacing = spacing;
+    }
 }
 
 export function deactivate() {

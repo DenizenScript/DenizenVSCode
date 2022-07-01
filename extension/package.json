@@ -156,6 +156,11 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Whether to output debug logs for syntax highlighting."
+                },
+                "denizenscript.debug.folding": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to output debug logs for syntax folding."
                 }
             }
         },
