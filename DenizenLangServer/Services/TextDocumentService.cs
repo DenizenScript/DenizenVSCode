@@ -269,7 +269,7 @@ namespace DenizenLangServer.Services
                     {
                         eventName = eventName["on ".Length..];
                     }
-                    eventName = EventTools.SeparateSwitches(eventName, out List<KeyValuePair<string, string>> switches);
+                    eventName = EventTools.SeparateSwitches(MetaDocs.CurrentMeta, eventName, out List<KeyValuePair<string, string>> switches);
                     if (!MetaDocs.CurrentMeta.Events.TryGetValue(eventName, out MetaEvent realEvt))
                     {
                         string[] parts = eventName.Split(' ');
@@ -661,7 +661,7 @@ namespace DenizenLangServer.Services
                     {
                         eventName = eventName["on ".Length..];
                     }
-                    eventName = EventTools.SeparateSwitches(eventName, out List<KeyValuePair<string, string>> switches);
+                    eventName = EventTools.SeparateSwitches(MetaDocs.CurrentMeta, eventName, out List<KeyValuePair<string, string>> switches);
                     string[] parts = eventName.Split(' ');
                     List<CompletionItem> completions = new();
                     foreach (MetaEvent evt in MetaDocs.CurrentMeta.Events.Values)
