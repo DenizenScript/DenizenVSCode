@@ -207,8 +207,8 @@ namespace DenizenLangServer.Services
                                     squareBrackets--;
                                 }
                             }
-                            SingleTag parsed = TagHelper.Parse(fullTag, (s) => { /* Ignore errors */ });
-                            TagTracer tracer = new() { Docs = MetaDocs.CurrentMeta, Error = (s) => { /* Ignore errors */ }, DeprecationError = (s, p) => { }, Tag = parsed };
+                            SingleTag parsed = TagHelper.Parse(fullTag, (_) => { /* Ignore errors */ });
+                            TagTracer tracer = new() { Docs = MetaDocs.CurrentMeta, Tag = parsed };
                             tracer.Trace();
                             foreach (SingleTag.Part part in parsed.Parts)
                             {
@@ -620,9 +620,18 @@ namespace DenizenLangServer.Services
                                         new CompletionItem(tag, CompletionItemKind.Property, Token)).ToArray();
                                 return new CompletionList(results);
                             }
+                            SingleTag tag = TagHelper.Parse(fullTag[..(lastDot - 1)], (_) => { /* ignore */ });
+                            TagTracer tracer = new() { Tag = tag, Docs = MetaDocs.CurrentMeta };
+                            tracer.Trace();
+                            SingleTag.Part lastPart = tag.Parts[^1];
                             string subComponent = fullTag[lastDot..];
                             if (!subComponent.Contains('['))
                             {
+                                if (lastPart.PossibleSubTypes.Any())
+                                {
+                                    return new CompletionList(MetaDocs.CurrentMeta.Tags.Values.Where(tag => lastPart.PossibleSubTypes.Contains(tag.BaseType)).Where(tag => tag.AfterDotCleaned.StartsWith(subComponent))
+                                       .Select(tag => new CompletionItem(tag.AfterDotCleaned, CompletionItemKind.Property, tag.Name, tag.Description, Token)).ToArray());
+                                }
                                 CompletionItem[] results = MetaDocs.CurrentMeta.TagParts.Where(tag => tag.StartsWith(subComponent))
                                     .Select(tag => TryFindLikelyTagForPart(tag, out MetaTag tagDoc) ?
                                         new CompletionItem(tag, CompletionItemKind.Property, tagDoc.Name, tagDoc.Description, Token) :
