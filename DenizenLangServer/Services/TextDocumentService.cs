@@ -629,7 +629,7 @@ namespace DenizenLangServer.Services
                             {
                                 if (lastPart.PossibleSubTypes.Any())
                                 {
-                                    return new CompletionList(MetaDocs.CurrentMeta.Tags.Values.Where(tag => lastPart.PossibleSubTypes.Contains(tag.BaseType)).Where(tag => tag.AfterDotCleaned.StartsWith(subComponent))
+                                    return new CompletionList(MetaDocs.CurrentMeta.Tags.Values.Where(tag => lastPart.PossibleSubTypes.Contains(tag.BaseType) || lastPart.Text == tag.BeforeDot).Where(tag => tag.AfterDotCleaned.StartsWith(subComponent))
                                        .Select(tag => new CompletionItem(tag.AfterDotCleaned, CompletionItemKind.Property, tag.Name, tag.Description, Token)).ToArray());
                                 }
                                 CompletionItem[] results = MetaDocs.CurrentMeta.TagParts.Where(tag => tag.StartsWith(subComponent))
