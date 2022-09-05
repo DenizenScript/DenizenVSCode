@@ -351,7 +351,7 @@ const definiteNotScriptKeys : string[] = [
     "interact scripts", "default constants", "data", "constants", "text", "lore", "aliases", "slots", "enchantments", "input"
 ];
 
-function decorateLine(line : string, lineNumber: number, decorations: { [color: string]: vscode.Range[] }, lastKey : string) {
+function decorateLine(line : string, lineNumber: number, decorations: { [color: string]: vscode.Range[] }, lastKey : string, isData : boolean) {
     if (line.endsWith("\r")) {
         line = line.substring(0, line.length - 1);
     }
@@ -381,7 +381,7 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         }
     }
     else if (trimmed.startsWith("-")) {
-        const isNonScript : boolean = definiteNotScriptKeys.includes(lastKey);
+        const isNonScript : boolean = isData || definiteNotScriptKeys.includes(lastKey);
         addDecor(decorations, "normal", lineNumber, preSpaces, preSpaces + 1);
         if (isNonScript) {
             decorateArg(trimmed.substring(1), preSpaces + 1, lineNumber, decorations, false, "non-script");
@@ -484,25 +484,28 @@ function decorateFullFile(editor: vscode.TextEditor) {
             outputChannel.appendLine("Doing partial highlight of file from start " + startLine + " to end " + endLine + ", for file: " + editor.document.fileName);
         }
     }
-    // Figure out the initial lastKey if needed
-    for (let i : number = startLine - 1; i >= 0; i--) {
-        const lineText : string = splitText[i];
-        const trimmedLine = lineText.trim();
-        if (trimmedLine.endsWith(":") && !trimmedLine.startsWith("-"))
-        {
-            lastKey = trimmedLine.substring(0, trimmedLine.length - 1).toLowerCase();
-            break;
-        }
-    }
+    let definitelyDataSpacing : number = -1;
     // Actually choose colors
-    for (let i : number = startLine; i < endLine; i++) {
+    for (let i : number = 0; i < endLine; i++) {
         const lineText : string = splitText[i];
-        const trimmedLine = lineText.trim();
-        if (trimmedLine.endsWith(":") && !trimmedLine.startsWith("-"))
-        {
+        const trimmedLineStart : string = lineText.trimStart();
+        const spaces : number = lineText.length - trimmedLineStart.length;
+        const trimmedLine : string = trimmedLineStart.trimEnd();
+        if (trimmedLine.endsWith(":") && !trimmedLine.startsWith("-")) {
             lastKey = trimmedLine.substring(0, trimmedLine.length - 1).toLowerCase();
+            if (spaces <= definitelyDataSpacing) {
+                definitelyDataSpacing = -1;
+            }
+            if (definiteNotScriptKeys.includes(lastKey) && definitelyDataSpacing == -1) {
+                definitelyDataSpacing = spaces;
+            }
         }
-        decorateLine(lineText, i, decorations, lastKey);
+        else if (trimmedLine == "type: data" && (definitelyDataSpacing == -1 || spaces <= definitelyDataSpacing)) {
+            definitelyDataSpacing = spaces - 1;
+        }
+        if (i >= startLine) {
+            decorateLine(lineText, i, decorations, lastKey, definitelyDataSpacing != -1);
+        }
     }
     // Apply them
     for (const c in decorations) {
