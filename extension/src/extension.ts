@@ -60,18 +60,41 @@ function activateLanguageServer(context: vscode.ExtensionContext, dotnetPath : s
 }
 
 const highlightDecors: { [color: string]: vscode.TextEditorDecorationType } = {};
+const highlightColorRef: { [color: string]: string } = {};
 
 function parseColor(inColor : string) : vscode.DecorationRenderOptions {
     const colorSplit : string[] = inColor.split('\|');
     let resultColor : vscode.DecorationRenderOptions = { color : colorSplit[0] };
+    let strike : boolean = false;
+    let underline : boolean = false;
     for (const i in colorSplit) {
         const subValueSplit = colorSplit[i].split('=', 2);
         const subValueSetting = subValueSplit[0];
         if (subValueSetting == "style") {
             resultColor.fontStyle = subValueSplit[1];
         }
+        else if (subValueSetting == "weight") {
+            resultColor.fontWeight = subValueSplit[1];
+        }
+        else if (subValueSetting == "strike") {
+            strike = subValueSplit[1] == "true";
+        }
+        else if (subValueSetting == "underline") {
+            underline = subValueSplit[1] == "true";
+        }
         else if (subValueSetting == "background") {
             resultColor.backgroundColor = subValueSplit[1];
+        }
+    }
+    if (strike || underline) {
+        if (strike && !underline) {
+            resultColor.textDecoration = "line-through";
+        }
+        else if (underline && !strike) {
+            resultColor.textDecoration = "underline";
+        }
+        else {
+            resultColor.textDecoration = "underline line-through";
         }
     }
     return resultColor;
@@ -79,6 +102,7 @@ function parseColor(inColor : string) : vscode.DecorationRenderOptions {
 
 function colorSet(name : string, inColor : string) {
     highlightDecors[name] = vscode.window.createTextEditorDecorationType(parseColor(inColor));
+    highlightColorRef[name] = inColor;
 }
 
 const colorTypes : string[] = [
@@ -163,7 +187,7 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
             inTagCounter--;
             if (inTagCounter == 0) {
                 const tagText : string = tag.substring(tagStart + 1, i);
-                let autoColor : string = getTagColor(tagText);
+                let autoColor : string = getTagColor(tagText, textColor);
                 if (autoColor != null) {
                     addDecor(decorations, "auto:" + autoColor, lineNumber, start + tagStart + 1, start + i);
                     addDecor(decorations, "tag", lineNumber, start + tagStart, start + tagStart + 1);
@@ -263,7 +287,13 @@ const tagSpecialColors: { [color: string]: string } = {
     "&c": "#FF5555", "red": "#FF5555",
     "&d": "#FF55FF", "light_purple": "#FF55FF",
     "&e": "#FFFF55", "yellow": "#FFFF55",
-    "&f": "#FFFFFF", "white": "#FFFFFF",
+    "&f": "#FFFFFF", "white": "#FFFFFF", "&r": "#FFFFFF", "reset": "#FFFFFF"
+};
+const formatCodes: { [code: string]: string } = {
+    "&l": "bold", "&L": "bold", "bold": "bold",
+    "&o": "italic", "&O": "italic", "italic": "italic",
+    "&m": "strike", "&M": "strike", "strikethrough": "strike",
+    "&n": "underline", "&N": "underline", "underline": "underline"
 };
 
 const hexChars: { [c: string] : boolean } = {}
@@ -282,17 +312,46 @@ function isHex(text : string) : boolean {
     return true;
 }
 
-function getTagColor(tagText : string) : string {
+function getColorData(color : string) : string {
+    if (color.startsWith("auto:#")) {
+        return color.substring("auto:".length);
+    }
+    const knownColor : string = highlightColorRef[color];
+    if (knownColor) {
+        return knownColor;
+    }
+    return null;
+}
+
+function getTagColor(tagText : string, preColor : string) : string {
     if (!doInlineColors) {
         return null;
     }
     if (tagText in tagSpecialColors) {
         return tagSpecialColors[tagText];
     }
-    else if (tagText.startsWith("&color[") && tagText.endsWith("]") && !tagText.includes(".")) {
+    if (tagText.startsWith("&color[") && tagText.endsWith("]") && !tagText.includes(".")) {
         const colorText : string = tagText.substring("&color[".length, tagText.length - 1);
         if (colorText.length == 7 && colorText.startsWith("#") && isHex(colorText.substring(1))) {
             return colorText;
+        }
+    }
+    const formatter : string = formatCodes[tagText];
+    if (formatter) {
+        const rgb : string = getColorData(preColor);
+        if (rgb) {
+            if (formatter == "bold") {
+                return rgb + "|weight=bold";
+            }
+            else if (formatter == "italic") {
+                return rgb + "|style=italic";
+            }
+            else if (formatter == "strike") {
+                return rgb + "|strike=true";
+            }
+            else if (formatter == "underline") {
+                return rgb + "|underline=true";
+            }
         }
     }
     return null;
@@ -342,7 +401,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             inTagCounter--;
             if (inTagCounter == 0) {
                 const tagText : string = arg.substring(tagStart + 1, i);
-                let autoColor : string = getTagColor(tagText);
+                let autoColor : string = getTagColor(tagText, textColor);
                 if (autoColor != null) {
                     addDecor(decorations, "tag", lineNumber, start + tagStart, start + tagStart + 1);
                     addDecor(decorations, "auto:" + autoColor, lineNumber, start + tagStart + 1, start + i);
