@@ -377,7 +377,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             lastDecor = i + 1;
             if (!quoted) {
                 inTagCounter = 0;
-                defaultDecor = referenceDefault;
+                defaultDecor = textColor;
                 spaces++;
             }
             const nextArg : string = arg.includes(" ", i + 1) ? arg.substring(i + 1, arg.indexOf(" ", i + 1)) : arg.substring(i + 1);
