@@ -108,7 +108,6 @@ function loadAllColors() {
         let pair : string[] = color.split('=');
         if (pair.length == 2) {
             tagSpecialColors["&[" + pair[0] + "]"] = pair[1];
-            outputChannel.appendLine("Add color &[" + pair[0] + "] as " + pair[1] + "!");
         }
         else {
             outputChannel.appendLine("Cannot interpret color " + color);
@@ -148,6 +147,7 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
     let inTagParamCounter : number = 0;
     let defaultDecor : string = "tag";
     let lastDecor : number = -1; // Color the < too.
+    let textColor : string = "tag_param";
     for (let i = 0; i < len; i++) {
         const c : string = tag.charAt(i);
         if (c == '<') {
@@ -162,9 +162,19 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
         else if (c == '>' && inTagCounter > 0) {
             inTagCounter--;
             if (inTagCounter == 0) {
-                decorateTag(tag.substring(tagStart + 1, i), start + tagStart + 1, lineNumber, decorations);
+                const tagText : string = tag.substring(tagStart + 1, i);
+                let autoColor : string = getTagColor(tagText);
+                if (autoColor != null) {
+                    addDecor(decorations, "auto:" + autoColor, lineNumber, start + tagStart + 1, start + i);
+                    addDecor(decorations, "tag", lineNumber, start + tagStart, start + tagStart + 1);
+                    defaultDecor = "auto:" + autoColor;
+                    textColor = defaultDecor;
+                }
+                else {
+                    decorateTag(tagText, start + tagStart + 1, lineNumber, decorations);
+                    defaultDecor = inTagParamCounter > 0 ? textColor : "tag";
+                }
                 addDecor(decorations, "tag", lineNumber, start + i, start + i + 1);
-                defaultDecor = inTagParamCounter > 0 ? "tag_param" : "tag";
                 lastDecor = i + 1;
             }
         }
@@ -272,6 +282,22 @@ function isHex(text : string) : boolean {
     return true;
 }
 
+function getTagColor(tagText : string) : string {
+    if (!doInlineColors) {
+        return null;
+    }
+    if (tagText in tagSpecialColors) {
+        return tagSpecialColors[tagText];
+    }
+    else if (tagText.startsWith("&color[") && tagText.endsWith("]") && !tagText.includes(".")) {
+        const colorText : string = tagText.substring("&color[".length, tagText.length - 1);
+        if (colorText.length == 7 && colorText.startsWith("#") && isHex(colorText.substring(1))) {
+            return colorText;
+        }
+    }
+    return null;
+}
+
 function decorateArg(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }, canQuote : boolean, contextualLabel : string) {
     const len : number = arg.length;
     let quoted : boolean = false;
@@ -283,6 +309,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
     let lastDecor : number = 0;
     let hasTagEnd : boolean = checkIfHasTagEnd(arg, false, 'x', canQuote);
     let spaces : number = 0;
+    let textColor : string = referenceDefault;
     for (let i = 0; i < len; i++) {
         const c : string = arg.charAt(i);
         if (canQuote && (c == '"' || c == '\'')) {
@@ -290,6 +317,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i + 1);
                 lastDecor = i + 1;
                 defaultDecor = referenceDefault;
+                textColor = defaultDecor;
                 quoted = false;
             }
             else if (!quoted) {
@@ -297,6 +325,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 lastDecor = i;
                 quoted = true;
                 defaultDecor = c == '"' ? "quote_double" : "quote_single";
+                textColor = defaultDecor;
                 quoteMode = c;
             }
         }
@@ -313,23 +342,16 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             inTagCounter--;
             if (inTagCounter == 0) {
                 const tagText : string = arg.substring(tagStart + 1, i);
-                let autoColor : string = null;
-                if (tagText in tagSpecialColors) {
-                    autoColor = tagSpecialColors[tagText];
-                }
-                else if (tagText.startsWith("&color[") && tagText.endsWith("]") && !tagText.includes(".")) {
-                    const colorText : string = tagText.substring("&color[".length, tagText.length - 1);
-                    if (colorText.length == 7 && colorText.startsWith("#") && isHex(colorText.substring(1))) {
-                        autoColor = colorText;
-                    }
-                }
-                if (doInlineColors && autoColor != null) {
+                let autoColor : string = getTagColor(tagText);
+                if (autoColor != null) {
+                    addDecor(decorations, "tag", lineNumber, start + tagStart, start + tagStart + 1);
                     addDecor(decorations, "auto:" + autoColor, lineNumber, start + tagStart + 1, start + i);
                     defaultDecor = "auto:" + autoColor;
+                    textColor = defaultDecor;
                 }
                 else {
                     decorateTag(tagText, start + tagStart + 1, lineNumber, decorations);
-                    defaultDecor = quoted ? (quoteMode == '"' ? "quote_double" : "quote_single") : referenceDefault;
+                    defaultDecor = textColor;
                 }
                 addDecor(decorations, "tag", lineNumber, start + i, start + i + 1);
                 lastDecor = i + 1;
