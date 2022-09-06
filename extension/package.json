@@ -3,13 +3,13 @@
     "displayName": "DenizenScript",
     "description": "The Denizen scripting language.",
     "author": "mcmonkey and the DenizenScript team",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "publisher": "denizenscript",
     "license": "MIT",
     "repository": "https://github.com/DenizenScript/DenizenVSCode",
     "icon": "logo.png",
     "engines": {
-        "@types/vscode": "^1.33.0"
+        "vscode": "^1.34.0"
     },
     "categories": [
         "Programming Languages"
@@ -136,6 +136,16 @@
                     "type": "string",
                     "default": "#FFFFFF",
                     "description": "Highlighting for anything not otherwise specified."
+                },
+                "denizenscript.theme_colors.text_color_map": {
+                    "type": "string",
+                    "default": "base=#00AA00,emphasis=#55FFFF,error=#FF5555,warning=#FFFF55,item=#FFAA00,lore=#AAAAAA,npc=#55FF55,default=#FFFFFF",
+                    "description": "Custom color preferences to match your Denizen/config.yml, but RGB Hex format only."
+                },
+                "denizenscript.behaviors.do_inline_colors": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to generate the correct local colors for color tags."
                 },
                 "denizenscript.behaviors.do_hover_docs": {
                     "type": "boolean",

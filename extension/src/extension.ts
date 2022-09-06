@@ -14,6 +14,7 @@ let outputChannel = vscode.window.createOutputChannel("Denizen");
 
 let debugHighlighting : boolean = false;
 let debugFolding : boolean = false;
+let doInlineColors : boolean = true;
 
 class HighlightCache {
     needRefreshStartLine : number = -1;
@@ -60,8 +61,8 @@ function activateLanguageServer(context: vscode.ExtensionContext, dotnetPath : s
 
 const highlightDecors: { [color: string]: vscode.TextEditorDecorationType } = {};
 
-function colorSet(name : string, incolor : string) {
-    const colorSplit : string[] = incolor.split('\|');
+function parseColor(inColor : string) : vscode.DecorationRenderOptions {
+    const colorSplit : string[] = inColor.split('\|');
     let resultColor : vscode.DecorationRenderOptions = { color : colorSplit[0] };
     for (const i in colorSplit) {
         const subValueSplit = colorSplit[i].split('=', 2);
@@ -73,7 +74,11 @@ function colorSet(name : string, incolor : string) {
             resultColor.backgroundColor = subValueSplit[1];
         }
     }
-    highlightDecors[name] = vscode.window.createTextEditorDecorationType(resultColor);
+    return resultColor;
+}
+
+function colorSet(name : string, inColor : string) {
+    highlightDecors[name] = vscode.window.createTextEditorDecorationType(parseColor(inColor));
 }
 
 const colorTypes : string[] = [
@@ -95,6 +100,20 @@ function loadAllColors() {
     headerSymbols = configuration.get("denizenscript.header_symbols");
     debugHighlighting = configuration.get("denizenscript.debug.highlighting");
     debugFolding = configuration.get("denizenscript.debug.folding");
+    doInlineColors = configuration.get("denizenscript.behaviors.do_inline_colors");
+    const customColors : string = configuration.get("denizenscript.theme_colors.text_color_map");
+    const colorsSplit : string[] = customColors.split(',');
+    for (const i in colorsSplit) {
+        const color = colorsSplit[i];
+        let pair : string[] = color.split('=');
+        if (pair.length == 2) {
+            tagSpecialColors["&[" + pair[0] + "]"] = pair[1];
+            outputChannel.appendLine("Add color &[" + pair[0] + "] as " + pair[1] + "!");
+        }
+        else {
+            outputChannel.appendLine("Cannot interpret color " + color);
+        }
+    }
 }
 
 function activateHighlighter(context: vscode.ExtensionContext) {
@@ -115,6 +134,10 @@ function refreshDecor() {
 }
 
 function addDecor(decorations: { [color: string]: vscode.Range[] }, type: string, lineNumber: number, startChar: number, endChar: number) {
+    if (!(type in highlightDecors) && type.startsWith("auto:")) {
+        highlightDecors[type] = vscode.window.createTextEditorDecorationType(parseColor(type.substring("auto:".length)));
+        decorations[type] = [];
+    }
     decorations[type].push(new vscode.Range(new vscode.Position(lineNumber, startChar), new vscode.Position(lineNumber, endChar)));
 }
 
@@ -213,6 +236,42 @@ function checkIfHasTagEnd(arg : string, quoted: boolean, quoteMode: string, canQ
     return false;
 }
 
+
+const tagSpecialColors: { [color: string]: string } = {
+    "&0": "#000000", "black": "#000000",
+    "&1": "#0000AA", "dark_blue": "#0000AA",
+    "&2": "#00AA00", "dark_green": "#00AA00",
+    "&3": "#00AAAA", "dark_aqua": "#00AAAA",
+    "&4": "#AA0000", "dark_red": "#AA0000",
+    "&5": "#AA00AA", "dark_purple": "#AA00AA",
+    "&6": "#FFAA00", "gold": "#FFAA00",
+    "&7": "#AAAAAA", "gray": "#AAAAAA",
+    "&8": "#555555", "dark_gray": "#555555",
+    "&9": "#5555FF", "blue": "#5555FF",
+    "&a": "#55FF55", "green": "#55FF55",
+    "&b": "#55FFFF", "aqua": "#55FFFF",
+    "&c": "#FF5555", "red": "#FF5555",
+    "&d": "#FF55FF", "light_purple": "#FF55FF",
+    "&e": "#FFFF55", "yellow": "#FFFF55",
+    "&f": "#FFFFFF", "white": "#FFFFFF",
+};
+
+const hexChars: { [c: string] : boolean } = {}
+const hexRefStr = "abcdefABCDEF0123456789";
+for (let hexID = 0; hexID < hexRefStr.length; hexID++) {
+    hexChars[hexRefStr.charAt(hexID)] = true;
+}
+
+function isHex(text : string) : boolean {
+    for (let i = 0; i < text.length; i++) {
+        let c : string = text.charAt(i);
+        if (!(c in hexChars)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function decorateArg(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }, canQuote : boolean, contextualLabel : string) {
     const len : number = arg.length;
     let quoted : boolean = false;
@@ -253,9 +312,26 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
         else if (hasTagEnd && c == '>' && inTagCounter > 0) {
             inTagCounter--;
             if (inTagCounter == 0) {
-                decorateTag(arg.substring(tagStart + 1, i), start + tagStart + 1, lineNumber, decorations);
+                const tagText : string = arg.substring(tagStart + 1, i);
+                let autoColor : string = null;
+                if (tagText in tagSpecialColors) {
+                    autoColor = tagSpecialColors[tagText];
+                }
+                else if (tagText.startsWith("&color[") && tagText.endsWith("]") && !tagText.includes(".")) {
+                    const colorText : string = tagText.substring("&color[".length, tagText.length - 1);
+                    if (colorText.length == 7 && colorText.startsWith("#") && isHex(colorText.substring(1))) {
+                        autoColor = colorText;
+                    }
+                }
+                if (doInlineColors && autoColor != null) {
+                    addDecor(decorations, "auto:" + autoColor, lineNumber, start + tagStart + 1, start + i);
+                    defaultDecor = "auto:" + autoColor;
+                }
+                else {
+                    decorateTag(tagText, start + tagStart + 1, lineNumber, decorations);
+                    defaultDecor = quoted ? (quoteMode == '"' ? "quote_double" : "quote_single") : referenceDefault;
+                }
                 addDecor(decorations, "tag", lineNumber, start + i, start + i + 1);
-                defaultDecor = quoted ? (quoteMode == '"' ? "quote_double" : "quote_single") : referenceDefault;
                 lastDecor = i + 1;
             }
         }
