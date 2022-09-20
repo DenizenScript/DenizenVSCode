@@ -545,6 +545,7 @@ namespace DenizenLangServer.Services
                 if (trimmed.Contains('<'))
                 {
                     int argStart = 0;
+                    int argInTag = 0;
                     for (int i = 0; i < trimmed.Length; i++)
                     {
                         if (trimmed[i] == '"' || trimmed[i] == '\'')
@@ -555,7 +556,15 @@ namespace DenizenLangServer.Services
                                 i++;
                             }
                         }
-                        else if (trimmed[i] == ' ')
+                        else if (trimmed[i] == '<' && i + 1 < trimmed.Length && ScriptChecker.VALID_TAG_FIRST_CHAR.IsMatch(trimmed[i + 1]))
+                        {
+                            argInTag++;
+                        }
+                        else if (trimmed[i] == '>')
+                        {
+                            argInTag--;
+                        }
+                        else if (trimmed[i] == ' ' && argInTag == 0)
                         {
                             argStart = i + 1;
                         }

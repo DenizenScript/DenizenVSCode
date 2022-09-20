@@ -249,6 +249,7 @@ const deffableCmdLabels : string[] = [ "cmd:run", "cmd:runlater", "cmd:clickable
 
 function checkIfHasTagEnd(arg : string, quoted: boolean, quoteMode: string, canQuote : boolean) : boolean {
     const len : number = arg.length;
+    let params : number = 0;
     for (let i = 0; i < len; i++) {
         const c : string = arg.charAt(i);
         if (canQuote && (c == '"' || c == '\'')) {
@@ -260,10 +261,16 @@ function checkIfHasTagEnd(arg : string, quoted: boolean, quoteMode: string, canQ
                 quoteMode = c;
             }
         }
+        else if (c == '[') {
+            params++;
+        }
+        else if (c == ']' && params > 0) {
+            params--;
+        }
         else if (c == '>') {
             return true;
         }
-        else if (c == ' ' && !quoted && canQuote) {
+        else if (c == ' ' && !quoted && canQuote && params == 0) {
             return false;
         }
     }
@@ -357,6 +364,8 @@ function getTagColor(tagText : string, preColor : string) : string {
     return null;
 }
 
+const TAG_ALLOWED : string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789&_";
+
 function decorateArg(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }, canQuote : boolean, contextualLabel : string) {
     const len : number = arg.length;
     let quoted : boolean = false;
@@ -388,7 +397,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 quoteMode = c;
             }
         }
-        else if (hasTagEnd && c == '<' && i + 1 < len && arg.charAt(i + 1) != '-') {
+        else if (hasTagEnd && c == '<' && i + 1 < len && TAG_ALLOWED.includes(arg.charAt(i + 1))) {
             inTagCounter++;
             if (inTagCounter == 1) {
                 addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
@@ -429,7 +438,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 lastDecor = i;
             }
         }
-        else if (c == ' ' && ((!quoted && canQuote) || inTagCounter == 0)) {
+        else if (c == ' ' && !quoted && canQuote && inTagCounter == 0) {
             hasTagEnd = checkIfHasTagEnd(arg.substring(i + 1), quoted, quoteMode, canQuote);
             addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
             addDecor(decorations, "space", lineNumber, start + i, start + i + 1);
