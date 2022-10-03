@@ -761,6 +761,8 @@ function forceRefresh(reason: String) {
     scheduleRefresh();
 }
 
+let changeCounter : number = 0;
+
 export async function activate(context: vscode.ExtensionContext) {
     let path : string = await activateDotNet();
     activateLanguageServer(context, path);
@@ -788,6 +790,9 @@ export async function activate(context: vscode.ExtensionContext) {
                 outputChannel.appendLine("Scheduled a partial refresh of syntax highlighting because onDidChangeTextDocument, from " + highlight.needRefreshStartLine + " to " + highlight.needRefreshEndLine + " with shift " + highlight.needRefreshLineShift);
             }
             scheduleRefresh();
+            if (changeCounter++ < 2) {
+                forceRefresh("onDidChangeTextDocument" + changeCounter);
+            }
         }
     }, null, context.subscriptions);
     vscode.window.onDidChangeVisibleTextEditors(editors => {
