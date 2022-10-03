@@ -382,7 +382,8 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
         const c : string = arg.charAt(i);
         if (canQuote && (c == '"' || c == '\'')) {
             if (quoted && c == quoteMode) {
-                addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i + 1);
+                addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
+                addDecor(decorations, c == '"' ? "quote_double" : "quote_single", lineNumber, start + i, start + i + 1);
                 lastDecor = i + 1;
                 defaultDecor = referenceDefault;
                 textColor = defaultDecor;
