@@ -679,9 +679,10 @@ function decorateEventLine(line : string, preLength: number, lineNumber: number,
             addDecor(decorations, "event_switch", lineNumber, preLength + charIndex, preLength + charIndex + colon);
             addDecor(decorations, "colons", lineNumber, preLength + charIndex + colon, preLength + charIndex + colon + 1);
             addDecor(decorations, "event_switch_value", lineNumber, preLength + charIndex + colon + 1, preLength + charIndex + arg.length);
-            continue;
         }
-        addDecor(decorations, format, lineNumber, preLength + charIndex, preLength + charIndex + arg.length);
+        else {
+            addDecor(decorations, format, lineNumber, preLength + charIndex, preLength + charIndex + arg.length);
+        }
         charIndex += arg.length + 1;
     }
 }
