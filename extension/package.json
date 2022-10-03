@@ -72,9 +72,24 @@
                     "default": "#1155FF",
                     "description": "Color of basic keys (lines that end with a colon)."
                 },
-                "denizenscript.theme_colors.key_inline": {
+                "denizenscript.theme_colors.event_line": {
+                    "type": "string",
+                    "default": "#1155FF",
+                    "description": "Color of basic event line after the 'on' / 'after' prefix."
+                },
+                "denizenscript.theme_colors.event_switch": {
                     "type": "string",
                     "default": "#1155FF|style=italic",
+                    "description": "Color of an event switch label."
+                },
+                "denizenscript.theme_colors.event_switch_value": {
+                    "type": "string",
+                    "default": "#1155FF",
+                    "description": "Color of an event switch value."
+                },
+                "denizenscript.theme_colors.key_inline": {
+                    "type": "string",
+                    "default": "#1155FF",
                     "description": "Color of inline keys (lines that contain a colon, and don't start with a dash)."
                 },
                 "denizenscript.theme_colors.command": {
@@ -120,7 +135,7 @@
                 "denizenscript.theme_colors.colons": {
                     "type": "string",
                     "default": "#66CCFF|weight=bold",
-                    "description": "Colons, on a key or the end of a command, or other operators."
+                    "description": "Colons, on a key, the end of a command, or inside events (and also some other operators)."
                 },
                 "denizenscript.theme_colors.if_operators": {
                     "type": "string",

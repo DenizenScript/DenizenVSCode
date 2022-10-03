@@ -108,7 +108,10 @@ function colorSet(name : string, inColor : string) {
 const colorTypes : string[] = [
     "comment_header", "comment_normal", "comment_todo", "comment_code",
     "key", "key_inline", "command", "quote_double", "quote_single", "def_name",
-    "tag", "tag_dot", "tag_param", "tag_param_bracket", "bad_space", "colons", "if_operators", "data_actions", "space", "normal"
+    "event_line", "event_switch", "event_switch_value",
+    "tag", "tag_dot", "tag_param", "tag_param_bracket",
+    "bad_space", "space", "normal",
+    "colons", "if_operators", "data_actions"
 ];
 
 function loadAllColors() {
@@ -640,19 +643,46 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         }
     }
     else if (trimmed.endsWith(":")) {
-        decorateSpaceable(trimmed.substring(0, trimmed.length - 1), preSpaces, lineNumber, "key", decorations);
+        if (trimmed.startsWith("on ") || trimmed.startsWith("after ")) {
+            decorateEventLine(trimmed.substring(0, trimmed.length - 1), preSpaces, lineNumber, decorations);
+        }
+        else {
+            decorateSpaceable(trimmed.substring(0, trimmed.length - 1), preSpaces, lineNumber, "key", decorations);
+        }
         addDecor(decorations, "colons", lineNumber, trimmedEnd.length - 1, trimmedEnd.length);
     }
     else if (trimmed.includes(": ")) {
         const colonIndex = line.indexOf(": ");
         const key = trimmed.substring(0, colonIndex - preSpaces);
-        decorateSpaceable(key, preSpaces, lineNumber, "key", decorations);
+        decorateSpaceable(key, preSpaces, lineNumber, "key_inline", decorations);
         addDecor(decorations, "colons", lineNumber, colonIndex, colonIndex + 1);
         addDecor(decorations, "space", lineNumber, colonIndex + 1, colonIndex + 2);
         decorateArg(trimmed.substring(colonIndex - preSpaces + 2), colonIndex + 2, lineNumber, decorations, false, "key:" + key);
     }
     else {
         addDecor(decorations, "bad_space", lineNumber, preSpaces, line.length);
+    }
+}
+
+function decorateEventLine(line : string, preLength: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
+    let charIndex : number = 0;
+    for (let arg of line.split(' ')) {
+        let format = "event_line";
+        if (charIndex == 0 && (arg == 'on' || arg == 'after')) {
+            format = "key";
+        }
+        if (charIndex > 0) {
+            addDecor(decorations, "space", lineNumber, preLength + charIndex - 1, preLength + charIndex);
+        }
+        const colon = arg.indexOf(':');
+        if (colon != -1) {
+            addDecor(decorations, "event_switch", lineNumber, preLength + charIndex, preLength + charIndex + colon);
+            addDecor(decorations, "colons", lineNumber, preLength + charIndex + colon, preLength + charIndex + colon + 1);
+            addDecor(decorations, "event_switch_value", lineNumber, preLength + charIndex + colon + 1, preLength + charIndex + arg.length);
+            continue;
+        }
+        addDecor(decorations, format, lineNumber, preLength + charIndex, preLength + charIndex + arg.length);
+        charIndex += arg.length + 1;
     }
 }
 
