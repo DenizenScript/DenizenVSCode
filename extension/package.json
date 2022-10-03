@@ -120,7 +120,17 @@
                 "denizenscript.theme_colors.colons": {
                     "type": "string",
                     "default": "#66CCFF|weight=bold",
-                    "description": "Colons, on a key or the end of a command, or other operators (if command, data actions, etc)."
+                    "description": "Colons, on a key or the end of a command, or other operators."
+                },
+                "denizenscript.theme_colors.if_operators": {
+                    "type": "string",
+                    "default": "#7777FF|weight=bold",
+                    "description": "If command operator symbols."
+                },
+                "denizenscript.theme_colors.data_actions": {
+                    "type": "string",
+                    "default": "#7777FF|weight=bold",
+                    "description": "Data action symbols."
                 },
                 "denizenscript.theme_colors.bad_space": {
                     "type": "string",

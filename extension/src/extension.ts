@@ -108,7 +108,7 @@ function colorSet(name : string, inColor : string) {
 const colorTypes : string[] = [
     "comment_header", "comment_normal", "comment_todo", "comment_code",
     "key", "key_inline", "command", "quote_double", "quote_single", "def_name",
-    "tag", "tag_dot", "tag_param", "tag_param_bracket", "bad_space", "colons", "space", "normal"
+    "tag", "tag_dot", "tag_param", "tag_param_bracket", "bad_space", "colons", "if_operators", "data_actions", "space", "normal"
 ];
 
 function loadAllColors() {
@@ -464,7 +464,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             const nextArg : string = arg.includes(" ", i + 1) ? arg.substring(i + 1, arg.indexOf(" ", i + 1)) : arg.substring(i + 1);
             if (!quoted && canQuote) {
                 if (ifOperators.includes(nextArg) && ifCmdLabels.includes(contextualLabel)) {
-                    addDecor(decorations, "colons", lineNumber, start + i + 1, start + i + 1 + nextArg.length);
+                    addDecor(decorations, "if_operators", lineNumber, start + i + 1, start + i + 1 + nextArg.length);
                     i += nextArg.length;
                     lastDecor = i;
                 }
@@ -507,7 +507,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                         const afterColon = nextArg.substring(colonIndex);
                         for (let possible of dataActions) {
                             if (afterColon.startsWith(possible)) {
-                                addDecor(decorations, "colons", lineNumber, start + i + 1, start + i + 1 + possible.length);
+                                addDecor(decorations, "data_actions", lineNumber, start + i + 1, start + i + 1 + possible.length);
                                 lastDecor = i + colonIndex + possible.length;
                                 break;
                             }
