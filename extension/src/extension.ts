@@ -508,7 +508,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                         for (let possible of dataActions) {
                             if (afterColon.startsWith(possible)) {
                                 addDecor(decorations, "data_actions", lineNumber, start + i + 1, start + i + 1 + possible.length);
-                                lastDecor = i + colonIndex + possible.length;
+                                lastDecor = i + possible.length + bump;
                                 break;
                             }
                         }
