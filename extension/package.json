@@ -120,7 +120,7 @@
                 "denizenscript.theme_colors.colons": {
                     "type": "string",
                     "default": "#66CCFF|weight=bold",
-                    "description": "Colons, on a key or the end of a command."
+                    "description": "Colons, on a key or the end of a command, or other operators (if command, data actions, etc)."
                 },
                 "denizenscript.theme_colors.bad_space": {
                     "type": "string",

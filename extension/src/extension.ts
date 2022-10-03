@@ -371,6 +371,7 @@ function getTagColor(tagText : string, preColor : string) : string {
 }
 
 const TAG_ALLOWED : string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789&_[";
+const dataActions : string[] = [ ":->:", ":<-:", ":|:", ":!", ":++", ":--", ":<-", ":+:", ":-:", ":*:", ":/:", ":" ];
 
 function decorateArg(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }, canQuote : boolean, contextualLabel : string) {
     const len : number = arg.length;
@@ -500,9 +501,17 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                             bump = 1;
                             addDecor(decorations, defaultDecor, lineNumber, start + i + 1, start + i + 2);
                         }
-                        addDecor(decorations, "def_name", lineNumber, start + i + 1 + bump, start + i + 1 + bump + colonIndex);
+                        addDecor(decorations, "def_name", lineNumber, start + i + 1 + bump, start + i + 1 + colonIndex);
                         i += colonIndex;
                         lastDecor = i + bump;
+                        const afterColon = nextArg.substring(colonIndex);
+                        for (let possible of dataActions) {
+                            if (afterColon.startsWith(possible)) {
+                                addDecor(decorations, "colons", lineNumber, start + i + 1, start + i + 1 + possible.length);
+                                lastDecor = i + colonIndex + possible.length;
+                                break;
+                            }
+                        }
                     }
                 }
             }
