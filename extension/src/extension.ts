@@ -478,19 +478,19 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 if (ifOperators.includes(nextArg) && ifCmdLabels.includes(contextualLabel)) {
                     addDecor(decorations, "if_operators", lineNumber, start + i + 1, start + i + 1 + nextArg.length);
                     i += nextArg.length;
-                    lastDecor = i;
+                    lastDecor = i + 1;
                 }
                 else if (nextArg.startsWith("as:") && !nextArg.includes("<") && (contextualLabel == "cmd:foreach" || contextualLabel == "cmd:repeat")) {
                     addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "as:".length);
                     decorateDefName(decorations, nextArg.substring("as:".length), lineNumber, start + i + 1 + "as:".length);
                     i += nextArg.length;
-                    lastDecor = i;
+                    lastDecor = i + 1;
                 }
                 else if (nextArg.startsWith("key:") && !nextArg.includes("<") && contextualLabel == "cmd:foreach") {
                     addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "key:".length);
                     decorateDefName(decorations, nextArg.substring("key:".length), lineNumber, start + i + 1 + "key:".length);
                     i += nextArg.length;
-                    lastDecor = i;
+                    lastDecor = i + 1;
                 }
                 else if (spaces == 1 && (contextualLabel == "cmd:define" || contextualLabel == "cmd:definemap") || contextualLabel == "cmd:flag") {
                     let colonIndex : number = nextArg.indexOf(':');
@@ -520,7 +520,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                         for (let possible of dataActions) {
                             if (afterColon.startsWith(possible)) {
                                 addDecor(decorations, "data_actions", lineNumber, start + i + 1, start + i + 1 + possible.length);
-                                lastDecor = i + possible.length + bump;
+                                lastDecor = i + possible.length + 1;
                                 break;
                             }
                         }
