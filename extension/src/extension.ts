@@ -439,6 +439,11 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 lastDecor = i;
             }
         }
+        else if (c == ' ' && quoted && inTagCounter == 0) {
+            addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
+            addDecor(decorations, "space", lineNumber, start + i, start + i + 1);
+            lastDecor = i + 1;
+        }
         else if (c == ' ' && !quoted && canQuote && inTagCounter == 0) {
             hasTagEnd = checkIfHasTagEnd(arg.substring(i + 1), quoted, quoteMode, canQuote);
             addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
@@ -586,12 +591,13 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         decorateSpaceable(trimmed.substring(0, trimmed.length - 1), preSpaces, lineNumber, "key", decorations);
         addDecor(decorations, "colons", lineNumber, trimmedEnd.length - 1, trimmedEnd.length);
     }
-    else if (trimmed.includes(":")) {
-        const colonIndex = line.indexOf(':');
+    else if (trimmed.includes(": ")) {
+        const colonIndex = line.indexOf(": ");
         const key = trimmed.substring(0, colonIndex - preSpaces);
         decorateSpaceable(key, preSpaces, lineNumber, "key", decorations);
         addDecor(decorations, "colons", lineNumber, colonIndex, colonIndex + 1);
-        decorateArg(trimmed.substring(colonIndex - preSpaces + 1), colonIndex + 1, lineNumber, decorations, false, "key:" + key);
+        addDecor(decorations, "space", lineNumber, colonIndex + 1, colonIndex + 2);
+        decorateArg(trimmed.substring(colonIndex - preSpaces + 2), colonIndex + 2, lineNumber, decorations, false, "key:" + key);
     }
     else {
         addDecor(decorations, "bad_space", lineNumber, preSpaces, line.length);
