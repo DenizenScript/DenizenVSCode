@@ -212,7 +212,13 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
                     defaultDecor = "def_name";
                 }
                 else {
-                    defaultDecor = "tag_param";
+                    const lastTag : string = tag.substring(0, i);
+                    if (lastTag.endsWith(".flag") || lastTag.endsWith(".flag_expiration") || lastTag.endsWith(".has_flag")) {
+                        defaultDecor = "def_name";
+                    }
+                    else {
+                        defaultDecor = "tag_param";
+                    }
                 }
             }
         }
@@ -473,13 +479,18 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                     i += nextArg.length;
                     lastDecor = i;
                 }
-                else if (spaces == 1 && (contextualLabel == "cmd:define" || contextualLabel == "cmd:definemap")) {
+                else if (spaces == 1 && (contextualLabel == "cmd:define" || contextualLabel == "cmd:definemap") || contextualLabel == "cmd:flag") {
                     let colonIndex : number = nextArg.indexOf(':');
                     if (colonIndex == -1) {
-                        colonIndex = nextArg.length;
+                        if (contextualLabel != "cmd:flag") {
+                            colonIndex = nextArg.length;
+                        }
+                    }
+                    if (contextualLabel == "cmd:flag" && nextArg.startsWith("expire:")) {
+                        colonIndex = -1;
                     }
                     const tagMark : number = nextArg.indexOf('<');
-                    if (tagMark == -1 || tagMark > colonIndex) {
+                    if ((tagMark == -1 || tagMark > colonIndex) && colonIndex != -1) {
                         const argStart : string = nextArg.charAt(0);
                         let bump : number = 0;
                         if (!quoted && canQuote && (argStart == '"' || argStart == '\'')) {
