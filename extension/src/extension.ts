@@ -225,7 +225,12 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
         else if (c == ']' && inTagCounter == 0) {
             inTagParamCounter--;
             if (inTagParamCounter == 0) {
-                addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
+                if (defaultDecor == "def_name") {
+                    decorateDefName(decorations, tag.substring(lastDecor, i), lineNumber, start + lastDecor);
+                }
+                else {
+                    addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
+                }
                 addDecor(decorations, "tag_param_bracket", lineNumber, start + i, start + i + 1);
                 defaultDecor = "tag";
                 lastDecor = i + 1;
@@ -385,6 +390,10 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
     let hasTagEnd : boolean = checkIfHasTagEnd(arg, false, 'x', canQuote);
     let spaces : number = 0;
     let textColor : string = referenceDefault;
+    if (referenceDefault == "def_name" && !arg.includes('<')) {
+        decorateDefName(decorations, arg, lineNumber, start);
+        return;
+    }
     for (let i = 0; i < len; i++) {
         const c : string = arg.charAt(i);
         if (canQuote && (c == '"' || c == '\'')) {
@@ -442,7 +451,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             const part : string = arg.substring(lastDecor, i);
             if (part.startsWith("def.") && !part.includes('<') && !part.includes(' ')) {
                 addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + "def.".length);
-                addDecor(decorations, "def_name", lineNumber, start + lastDecor + "def.".length, start + i);
+                decorateDefName(decorations, part.substring("def.".length), lineNumber, start + lastDecor + "def.".length);
                 lastDecor = i;
             }
         }
@@ -470,13 +479,13 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 }
                 else if (nextArg.startsWith("as:") && !nextArg.includes("<") && (contextualLabel == "cmd:foreach" || contextualLabel == "cmd:repeat")) {
                     addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "as:".length);
-                    addDecor(decorations, "def_name", lineNumber, start + i + 1 + "as:".length, start + i + 1 + nextArg.length);
+                    decorateDefName(decorations, nextArg.substring("as:".length), lineNumber, start + i + 1 + "as:".length);
                     i += nextArg.length;
                     lastDecor = i;
                 }
                 else if (nextArg.startsWith("key:") && !nextArg.includes("<") && contextualLabel == "cmd:foreach") {
                     addDecor(decorations, "normal", lineNumber, start + i + 1, start + i + 1 + "key:".length);
-                    addDecor(decorations, "def_name", lineNumber, start + i + 1 + "key:".length, start + i + 1 + nextArg.length);
+                    decorateDefName(decorations, nextArg.substring("key:".length), lineNumber, start + i + 1 + "key:".length);
                     i += nextArg.length;
                     lastDecor = i;
                 }
@@ -501,7 +510,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                             bump = 1;
                             addDecor(decorations, defaultDecor, lineNumber, start + i + 1, start + i + 2);
                         }
-                        addDecor(decorations, "def_name", lineNumber, start + i + 1 + bump, start + i + 1 + colonIndex);
+                        decorateDefName(decorations, nextArg.substring(bump, colonIndex), lineNumber, start + i + 1 + bump);
                         i += colonIndex;
                         lastDecor = i + bump;
                         const afterColon = nextArg.substring(colonIndex);
@@ -520,6 +529,29 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
     if (lastDecor < len) {
         addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + len);
     }
+}
+
+function indexOfAny(text : string, searches : string[], start : number) : number {
+    let least : number = -1;
+    for (let search of searches) {
+        const thisHit = text.indexOf(search, start);
+        if (thisHit != -1 && (thisHit < least || least == -1)) {
+            least = thisHit;
+        }
+    }
+    return least;
+}
+
+function decorateDefName(decorations: { [color: string]: vscode.Range[] }, part : string, lineNumber : number, start : number) {
+    let dot : number = indexOfAny(part, ['.', '|'], 0);
+    let lastIndex : number = 0;
+    while (dot != -1) {
+        addDecor(decorations, "def_name", lineNumber, start + lastIndex, start + dot);
+        addDecor(decorations, "tag_dot", lineNumber, start + dot - 1, start + dot + 1);
+        lastIndex = dot + 1;
+        dot = indexOfAny(part, ['.', '|'], dot + 1);
+    }
+    addDecor(decorations, "def_name", lineNumber, start + lastIndex, start + part.length);
 }
 
 function decorateComment(line : string, lineNumber: number, decorType: string, decorations: { [color: string]: vscode.Range[] }) {
