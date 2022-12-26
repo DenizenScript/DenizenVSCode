@@ -7,6 +7,8 @@ using JsonRpc.Messages;
 using LanguageServer.VsCode.Contracts;
 using Newtonsoft.Json.Linq;
 using FreneticUtilities.FreneticToolkit;
+using FreneticUtilities.FreneticExtensions;
+using System.IO;
 
 namespace DenizenLangServer.Services
 {
@@ -17,6 +19,7 @@ namespace DenizenLangServer.Services
         public InitializeResult Initialize(int processId, Uri rootUri, ClientCapabilities capabilities, JToken initializationOptions = null, string trace = null)
         {
             SpecialTools.Internationalize();
+            WorkspaceTracker.WorkspacePath = WorkspaceTracker.FixPath(rootUri);
             return new InitializeResult(new ServerCapabilities
             {
                 HoverProvider = new HoverOptions() { WorkDoneProgress = false },

@@ -16,5 +16,7 @@ namespace DenizenLangServer
         public static bool DoTabCompletes = true;
 
         public static string ExtraSources = "";
+
+        public static bool TrackFullWorkspace = true;
     }
 }

@@ -36,6 +36,8 @@ namespace DenizenLangServer.Services
             public bool Do_hover_docs { get; set; }
 
             public bool Do_tab_completes { get; set; }
+
+            public bool Track_full_workspace { get; set; }
         }
 
         [JsonRpcMethod(IsNotification = true, AllowExtensionData = true)]
@@ -45,6 +47,7 @@ namespace DenizenLangServer.Services
             {
                 ClientConfiguration.DoHoverDocs = settings.Denizenscript.Behaviors.Do_hover_docs;
                 ClientConfiguration.DoTabCompletes = settings.Denizenscript.Behaviors.Do_tab_completes;
+                ClientConfiguration.TrackFullWorkspace = settings.Denizenscript.Behaviors.Track_full_workspace;
                 if (ClientConfiguration.ExtraSources != settings.Denizenscript.Extra_sources)
                 {
                     Console.Error.WriteLine($"Alternate meta sources detected, scanning...");

@@ -182,6 +182,11 @@
                     "default": true,
                     "description": "Whether to suggest tab completions."
                 },
+                "denizenscript.behaviors.track_full_workspace": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to track the content of the full workspace (if false, will only scan the currently open file)."
+                },
                 "denizenscript.extra_sources": {
                     "type": "string",
                     "default": "",

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -400,9 +401,8 @@ namespace DenizenLangServer.Services
         }
 
         [JsonRpcMethod(IsNotification = true)]
-        public async Task DidClose(TextDocumentIdentifier textDocument)
+        public void DidClose(TextDocumentIdentifier textDocument)
         {
-            await Client.Document.PublishDiagnostics(textDocument.Uri, Array.Empty<Diagnostic>());
             Session.Documents.TryRemove(textDocument.Uri, out _);
         }
 

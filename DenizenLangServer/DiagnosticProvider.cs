@@ -1,5 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,6 +27,8 @@ namespace DenizenLangServer
         public CancellationToken CancelToken = new();
 
         public LockObject DiagUpdateLock = new();
+
+        public LockObject DiagPublishLock = new();
 
         public void InformNeedsUpdate(TextDocument document)
         {
@@ -67,14 +73,7 @@ namespace DenizenLangServer
         {
             try
             {
-                ICollection<Diagnostic> diagList = LintDocument(document);
-                if (session.Documents.ContainsKey(document.Uri))
-                {
-                    Task.Factory.StartNew(() =>
-                    {
-                        session.Client.Document.PublishDiagnostics(document.Uri, diagList).Wait();
-                    });
-                }
+                LintDocument(document);
             }
             catch (Exception ex)
             {
@@ -94,18 +93,9 @@ namespace DenizenLangServer
             return new Range(warning.Line, warning.StartChar, warning.Line, warning.EndChar);
         }
 
-        public ICollection<Diagnostic> LintDocument(TextDocument document)
+        public void PublishCheckerResults(Uri uri, ScriptChecker checker)
         {
-            var diag = new List<Diagnostic>();
-            ScriptChecker checker = new(document.Content);
-            try
-            {
-                checker.Run();
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine(ex);
-            }
+            List<Diagnostic> diag = new();
             foreach (ScriptChecker.ScriptWarning warning in checker.Errors)
             {
                 diag.Add(new Diagnostic(DiagnosticSeverity.Error, GetRange(warning), "Denizen Script Checker", warning.WarningUniqueKey, warning.CustomMessageForm));
@@ -118,7 +108,35 @@ namespace DenizenLangServer
             {
                 diag.Add(new Diagnostic(DiagnosticSeverity.Information, GetRange(warning), "Denizen Script Checker", warning.WarningUniqueKey, warning.CustomMessageForm));
             }
-            return diag;
+            Task.Factory.StartNew(() =>
+            {
+                string realPath = WorkspaceTracker.FixPath(uri);
+                Uri newUri = new("file:///" + Uri.EscapeDataString(realPath));
+                lock (DiagPublishLock)
+                {
+                    DiagSession.Client.Document.PublishDiagnostics(newUri, diag).Wait();
+                }
+            });
+        }
+
+        public void LintDocument(TextDocument document)
+        {
+            WorkspaceTracker.Diagnostics = this;
+            ScriptChecker checker = new(document.Content);
+            if (ClientConfiguration.TrackFullWorkspace)
+            {
+                checker.SurroundingWorkspace = WorkspaceTracker.WorkspaceData;
+            }
+            try
+            {
+                checker.Run();
+                PublishCheckerResults(document.Uri, checker);
+                WorkspaceTracker.Replace(document.Uri, checker);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+            }
         }
     }
 }
