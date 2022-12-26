@@ -29,7 +29,7 @@ namespace DenizenLangServer
 
         public static void Replace(Uri file, ScriptChecker checker)
         {
-            if (!ClientConfiguration.TrackFullWorkspace)
+            if (!ClientConfiguration.TrackFullWorkspace || WorkspacePath is null)
             {
                 return;
             }
@@ -40,6 +40,10 @@ namespace DenizenLangServer
 
         public static string FixPath(Uri uri)
         {
+            if (uri is null)
+            {
+                return null;
+            }
             return Uri.UnescapeDataString(uri.ToString()["file:///".Length..]);
         }
 
