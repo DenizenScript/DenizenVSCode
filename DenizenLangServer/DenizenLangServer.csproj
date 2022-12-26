@@ -24,4 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="SharpDenizenTools\SharpDenizenTools\SharpDenizenTools.csproj" />
   </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy /y &quot;$(ProjectDir)$(OutDir)/*&quot; &quot;$(ProjectDir)/../extension/server&quot;" />
+  </Target>
 </Project>
