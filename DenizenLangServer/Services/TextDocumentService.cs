@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
 using JsonRpc.Contracts;
 using JsonRpc.Server;
 using LanguageServer.VsCode;
@@ -81,149 +82,31 @@ namespace DenizenLangServer.Services
             }
         }
 
+        public static AsciiMatcher SafeAdvanceForward = new(AsciiMatcher.BothCaseLetters + AsciiMatcher.Digits + "_-");
+
         public Hover GetHoverAt(TextDocument doc, int offset, string relevantLine, Position position)
         {
             LanguageServer.VsCode.Contracts.Range range(int start, int end)
             {
                 return new LanguageServer.VsCode.Contracts.Range(position.Line, start, position.Line, end);
             }
-            string link(MetaObject obj)
-            {
-                return $"[Meta Docs: {obj.Type.WebPath} {DescriptionClean(obj.Name)}](https://" + $"meta.denizenscript.com/Docs/{obj.Type.WebPath}/{HttpUtility.UrlEncode(obj.CleanName)})";
-            }
             string trimmed = relevantLine.TrimStart();
             int spaces = relevantLine.Length - trimmed.Length;
-            if (trimmed.StartsWith("- "))
+            int canGoForwardBy = SafeAdvanceForward.FirstNonMatchingIndex(relevantLine[position.Character..]);
+            CompletionList completions = GetCompletionsFor(doc, new Position(position.Line, position.Character + Math.Max(0,canGoForwardBy)), null);
+            if (completions is not null && completions.Items.Any())
             {
-                string commandText = trimmed[2..];
-                string commandName = commandText.Before(' ').ToLowerFast();
-                if (commandName.StartsWith("~"))
+                foreach (CompletionItem possible in completions.Items)
                 {
-                    commandName = commandName[1..];
-                }
-                if (position.Character > spaces && position.Character <= spaces + 2 + commandName.Length)
-                {
-                    if (MetaDocs.CurrentMeta.Commands.TryGetValue(commandName, out MetaCommand command))
+                    if (possible.Documentation is null)
                     {
-                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Command {command.Name}\n{DescriptionClean(command.Short)}\n```xml\n- {command.Syntax}\n```\n{link(command)}"
-                            + $"\n\n{DescriptionClean(command.Description)}{ObligatoryText(command)}Related Tags:\n- {DescriptionClean(string.Join("\n- ", command.Tags))}"), range(spaces, spaces + commandName.Length + 2));
+                        continue;
                     }
-                }
-                if (commandName == "adjust" || commandName == "adjustblock" || commandName == "inventory")
-                {
-                    int lastSpace = relevantLine.LastIndexOf(' ', position.Character) + 1;
-                    if (lastSpace != 0)
+                    for (int i = position.Character - 1; i >= 0; i--)
                     {
-                        int nextSpace = relevantLine.IndexOf(' ', position.Character);
-                        if (nextSpace == -1)
+                        if (relevantLine[i..].StartsWith(possible.Label))
                         {
-                            nextSpace = relevantLine.Length;
-                        }
-                        string arg = relevantLine[lastSpace..nextSpace].Before(':').ToLowerFast();
-                        MetaMechanism mechanism = MetaDocs.CurrentMeta.Mechanisms.Values.FirstOrDefault(mech => mech.MechName == arg);
-                        if (mechanism != null)
-                        {
-                            return new Hover(new MarkupContent(MarkupKind.Markdown, $"### {mechanism.MechObject} Mechanism {mechanism.MechName}\n{link(mechanism)}\n\nInput: {mechanism.Input}"
-                                + $"\n\n{DescriptionClean(mechanism.Description)}{ObligatoryText(mechanism)}Related Tags:\n- {DescriptionClean(string.Join("\n- ", mechanism.Tags))}"), range(lastSpace, nextSpace));
-                        }
-                    }
-                }
-            }
-            if (trimmed.StartsWith("-") || trimmed.Contains(':'))
-            {
-                if (trimmed.Contains('<'))
-                {
-                    int argStart = 0, argEnd = trimmed.Length;
-                    for (int i = 0; i < trimmed.Length; i++)
-                    {
-                        if (trimmed[i] == '"' || trimmed[i] == '\'')
-                        {
-                            char quote = trimmed[i++];
-                            while (i < trimmed.Length && trimmed[i] != quote)
-                            {
-                                i++;
-                            }
-                        }
-                        else if (trimmed[i] == ' ')
-                        {
-                            if (i + spaces < position.Character)
-                            {
-                                argStart = i + 1;
-                            }
-                            else
-                            {
-                                argEnd = i;
-                                break;
-                            }
-                        }
-                    }
-                    string arg = trimmed[argStart..argEnd];
-                    int posInArg = position.Character - (spaces + argStart);
-                    if (arg.Contains('<'))
-                    {
-                        int tagBits = 0;
-                        int relevantTagStart = -1;
-                        for (int i = posInArg; i >= 0; i--)
-                        {
-                            if (arg[i] == '>')
-                            {
-                                tagBits++;
-                            }
-                            else if (arg[i] == '<')
-                            {
-                                if (tagBits == 0)
-                                {
-                                    relevantTagStart = i + 1;
-                                    break;
-                                }
-                                tagBits--;
-                            }
-                        }
-                        if (relevantTagStart != -1)
-                        {
-                            int posInTag = posInArg - relevantTagStart;
-                            string fullTag = arg[relevantTagStart..].ToLowerFast();
-                            int subTags = 0;
-                            int squareBrackets = 0;
-                            for (int i = 0; i < fullTag.Length; i++)
-                            {
-                                if (fullTag[i] == '<')
-                                {
-                                    subTags++;
-                                }
-                                else if (fullTag[i] == '>')
-                                {
-                                    if (subTags == 0)
-                                    {
-                                        fullTag = fullTag[..i];
-                                        break;
-                                    }
-                                    subTags--;
-                                }
-                                else if (fullTag[i] == '[' && subTags == 0)
-                                {
-                                    squareBrackets++;
-                                }
-                                else if (fullTag[i] == ']' && subTags == 0)
-                                {
-                                    squareBrackets--;
-                                }
-                            }
-                            SingleTag parsed = TagHelper.Parse(fullTag, (_) => { /* Ignore errors */ });
-                            TagTracer tracer = new() { Docs = MetaDocs.CurrentMeta, Tag = parsed };
-                            tracer.Trace();
-                            foreach (SingleTag.Part part in parsed.Parts)
-                            {
-                                if (posInTag >= part.StartChar && posInTag <= part.EndChar)
-                                {
-                                    if (part.PossibleTags.Any())
-                                    {
-                                        MetaTag tag = part.PossibleTags[0];
-                                        int startIndex = spaces + argStart + relevantTagStart;
-                                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Tag {DescriptionClean(tag.Name)}\n{link(tag)}\n\nReturns: {tag.Returns}\n\n{DescriptionClean(tag.Description)}{ObligatoryText(tag)}"), range(startIndex + part.StartChar, startIndex + part.EndChar + 1));
-                                    }
-                                }
-                            }
+                            return new Hover(possible.Documentation, range(i, i + possible.Label.Length));
                         }
                     }
                 }
@@ -256,7 +139,7 @@ namespace DenizenLangServer.Services
                     }
                     if (action != null)
                     {
-                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Action {DescriptionClean(action.Name)}\n\n{link(action)}\n\nTriggers: {DescriptionClean(action.Triggers)}"
+                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Action {DescriptionClean(action.Name)}\n\n{LinkMeta(action)}\n\nTriggers: {DescriptionClean(action.Triggers)}"
                             + $"\n\nContexts:\n- {DescriptionClean(string.Join("\n- ", action.Context))}{ObligatoryText(action)}"), range(spaces, spaces + actionName.Length + 1));
                     }
                 }
@@ -308,7 +191,7 @@ namespace DenizenLangServer.Services
                     }
                     if (realEvt != null)
                     {
-                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Event {DescriptionClean(realEvt.Name)}\n{link(realEvt)}\n\nTriggers: {DescriptionClean(realEvt.Triggers)}\n\n"
+                        return new Hover(new MarkupContent(MarkupKind.Markdown, $"### Event {DescriptionClean(realEvt.Name)}\n{LinkMeta(realEvt)}\n\nTriggers: {DescriptionClean(realEvt.Triggers)}\n\n"
                             + $"Contexts:\n- {DescriptionClean(string.Join("\n- ", realEvt.Context))}{ObligatoryText(realEvt)}"), range(spaces, spaces + trimmed.Length));
                     }
                 }
@@ -318,7 +201,7 @@ namespace DenizenLangServer.Services
                 string containerType = trimmed["type: ".Length..].ToLowerFast() + " script containers";
                 if (MetaDocs.CurrentMeta.Languages.TryGetValue(containerType, out MetaLanguage lang))
                 {
-                    return new Hover(new MarkupContent(MarkupKind.Markdown, $"### {DescriptionClean(lang.Name)}\n{link(lang)}\n\n{DescriptionClean(lang.Description)}{ObligatoryText(lang)}"), range(spaces, spaces + trimmed.Length));
+                    return new Hover(new MarkupContent(MarkupKind.Markdown, $"### {DescriptionClean(lang.Name)}\n{LinkMeta(lang)}\n\n{DescriptionClean(lang.Description)}{ObligatoryText(lang)}"), range(spaces, spaces + trimmed.Length));
                 }
             }
             return null;
@@ -416,7 +299,16 @@ namespace DenizenLangServer.Services
         {
             try
             {
-                return GetCompletionsFor(textDocument, position, context);
+                if (!ClientConfiguration.DoTabCompletes)
+                {
+                    return null;
+                }
+                TextDocument doc = GetDocument(textDocument);
+                if (doc == null || !textDocument.Uri.AbsolutePath.EndsWith(".dsc"))
+                {
+                    return new CompletionList(EmptyCompletionItems);
+                }
+                return GetCompletionsFor(doc, position, context);
             }
             catch (Exception ex)
             {
@@ -431,17 +323,8 @@ namespace DenizenLangServer.Services
             { "entity_type", () => ExtraData.Data.Entities }
         };
 
-        public CompletionList GetCompletionsFor(TextDocumentIdentifier textDocument, Position position, Dictionary<string, object> context)
+        public CompletionList GetCompletionsFor(TextDocument doc, Position position, Dictionary<string, object> context)
         {
-            if (!ClientConfiguration.DoTabCompletes)
-            {
-                return null;
-            }
-            TextDocument doc = GetDocument(textDocument);
-            if (doc == null || !textDocument.Uri.AbsolutePath.EndsWith(".dsc"))
-            {
-                return new CompletionList(EmptyCompletionItems);
-            }
             int offset = doc.OffsetAt(position);
             string content = doc.Content;
             if (offset == content.Length + 1)
@@ -481,8 +364,7 @@ namespace DenizenLangServer.Services
                 if (!afterDash.Contains(' '))
                 {
                     string possibleCmd = afterDash.ToLowerFast();
-                    CompletionItem[] results = MetaDocs.CurrentMeta.Commands.Where(c => c.Key.StartsWith(possibleCmd))
-                        .Select(c => new CompletionItem(c.Key, CompletionItemKind.Method, c.Value.Short, c.Value.Syntax + "\n\n" + c.Value.Description, Token)).ToArray();
+                    CompletionItem[] results = MetaDocs.CurrentMeta.Commands.Where(c => c.Key.StartsWith(possibleCmd)).Select(c => new CompletionItem(c.Key, CompletionItemKind.Method, c.Value.Short, DescribeCommand(c.Value), Token)).ToArray();
                     return new CompletionList(results);
                 }
                 else
@@ -518,7 +400,7 @@ namespace DenizenLangServer.Services
                             {
                                 mechs = mechs.Where(mech => mech.MechObject == "MaterialTag");
                             }
-                            results = results.Concat(mechs.Where(mech => mech.MechName.StartsWith(argValue)).Select(mech => new CompletionItem(mech.MechName, CompletionItemKind.Property, mech.FullName, mech.Description, Token))).ToArray();
+                            results = results.Concat(mechs.Where(mech => mech.MechName.StartsWith(argValue)).Select(mech => new CompletionItem(mech.MechName, CompletionItemKind.Property, mech.FullName, DescribeMech(mech), Token))).ToArray();
                         }
                         if (results.Length > 0)
                         {
@@ -628,7 +510,7 @@ namespace DenizenLangServer.Services
                                 {
                                     CompletionItem[] results = MetaDocs.CurrentMeta.TagBases.Where(tag => tag.StartsWith(fullTag))
                                         .Select(tag => MetaDocs.CurrentMeta.Tags.TryGetValue(tag, out MetaTag tagDoc) ?
-                                            new CompletionItem(tag, CompletionItemKind.Property, tagDoc.Name, tagDoc.Description, Token) :
+                                            new CompletionItem(tag, CompletionItemKind.Property, tagDoc.Name, DescribeTag(tagDoc), Token) :
                                             new CompletionItem(tag, CompletionItemKind.Property, Token)).ToArray();
                                     return new CompletionList(results);
                                 }
@@ -654,11 +536,11 @@ namespace DenizenLangServer.Services
                                 if (lastPart.PossibleSubTypes.Any())
                                 {
                                     return new CompletionList(MetaDocs.CurrentMeta.Tags.Values.Where(tag => lastPart.PossibleSubTypes.Contains(tag.BaseType) || lastPart.Text == tag.BeforeDot).Where(tag => tag.AfterDotCleaned.StartsWith(subComponent))
-                                       .Select(tag => new CompletionItem(tag.AfterDotCleaned, CompletionItemKind.Property, tag.Name, tag.Description, Token)).ToArray());
+                                       .Select(tag => new CompletionItem(tag.AfterDotCleaned, CompletionItemKind.Property, tag.Name, DescribeTag(tag), Token)).ToArray());
                                 }
                                 CompletionItem[] results = MetaDocs.CurrentMeta.TagParts.Where(tag => tag.StartsWith(subComponent))
                                     .Select(tag => TryFindLikelyTagForPart(tag, out MetaTag tagDoc) ?
-                                        new CompletionItem(tag, CompletionItemKind.Property, tagDoc.Name, tagDoc.Description, Token) :
+                                        new CompletionItem(tag, CompletionItemKind.Property, tagDoc.Name, DescribeTag(tagDoc), Token) :
                                         new CompletionItem(tag, CompletionItemKind.Property, Token)).ToArray();
                                 return new CompletionList(results);
                             }
@@ -739,6 +621,27 @@ namespace DenizenLangServer.Services
             KeyValuePair<string, MetaTag> res = MetaDocs.CurrentMeta.Tags.FirstOrDefault(t => t.Key.EndsWith(dottedText));
             tagOut = res.Value;
             return tagOut != null;
+        }
+        public static string LinkMeta(MetaObject obj)
+        {
+            return $"[Meta Docs: {obj.Type.WebPath} {DescriptionClean(obj.Name)}](https://" + $"meta.denizenscript.com/Docs/{obj.Type.WebPath}/{HttpUtility.UrlEncode(obj.CleanName)})";
+        }
+
+        public static MarkupContent DescribeCommand(MetaCommand command)
+        {
+            return new MarkupContent(MarkupKind.Markdown, $"### Command {command.Name}\n{DescriptionClean(command.Short)}\n```xml\n- {command.Syntax}\n```\n{LinkMeta(command)}"
+                            + $"\n\n{DescriptionClean(command.Description)}{ObligatoryText(command)}Related Tags:\n- {DescriptionClean(string.Join("\n- ", command.Tags))}");
+        }
+
+        public static MarkupContent DescribeMech(MetaMechanism mechanism)
+        {
+            return new MarkupContent(MarkupKind.Markdown, $"### {mechanism.MechObject} Mechanism {mechanism.MechName}\n{LinkMeta(mechanism)}\n\nInput: {mechanism.Input}"
+                                + $"\n\n{DescriptionClean(mechanism.Description)}{ObligatoryText(mechanism)}Related Tags:\n- {DescriptionClean(string.Join("\n- ", mechanism.Tags))}");
+        }
+
+        public static MarkupContent DescribeTag(MetaTag tag)
+        {
+            return new MarkupContent(MarkupKind.Markdown, $"### Tag {DescriptionClean(tag.Name)}\n{LinkMeta(tag)}\n\nReturns: {tag.Returns}\n\n{DescriptionClean(tag.Description)}{ObligatoryText(tag)}");
         }
     }
 }

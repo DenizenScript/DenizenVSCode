@@ -61,7 +61,14 @@ namespace DenizenLangServer
             Register(ByCommand, "statistic", "", () => Data.Statistics);
             HashSet<string> determineCompletions = new() { "cancelled", "cancelled:false" };
             Register(ByCommand, "determine", "", () => determineCompletions);
-            IEnumerable<CompletionItem> scriptsByType(string t, string arg, JToken Token) => WorkspaceTracker.WorkspaceData.Scripts.Values.Where(s => t is null || s.Type == t).Select(s => new CompletionItem(s.Name, CompletionItemKind.Method, s.Name, DescribeScript(s), Token));
+            IEnumerable<CompletionItem> scriptsByType(string t, string arg, JToken Token)
+            {
+                if (!ClientConfiguration.TrackFullWorkspace || WorkspaceTracker.WorkspaceData is null)
+                {
+                    return Array.Empty<CompletionItem>();
+                }
+                return WorkspaceTracker.WorkspaceData.Scripts.Values.Where(s => t is null || s.Type == t).Where(s => s.Name.StartsWith(arg)).Select(s => new CompletionItem(s.Name, CompletionItemKind.Method, s.Name, DescribeScript(s), Token));
+            }
             foreach (string runner in new[] { "run", "runlater", "clickable", "inject", "modifyblock" })
             {
                 Register(ByCommand, runner, "", (a, t) => scriptsByType("task", a, t));
