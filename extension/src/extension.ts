@@ -451,10 +451,15 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
             lastDecor = i + 1;
         }
         else if (inTagCounter == 0 && c == ':' && deffableCmdLabels.includes(contextualLabel.replace("~", ""))) {
-            const part : string = arg.substring(lastDecor, i);
+            let part : string = arg.substring(lastDecor, i);
+            let bump = 0;
+            if (canQuote && (part.startsWith("'") || part.startsWith('"'))) {
+                part = part.substring(1);
+                bump = 1;
+            }
             if (part.startsWith("def.") && !part.includes('<') && !part.includes(' ')) {
-                addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + "def.".length);
-                decorateDefName(decorations, part.substring("def.".length), lineNumber, start + lastDecor + "def.".length);
+                addDecor(decorations, defaultDecor, lineNumber, start + bump + lastDecor, start + bump + "def.".length);
+                decorateDefName(decorations, part.substring("def.".length), lineNumber, start + bump + lastDecor + "def.".length);
                 lastDecor = i;
             }
         }
