@@ -388,16 +388,12 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
     let quoteMode : string = 'x';
     let inTagCounter : number = 0;
     let tagStart : number = 0;
-    const referenceDefault = contextualLabel == "key:definitions" ? "def_name" : "normal";
+    const referenceDefault = "normal";
     let defaultDecor : string = referenceDefault;
     let lastDecor : number = 0;
     let hasTagEnd : boolean = checkIfHasTagEnd(arg, false, 'x', canQuote);
     let spaces : number = 0;
     let textColor : string = referenceDefault;
-    if (referenceDefault == "def_name" && !arg.includes('<')) {
-        decorateDefName(decorations, arg, lineNumber, start);
-        return;
-    }
     for (let i = 0; i < len; i++) {
         const c : string = arg.charAt(i);
         if (canQuote && (c == '"' || c == '\'')) {
@@ -445,11 +441,6 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 addDecor(decorations, "tag", lineNumber, start + i, start + i + 1);
                 lastDecor = i + 1;
             }
-        }
-        else if (inTagCounter == 0 && c == '|' && contextualLabel == "key:definitions") {
-            addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
-            addDecor(decorations, "normal", lineNumber, start + i, start + i + 1);
-            lastDecor = i + 1;
         }
         else if (inTagCounter == 0 && c == ':' && deffableCmdLabels.includes(contextualLabel.replace("~", ""))) {
             let part : string = arg.substring(lastDecor, i);
@@ -663,10 +654,47 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         decorateSpaceable(key, preSpaces, lineNumber, "key_inline", decorations);
         addDecor(decorations, "colons", lineNumber, colonIndex, colonIndex + 1);
         addDecor(decorations, "space", lineNumber, colonIndex + 1, colonIndex + 2);
-        decorateArg(trimmed.substring(colonIndex - preSpaces + 2), colonIndex + 2, lineNumber, decorations, false, "key:" + key);
+        if (key == "definitions") {
+            decorateDefinitionsKey(trimmed.substring(colonIndex - preSpaces + 2), colonIndex + 2, lineNumber, decorations);
+        }
+        else {
+            decorateArg(trimmed.substring(colonIndex - preSpaces + 2), colonIndex + 2, lineNumber, decorations, false, "key:" + key);
+        }
     }
     else {
         addDecor(decorations, "bad_space", lineNumber, preSpaces, line.length);
+    }
+}
+
+function decorateDefinitionsKey(arg : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
+    const len : number = arg.length;
+    let lastDecor = 0;
+    let textColor = "def_name";
+    for (let i = 0; i < len; i++) {
+        const c : string = arg.charAt(i);
+        if (c == '[') {
+            addDecor(decorations, textColor, lineNumber, start + lastDecor, start + i);
+            addDecor(decorations, "tag_param_bracket", lineNumber, start + i, start + i + 1);
+            textColor = "tag_param";
+            lastDecor = i + 1;
+        }
+        else if (c == ']') {
+            addDecor(decorations, textColor, lineNumber, start + lastDecor, start + i);
+            addDecor(decorations, "tag_param_bracket", lineNumber, start + i, start + i + 1);
+            textColor = "bad_space";
+            lastDecor = i + 1;
+        }
+        else if (c == ' ') {
+            addDecor(decorations, textColor, lineNumber, start + lastDecor, start + i);
+            addDecor(decorations, "space", lineNumber, start + i, start + i + 1);
+            lastDecor = i + 1;
+        }
+        else if (c == '|') {
+            addDecor(decorations, textColor, lineNumber, start + lastDecor, start + i);
+            addDecor(decorations, "normal", lineNumber, start + i, start + i + 1);
+            textColor = "def_name";
+            lastDecor = i + 1;
+        }
     }
 }
 

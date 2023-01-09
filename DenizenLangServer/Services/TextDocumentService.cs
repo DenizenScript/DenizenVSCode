@@ -519,6 +519,10 @@ namespace DenizenLangServer.Services
                             }
                             results = results.Concat(mechs.Where(mech => mech.MechName.StartsWith(argValue)).Select(mech => new CompletionItem(mech.MechName, CompletionItemKind.Property, mech.FullName, mech.Description, Token))).ToArray();
                         }
+                        else if (cmd.Syntax.Contains("[<script>]") && ClientConfiguration.TrackFullWorkspace && WorkspaceTracker.WorkspaceData is not null)
+                        {
+                            results = results.Concat(WorkspaceTracker.WorkspaceData.Scripts.Values.Where(scr => scr.Type == "task").Select(scr => new CompletionItem(scr.Name, CompletionItemKind.Method, scr.Name, DescribeScript(scr), Token))).ToArray();
+                        }
                         if (results.Length > 0)
                         {
                             return new CompletionList(results);
@@ -712,6 +716,27 @@ namespace DenizenLangServer.Services
             KeyValuePair<string, MetaTag> res = MetaDocs.CurrentMeta.Tags.FirstOrDefault(t => t.Key.EndsWith(dottedText));
             tagOut = res.Value;
             return tagOut != null;
+        }
+
+        public static MarkupContent DescribeScript(ScriptContainerData script)
+        {
+            string defInfo = "";
+            if (script.Keys.TryGetValue(new ScriptChecker.LineTrackedString(0, "definitions", 0), out object definitions))
+            {
+                defInfo = "### Definitions:\n";
+                foreach (string def in definitions.ToString().Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    string name = def;
+                    string info = "";
+                    if (def.Contains('[') && def.EndsWithFast(']'))
+                    {
+                        name = def.Before('[').Trim();
+                        info = def.After('[').BeforeLast(']').Trim();
+                    }
+                    defInfo += $"- **{name}:** {info}  \n";
+                }
+            }
+            return new MarkupContent(MarkupKind.Markdown, $"{script.Type} script '{script.Name}'  \n{defInfo}\nIn `{script.FileName}` at line `{script.LineNumber}`");
         }
     }
 }

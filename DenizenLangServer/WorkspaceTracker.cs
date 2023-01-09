@@ -27,13 +27,23 @@ namespace DenizenLangServer
 
         public static DiagnosticProvider Diagnostics;
 
+        private static void AddInternal(Uri file, ScriptChecker checker)
+        {
+            string path = FixPath(file).Replace(WorkspacePath, "");
+            foreach (ScriptContainerData script in checker.GeneratedWorkspace.Scripts.Values)
+            {
+                script.FileName = path;
+            }
+            Checkers[file] = checker;
+        }
+
         public static void Replace(Uri file, ScriptChecker checker)
         {
             if (!ClientConfiguration.TrackFullWorkspace || WorkspacePath is null)
             {
                 return;
             }
-            Checkers[file] = checker;
+            AddInternal(file, checker);
             long index = ++LastUpdate;
             Task.Factory.StartNew(() => { UpdateWorkspaceData(index); });
         }
@@ -71,6 +81,7 @@ namespace DenizenLangServer
                                 if (Checkers.TryAdd(uri, checker))
                                 {
                                     checker.Run();
+                                    AddInternal(uri, checker);
                                 }
                             }
                         }
@@ -87,8 +98,8 @@ namespace DenizenLangServer
                             {
                                 SurroundingWorkspace = genData
                             };
-                            Checkers[path] = checker;
                             checker.Run();
+                            AddInternal(path, checker);
                             Diagnostics.PublishCheckerResults(path, checker);
                         }
                         WorkspaceData = genData;
