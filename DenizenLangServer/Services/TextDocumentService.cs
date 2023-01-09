@@ -495,9 +495,9 @@ namespace DenizenLangServer.Services
                         CompletionItem[] results = cmd.FlatArguments.Where(arg => arg.Item1.StartsWith(argThusFar)).JoinWith(
                             cmd.ArgPrefixes.Where(arg => arg.Item1.StartsWith(argThusFar)).Select(a => new Tuple<string, string>(a.Item1 + ":", a.Item2)))
                             .Select(a => new CompletionItem(a.Item1, CompletionItemKind.Field, a.Item2, Token)).ToArray();
-                        if (CommandTabCompletions.TabCompletions.TryGetValue(cmd.CleanName, out CommandTabCompletions completer) && completer.ByPrefix.TryGetValue(prefix, out Func<IEnumerable<string>> completeFunc))
+                        if (CommandTabCompletions.TabCompletions.TryGetValue(cmd.CleanName, out CommandTabCompletions completer) && completer.ByPrefix.TryGetValue(prefix, out Func<string, JToken, IEnumerable<CompletionItem>> completeFunc))
                         {
-                            results = results.Concat(completeFunc().Where(text => text.StartsWith(argValue)).Select(text => new CompletionItem(text, CompletionItemKind.Enum, Token))).ToArray();
+                            results = results.Concat(completeFunc(argValue, Token)).ToArray();
                         }
                         if (cmd.CleanName == "adjust" || cmd.CleanName == "inventory" || cmd.CleanName == "adjustblock")
                         {
@@ -518,10 +518,6 @@ namespace DenizenLangServer.Services
                                 mechs = mechs.Where(mech => mech.MechObject == "MaterialTag");
                             }
                             results = results.Concat(mechs.Where(mech => mech.MechName.StartsWith(argValue)).Select(mech => new CompletionItem(mech.MechName, CompletionItemKind.Property, mech.FullName, mech.Description, Token))).ToArray();
-                        }
-                        else if (cmd.Syntax.Contains("[<script>]") && ClientConfiguration.TrackFullWorkspace && WorkspaceTracker.WorkspaceData is not null)
-                        {
-                            results = results.Concat(WorkspaceTracker.WorkspaceData.Scripts.Values.Where(scr => scr.Type == "task").Select(scr => new CompletionItem(scr.Name, CompletionItemKind.Method, scr.Name, DescribeScript(scr), Token))).ToArray();
                         }
                         if (results.Length > 0)
                         {
@@ -633,6 +629,10 @@ namespace DenizenLangServer.Services
                                         new CompletionItem(tag, CompletionItemKind.Property, Token)).ToArray();
                                 return new CompletionList(results);
                             }
+                            if (lastDot == 0)
+                            {
+                                return new CompletionList(Array.Empty<CompletionItem>());
+                            }
                             SingleTag tag = TagHelper.Parse(fullTag[..(lastDot - 1)], (_) => { /* ignore */ });
                             TagTracer tracer = new() { Tag = tag, Docs = MetaDocs.CurrentMeta };
                             tracer.Trace();
@@ -716,27 +716,6 @@ namespace DenizenLangServer.Services
             KeyValuePair<string, MetaTag> res = MetaDocs.CurrentMeta.Tags.FirstOrDefault(t => t.Key.EndsWith(dottedText));
             tagOut = res.Value;
             return tagOut != null;
-        }
-
-        public static MarkupContent DescribeScript(ScriptContainerData script)
-        {
-            string defInfo = "";
-            if (script.Keys.TryGetValue(new ScriptChecker.LineTrackedString(0, "definitions", 0), out object definitions))
-            {
-                defInfo = "### Definitions:\n";
-                foreach (string def in definitions.ToString().Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-                {
-                    string name = def;
-                    string info = "";
-                    if (def.Contains('[') && def.EndsWithFast(']'))
-                    {
-                        name = def.Before('[').Trim();
-                        info = def.After('[').BeforeLast(']').Trim();
-                    }
-                    defInfo += $"- **{name}:** {info}  \n";
-                }
-            }
-            return new MarkupContent(MarkupKind.Markdown, $"{script.Type} script '{script.Name}'  \n{defInfo}\nIn `{script.FileName}` at line `{script.LineNumber}`");
         }
     }
 }
