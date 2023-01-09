@@ -17,6 +17,7 @@ using Newtonsoft.Json.Linq;
 using SharpDenizenTools.MetaHandlers;
 using SharpDenizenTools.MetaObjects;
 using SharpDenizenTools.ScriptAnalysis;
+using YamlDotNet.Core.Tokens;
 
 namespace DenizenLangServer.Services
 {
@@ -495,7 +496,7 @@ namespace DenizenLangServer.Services
                         CompletionItem[] results = cmd.FlatArguments.Where(arg => arg.Item1.StartsWith(argThusFar)).JoinWith(
                             cmd.ArgPrefixes.Where(arg => arg.Item1.StartsWith(argThusFar)).Select(a => new Tuple<string, string>(a.Item1 + ":", a.Item2)))
                             .Select(a => new CompletionItem(a.Item1, CompletionItemKind.Field, a.Item2, Token)).ToArray();
-                        if (CommandTabCompletions.TabCompletions.TryGetValue(cmd.CleanName, out CommandTabCompletions completer) && completer.ByPrefix.TryGetValue(prefix, out Func<string, JToken, IEnumerable<CompletionItem>> completeFunc))
+                        if (CommandTabCompletions.ByCommand.TryGetValue(cmd.CleanName, out CommandTabCompletions completer) && completer.ByPrefix.TryGetValue(prefix, out Func<string, JToken, IEnumerable<CompletionItem>> completeFunc))
                         {
                             results = results.Concat(completeFunc(argValue, Token)).ToArray();
                         }
@@ -621,16 +622,26 @@ namespace DenizenLangServer.Services
                                     lastDot = i + 1;
                                 }
                             }
-                            if (components == 0 && !fullTag.Contains('['))
+                            if (components == 0)
                             {
-                                CompletionItem[] results = MetaDocs.CurrentMeta.TagBases.Where(tag => tag.StartsWith(fullTag))
-                                    .Select(tag => MetaDocs.CurrentMeta.Tags.TryGetValue(tag, out MetaTag tagDoc) ?
-                                        new CompletionItem(tag, CompletionItemKind.Property, tagDoc.Name, tagDoc.Description, Token) :
-                                        new CompletionItem(tag, CompletionItemKind.Property, Token)).ToArray();
-                                return new CompletionList(results);
-                            }
-                            if (lastDot == 0)
-                            {
+                                if (!fullTag.Contains('['))
+                                {
+                                    CompletionItem[] results = MetaDocs.CurrentMeta.TagBases.Where(tag => tag.StartsWith(fullTag))
+                                        .Select(tag => MetaDocs.CurrentMeta.Tags.TryGetValue(tag, out MetaTag tagDoc) ?
+                                            new CompletionItem(tag, CompletionItemKind.Property, tagDoc.Name, tagDoc.Description, Token) :
+                                            new CompletionItem(tag, CompletionItemKind.Property, Token)).ToArray();
+                                    return new CompletionList(results);
+                                }
+                                if (fullTag.Contains(']'))
+                                {
+                                    return new CompletionList(Array.Empty<CompletionItem>());
+                                }
+                                string baseTag = fullTag.Before('[');
+                                if (MetaDocs.CurrentMeta.Tags.TryGetValue(baseTag, out MetaTag actualBase) && actualBase.AllowsParam
+                                    && CommandTabCompletions.ByTag.TryGetValue(actualBase.ParsedFormat.Parts[0].Parameter, out CommandTabCompletions completer))
+                                {
+                                    return new CompletionList(completer.ByPrefix[""](fullTag.After('['), Token));
+                                }
                                 return new CompletionList(Array.Empty<CompletionItem>());
                             }
                             SingleTag tag = TagHelper.Parse(fullTag[..(lastDot - 1)], (_) => { /* ignore */ });
