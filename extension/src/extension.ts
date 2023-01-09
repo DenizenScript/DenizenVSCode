@@ -616,7 +616,7 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         }
     }
     else if (trimmed.startsWith("-")) {
-        const isNonScript : boolean = isData || definiteNotScriptKeys.includes(lastKey);
+        const isNonScript : boolean = isData;
         addDecor(decorations, "normal", lineNumber, preSpaces, preSpaces + 1);
         if (isNonScript) {
             decorateArg(trimmed.substring(1), preSpaces + 1, lineNumber, decorations, false, "non-script");
@@ -766,6 +766,9 @@ function decorateFullFile(editor: vscode.TextEditor) {
         }
         else if (trimmedLine == "type: data" && (definitelyDataSpacing == -1 || spaces <= definitelyDataSpacing)) {
             definitelyDataSpacing = spaces - 1;
+        }
+        if (spaces < definitelyDataSpacing) {
+            definitelyDataSpacing = -1;
         }
         if (i >= startLine) {
             decorateLine(lineText, i, decorations, lastKey, definitelyDataSpacing != -1);
