@@ -445,12 +445,19 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
         else if (inTagCounter == 0 && c == ':' && deffableCmdLabels.includes(contextualLabel.replace("~", ""))) {
             let part : string = arg.substring(lastDecor, i);
             let bump = 0;
+            const origPart = part;
             if (canQuote && (part.startsWith("'") || part.startsWith('"'))) {
                 part = part.substring(1);
                 bump = 1;
             }
             if (part.startsWith("def.") && !part.includes('<') && !part.includes(' ')) {
-                addDecor(decorations, defaultDecor, lineNumber, start + bump + lastDecor, start + bump + "def.".length);
+                if (bump == 1) {
+                    addDecor(decorations, origPart.startsWith('"') ? "quote_double" : "quote_single", lineNumber, start + lastDecor, start + lastDecor + 1);
+                    addDecor(decorations, "normal", lineNumber, start + lastDecor + 1, start + lastDecor + 1 + "def.".length);
+                }
+                else {
+                    addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + lastDecor + "def.".length);
+                }
                 decorateDefName(decorations, part.substring("def.".length), lineNumber, start + bump + lastDecor + "def.".length);
                 lastDecor = i;
             }
