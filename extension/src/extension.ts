@@ -182,6 +182,7 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
             if (inTagCounter == 1) {
                 addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
                 lastDecor = i;
+                textColor = defaultDecor;
                 defaultDecor = "tag";
                 tagStart = i;
             }
