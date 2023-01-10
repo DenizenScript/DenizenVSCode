@@ -92,8 +92,13 @@ namespace DenizenLangServer.Services
             }
             string trimmed = relevantLine.TrimStart();
             int spaces = relevantLine.Length - trimmed.Length;
-            int canGoForwardBy = SafeAdvanceForward.FirstNonMatchingIndex(relevantLine[position.Character..]);
-            CompletionList completions = GetCompletionsFor(doc, new Position(position.Line, position.Character + Math.Max(0,canGoForwardBy)), null);
+            string subPiece = relevantLine[position.Character..];
+            int canGoForwardBy = SafeAdvanceForward.FirstNonMatchingIndex(subPiece);
+            if (canGoForwardBy == -1)
+            {
+                canGoForwardBy = subPiece.Length;
+            }
+            CompletionList completions = GetCompletionsFor(doc, new Position(position.Line, position.Character + canGoForwardBy), null);
             if (completions is not null && completions.Items.Any())
             {
                 foreach (CompletionItem possible in completions.Items)

@@ -24,7 +24,7 @@ namespace DenizenLangServer.Services
             {
                 HoverProvider = new HoverOptions() { WorkDoneProgress = false },
                 SignatureHelpProvider = new SignatureHelpOptions(""),
-                CompletionProvider = new CompletionOptions(true, " ."),
+                CompletionProvider = new CompletionOptions(true, " .=<[;"),
                 TextDocumentSync = new TextDocumentSyncOptions
                 {
                     OpenClose = true,
