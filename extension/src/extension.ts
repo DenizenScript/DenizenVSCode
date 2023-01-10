@@ -582,7 +582,7 @@ function decorateSpaceable(line : string, preLength: number, lineNumber: number,
 }
 
 const definiteNotScriptKeys : string[] = [
-    "interact scripts", "default constants", "data", "constants", "text", "lore", "aliases", "slots", "enchantments", "input"
+    "interact scripts", "default constants", "data", "constants", "text", "lore", "aliases", "slots", "enchantments", "input", "description"
 ];
 
 function decorateLine(line : string, lineNumber: number, decorations: { [color: string]: vscode.Range[] }, lastKey : string, isData : boolean) {
