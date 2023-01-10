@@ -484,10 +484,9 @@ namespace DenizenLangServer.Services
                                     return new CompletionList(Array.Empty<CompletionItem>());
                                 }
                                 string baseTag = fullTag.Before('[');
-                                if (MetaDocs.CurrentMeta.Tags.TryGetValue(baseTag, out MetaTag actualBase) && actualBase.AllowsParam
-                                    && CommandTabCompletions.TryGetCompleterForTagParam(actualBase.ParsedFormat.Parts[0].Parameter, out CommandTabCompletions baseCompleter))
+                                if (MetaDocs.CurrentMeta.Tags.TryGetValue(baseTag, out MetaTag actualBase) && actualBase.AllowsParam)
                                 {
-                                    return new CompletionList(baseCompleter.ByPrefix[""](fullTag.After('['), Token));
+                                    return new CompletionList(CommandTabCompletions.CompleteGenericTagParam(actualBase.ParsedFormat.Parts[0].Parameter, "", fullTag.AfterLast('['), actualBase, Token));
                                 }
                                 return new CompletionList(Array.Empty<CompletionItem>());
                             }
@@ -516,9 +515,9 @@ namespace DenizenLangServer.Services
                                 fullTracer.Trace();
                                 SingleTag.Part currentPart = parsedFullTag.Parts[^1];
                                 MetaTag actualTag = currentPart.PossibleTags.FirstOrDefault(t => t.AllowsParam);
-                                if (actualTag is not null && CommandTabCompletions.TryGetCompleterForTagParam(actualTag.ParsedFormat.Parts[^1].Parameter, out CommandTabCompletions completer))
+                                if (actualTag is not null && actualTag.ParsedFormat.Parts[^1].Parameter is not null)
                                 {
-                                    return new CompletionList(completer.ByPrefix[""](fullTag.AfterLast('['), Token));
+                                    return new CompletionList(CommandTabCompletions.CompleteGenericTagParam(actualTag.ParsedFormat.Parts[^1].Parameter, "", fullTag.AfterLast('['), actualTag, Token));
                                 }
                             }
                         }

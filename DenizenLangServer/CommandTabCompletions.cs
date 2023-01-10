@@ -23,19 +23,6 @@ namespace DenizenLangServer
 
         public Dictionary<string, Func<string, JToken, IEnumerable<CompletionItem>>> ByPrefix = new();
 
-        public static bool TryGetCompleterForTagParam(string param, out CommandTabCompletions completer)
-        {
-            if (param.StartsWithFast('(') && param.EndsWithFast(')'))
-            {
-                param = param[1..^1];
-            }
-            if (param.EndsWith("|..."))
-            {
-                param = param[..^"|...".Length];
-            }
-            return ByTag.TryGetValue(param, out completer);
-        }
-
         public static void Register(Dictionary<string, CommandTabCompletions> set, string command, string prefix, Func<IEnumerable<string>> options, string enumKey)
         {
             if (!set.TryGetValue(command, out CommandTabCompletions completer))
@@ -101,9 +88,76 @@ namespace DenizenLangServer
             Register(ByTag, "<biome>", "", () => Data.Biomes, "Biome");
             Register(ByTag, "<enchantment>", "", SuggestEnchantmentType);
             Register(ByTag, "<inventory>", "", SuggestInventoryType);
-            Register(ByTag, "<property-name>", "", (a, t) => SuggestMechanisms(null, a, t));
+            Register(ByTag, "<property-name>", "", (a, t) => SuggestMechanisms(null, a, t, ""));
             Register(ByTag, "<mechanism>=<value>", "", (a, t) => SuggestMechPair(null, a, t));
             Register(ByTag, "<mechanism>=<value>;...", "", (a, t) => SuggestMechPairSet(null, a, t));
+            Register(ByTag, "<property-map>", "", (a, t) => SuggestMechPairSet(null, a, t));
+        }
+
+        public static CompletionItem CompleteForTagPiece(MetaTag tag, string inputData, string result, JToken Token)
+        {
+            MarkupContent describe = new(MarkupKind.Markdown, $"### Tag {DescriptionClean(tag.Name.BeforeLast('[') + "[...]>")}\n{LinkMeta(tag)}\n\n**Input option**: {inputData}\n\n{ObligatoryText(tag)}");
+            return new CompletionItem(result, CompletionItemKind.Property, result, describe, Token);
+        }
+
+        public static IEnumerable<CompletionItem> CompleteGenericTagParam(string docParam, string prefix, string arg, MetaTag tag, JToken Token)
+        {
+            List<CompletionItem> results = new();
+            docParam = docParam.Replace('(', ')').Replace('{', ')').Replace('}', ')').Replace(")", "").Replace("|...", "");
+            if (ByTag.TryGetValue(docParam, out CommandTabCompletions completer))
+            {
+                return completer.ByPrefix[""](arg, Token);
+            }
+            if (docParam.Contains(';'))
+            {
+                string[] docPairs = docParam.SplitFast(';');
+                if (docPairs.All(p => p.Contains('=')))
+                {
+                    string[] givenPairs = arg.SplitFast(';');
+                    string lastArg = givenPairs[^1];
+                    if (lastArg.Contains('='))
+                    {
+                        string expected = lastArg.Before('=');
+                        string docMatch = docPairs.FirstOrDefault(p => p.Before('=') == expected);
+                        if (docMatch is not null)
+                        {
+                            return CompleteGenericTagParam(docMatch.After('='), expected + "=", lastArg.After('='), tag, Token);
+                        }
+                        return results;
+                    }
+                    HashSet<string> givenKeys = givenPairs.Where(s => s.Contains('=')).Select(s => s.Before('=')).ToHashSet();
+                    foreach (string docPair in docPairs)
+                    {
+                        string[] parts = docPair.SplitFast('=', 1);
+                        if (!givenKeys.Contains(parts[0]) && parts[0].StartsWith(lastArg))
+                        {
+                            results.Add(CompleteForTagPiece(tag, $"**{parts[0]}**=`{parts[1]}`", parts[0] + "=", Token));
+                        }
+                    }
+                    return results;
+                }
+            }
+            if (docParam.Contains('/'))
+            {
+                if (docParam.StartsWithFast('<') && docParam.EndsWithFast('>'))
+                {
+                    docParam = docParam[1..^1];
+                    if (docParam.Contains('<'))
+                    {
+                        return results;
+                    }
+                }
+                string[] parts = docParam.SplitFast('/');
+                foreach (string option in parts)
+                {
+                    if (!option.Contains('<') && option.StartsWith(arg))
+                    {
+                        results.Add(CompleteForTagPiece(tag, prefix + string.Join(" / ", parts.Select(p => p == option ? $"**{p}**" : p)), option, Token));
+                    }
+                }
+                return results;
+            }
+            return results;
         }
 
         public static IEnumerable<CompletionItem> CompleteEnum(IEnumerable<string> enumSet, string key, string arg, JToken Token)
@@ -111,9 +165,9 @@ namespace DenizenLangServer
             return enumSet.Where(i => i.StartsWith(arg)).Select(i => new CompletionItem(i, CompletionItemKind.Enum, i, key == null ? null : new MarkupContent(MarkupKind.Markdown, $"Vanilla **{key}**: {i}"), Token));
         }
 
-        public static IEnumerable<CompletionItem> SuggestMechanisms(string objectType, string arg, JToken Token)
+        public static IEnumerable<CompletionItem> SuggestMechanisms(string objectType, string arg, JToken Token, string suffix)
         {
-            return MetaDocs.CurrentMeta.Mechanisms.Values.Where(m => m.MechName.StartsWith(arg) && (objectType is null || m.MechObject == objectType)).Select(m => new CompletionItem(m.MechName, CompletionItemKind.Property, m.MechName, DescribeMech(m), Token));
+            return MetaDocs.CurrentMeta.Mechanisms.Values.Where(m => m.MechName.StartsWith(arg) && (objectType is null || m.MechObject == objectType)).Select(m => new CompletionItem(m.MechName + suffix, CompletionItemKind.Property, m.MechName, DescribeMech(m), Token));
         }
 
         public static IEnumerable<CompletionItem> SuggestMechPair(string objectType, string arg, JToken Token)
@@ -124,7 +178,7 @@ namespace DenizenLangServer
             }
             else
             {
-                return SuggestMechanisms(objectType, arg, Token);
+                return SuggestMechanisms(objectType, arg, Token, "=");
             }
         }
 
@@ -182,6 +236,10 @@ namespace DenizenLangServer
             {
                 if (script.Keys.TryGetValue(new ScriptChecker.LineTrackedString(0, key.ToLowerFast(), 0), out object val))
                 {
+                    if (val is IEnumerable<object> list)
+                    {
+                        val = string.Join("\n", list.Select(o => $"- {o}"));
+                    }
                     addedFirst += $"\n**{key}:** {val}  ";
                 }
             }
@@ -247,7 +305,7 @@ namespace DenizenLangServer
 
         public static string LinkMeta(MetaObject obj)
         {
-            return $"[Meta Docs: {obj.Type.WebPath} {DescriptionClean(obj.Name)}](https://" + $"meta.denizenscript.com/Docs/{obj.Type.WebPath}/{HttpUtility.UrlEncode(obj.CleanName)})";
+            return $"[Meta Docs: {obj.Type.WebPath} {DescriptionClean(obj.CleanName)}](https://" + $"meta.denizenscript.com/Docs/{obj.Type.WebPath}/{HttpUtility.UrlEncode(obj.CleanName)})";
         }
 
         public static MarkupContent DescribeCommand(MetaCommand command)
