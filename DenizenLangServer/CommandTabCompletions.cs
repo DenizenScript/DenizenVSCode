@@ -2,13 +2,16 @@
 using LanguageServer.VsCode.Contracts;
 using Newtonsoft.Json.Linq;
 using SharpDenizenTools.MetaHandlers;
+using SharpDenizenTools.MetaObjects;
 using SharpDenizenTools.ScriptAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using YamlDotNet.Core.Tokens;
+using static System.Collections.Specialized.BitVector32;
 
 namespace DenizenLangServer
 {
@@ -98,11 +101,36 @@ namespace DenizenLangServer
             Register(ByTag, "<biome>", "", () => Data.Biomes, "Biome");
             Register(ByTag, "<enchantment>", "", SuggestEnchantmentType);
             Register(ByTag, "<inventory>", "", SuggestInventoryType);
+            Register(ByTag, "<property-name>", "", (a, t) => SuggestMechanisms(null, a, t));
+            Register(ByTag, "<mechanism>=<value>", "", (a, t) => SuggestMechPair(null, a, t));
+            Register(ByTag, "<mechanism>=<value>;...", "", (a, t) => SuggestMechPairSet(null, a, t));
         }
 
         public static IEnumerable<CompletionItem> CompleteEnum(IEnumerable<string> enumSet, string key, string arg, JToken Token)
         {
             return enumSet.Where(i => i.StartsWith(arg)).Select(i => new CompletionItem(i, CompletionItemKind.Enum, i, key == null ? null : new MarkupContent(MarkupKind.Markdown, $"Vanilla **{key}**: {i}"), Token));
+        }
+
+        public static IEnumerable<CompletionItem> SuggestMechanisms(string objectType, string arg, JToken Token)
+        {
+            return MetaDocs.CurrentMeta.Mechanisms.Values.Where(m => m.MechName.StartsWith(arg) && (objectType is null || m.MechObject == objectType)).Select(m => new CompletionItem(m.MechName, CompletionItemKind.Property, m.MechName, DescribeMech(m), Token));
+        }
+
+        public static IEnumerable<CompletionItem> SuggestMechPair(string objectType, string arg, JToken Token)
+        {
+            if (arg.Contains('='))
+            {
+                return Array.Empty<CompletionItem>();
+            }
+            else
+            {
+                return SuggestMechanisms(objectType, arg, Token);
+            }
+        }
+
+        public static IEnumerable<CompletionItem> SuggestMechPairSet(string objectType, string arg, JToken Token)
+        {
+            return SuggestMechPair(objectType, arg.AfterLast(';'), Token);
         }
 
         public static IEnumerable<CompletionItem> SuggestInventoryType(string arg, JToken Token)
@@ -182,6 +210,78 @@ namespace DenizenLangServer
                 }
             }
             return new MarkupContent(MarkupKind.Markdown, $"{script.Type} script '{script.Name}'  {addedFirst}{defInfo}\n{addedAfter}\nIn `{script.FileName}` at line `{(script.LineNumber + 1)}`");
+        }
+
+        public static string ObligatoryText(MetaObject obj)
+        {
+            string result = "\n\n";
+            if (!string.IsNullOrWhiteSpace(obj.Plugin))
+            {
+                result += $"Required plugin(s) or platform(s): {DescriptionClean(obj.Plugin)}\n\n";
+            }
+            if (!string.IsNullOrWhiteSpace(obj.Deprecated))
+            {
+                result += $"Deprecation notice: {DescriptionClean(obj.Deprecated)}\n\n";
+            }
+            if (obj.Warnings != null && obj.Warnings.Any())
+            {
+                result += "### WARNING\n" + DescriptionClean(string.Join("\n- ", obj.Warnings)) + "\n\n";
+            }
+            return result;
+        }
+
+        public static string DescriptionClean(string input)
+        {
+            int codeStart = input.IndexOf("<code>");
+            if (codeStart != -1)
+            {
+                int codeEnd = input.IndexOf("</code>", codeStart);
+                if (codeEnd != -1)
+                {
+                    return DescriptionClean(input[..codeStart]) + "\n```yml\n" + input[(codeStart + "<code>".Length)..(codeEnd)].Replace('`', '\'') + "\n```\n" + DescriptionClean(input[(codeEnd + "</code>".Length)..]);
+                }
+            }
+            input = input.Replace('`', '\'').Replace("&", "&amp;").Replace("#", "&#35;").Replace("<", "&lt;").Replace(">", "&gt;");
+            return input;
+        }
+
+        public static string LinkMeta(MetaObject obj)
+        {
+            return $"[Meta Docs: {obj.Type.WebPath} {DescriptionClean(obj.Name)}](https://" + $"meta.denizenscript.com/Docs/{obj.Type.WebPath}/{HttpUtility.UrlEncode(obj.CleanName)})";
+        }
+
+        public static MarkupContent DescribeCommand(MetaCommand command)
+        {
+            return new MarkupContent(MarkupKind.Markdown, $"### Command {command.Name}\n{DescriptionClean(command.Short)}\n```xml\n- {command.Syntax}\n```\n{LinkMeta(command)}"
+                            + $"\n\n{DescriptionClean(command.Description)}{ObligatoryText(command)}Related Tags:\n- {DescriptionClean(string.Join("\n- ", command.Tags))}");
+        }
+
+        public static MarkupContent DescribeMech(MetaMechanism mechanism)
+        {
+            return new MarkupContent(MarkupKind.Markdown, $"### {mechanism.MechObject} Mechanism {mechanism.MechName}\n{LinkMeta(mechanism)}\n\nInput: {mechanism.Input}"
+                                + $"\n\n{DescriptionClean(mechanism.Description)}{ObligatoryText(mechanism)}Related Tags:\n- {DescriptionClean(string.Join("\n- ", mechanism.Tags))}");
+        }
+
+        public static MarkupContent DescribeTag(MetaTag tag)
+        {
+            return new MarkupContent(MarkupKind.Markdown, $"### Tag {DescriptionClean(tag.Name)}\n{LinkMeta(tag)}\n\nReturns: {tag.Returns}\n\n{DescriptionClean(tag.Description)}{ObligatoryText(tag)}");
+        }
+
+        public static MarkupContent DescribeLang(MetaLanguage lang)
+        {
+            return new MarkupContent(MarkupKind.Markdown, $"### {DescriptionClean(lang.Name)}\n{LinkMeta(lang)}\n\n{DescriptionClean(lang.Description)}{ObligatoryText(lang)}");
+        }
+
+        public static MarkupContent DescribeEvent(MetaEvent evt)
+        {
+            return new MarkupContent(MarkupKind.Markdown, $"### Event {DescriptionClean(evt.Name)}\n{LinkMeta(evt)}\n\nTriggers: {DescriptionClean(evt.Triggers)}\n\n"
+                            + $"Contexts:\n- {DescriptionClean(string.Join("\n- ", evt.Context))}{ObligatoryText(evt)}");
+        }
+
+        public static MarkupContent DescribeAction(MetaAction action)
+        {
+            return new MarkupContent(MarkupKind.Markdown, $"### Action {DescriptionClean(action.Name)}\n\n{LinkMeta(action)}\n\nTriggers: {DescriptionClean(action.Triggers)}"
+                            + $"\n\nContexts:\n- {DescriptionClean(string.Join("\n- ", action.Context))}{ObligatoryText(action)}");
         }
     }
 }

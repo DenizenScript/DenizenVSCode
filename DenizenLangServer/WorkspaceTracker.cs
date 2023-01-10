@@ -114,7 +114,6 @@ namespace DenizenLangServer
                     ScriptingWorkspaceData NewData = new();
                     foreach ((string path, ScriptChecker checker) in Checkers.ToArray())
                     {
-                        Console.Error.WriteLine($"Merge {path} in dataset {string.Join(',', checker.GeneratedWorkspace.Scripts.Keys)}");
                         NewData.MergeIn(checker.GeneratedWorkspace);
                     }
                     WorkspaceData = NewData;
