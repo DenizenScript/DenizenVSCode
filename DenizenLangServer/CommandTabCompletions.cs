@@ -131,7 +131,7 @@ namespace DenizenLangServer
                         string[] parts = docPair.SplitFast('=', 1);
                         if (!givenKeys.Contains(parts[0]) && parts[0].StartsWith(lastArg))
                         {
-                            results.Add(CompleteForTagPiece(tag, $"**{parts[0]}**=`{parts[1]}`", parts[0] + "=", Token));
+                            results.Add(CompleteForTagPiece(tag, $"**{parts[0]}**=`{parts[1]}`", parts[0], Token));
                         }
                     }
                     return results;
@@ -238,7 +238,7 @@ namespace DenizenLangServer
                 {
                     if (val is IEnumerable<object> list)
                     {
-                        val = string.Join("\n", list.Select(o => $"- {o}"));
+                        val = "\n" + string.Join("\n", list.Select(o => $"- {o}"));
                     }
                     addedFirst += $"\n**{key}:** {val}  ";
                 }
