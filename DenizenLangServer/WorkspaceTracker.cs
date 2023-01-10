@@ -13,7 +13,7 @@ namespace DenizenLangServer
 {
     public static class WorkspaceTracker
     {
-        public static ConcurrentDictionary<Uri, ScriptChecker> Checkers = new();
+        public static ConcurrentDictionary<string, ScriptChecker> Checkers = new();
 
         public static volatile ScriptingWorkspaceData WorkspaceData = null;
 
@@ -34,7 +34,7 @@ namespace DenizenLangServer
             {
                 script.FileName = path;
             }
-            Checkers[file] = checker;
+            Checkers[FixPath(file)] = checker;
         }
 
         public static void Replace(Uri file, ScriptChecker checker)
@@ -57,6 +57,11 @@ namespace DenizenLangServer
             return Uri.UnescapeDataString(uri.ToString()["file:///".Length..]);
         }
 
+        public static Uri PathToUri(string path)
+        {
+            return new("file:///" + Uri.EscapeDataString(path));
+        }
+
         public static void UpdateWorkspaceData(long updateCounter)
         {
             lock (UpdateLock)
@@ -75,10 +80,11 @@ namespace DenizenLangServer
                         {
                             string path = Path.GetFullPath(file);
                             Uri uri = new(path);
-                            if (!Checkers.ContainsKey(uri))
+                            string fixedPath = FixPath(uri);
+                            if (!Checkers.ContainsKey(fixedPath))
                             {
                                 ScriptChecker checker = new(File.ReadAllText(path));
-                                if (Checkers.TryAdd(uri, checker))
+                                if (Checkers.TryAdd(fixedPath, checker))
                                 {
                                     checker.Run();
                                     AddInternal(uri, checker);
@@ -87,27 +93,28 @@ namespace DenizenLangServer
                         }
                         Console.Error.WriteLine($"Have {Checkers.Count} files loaded and initially scanned");
                         ScriptingWorkspaceData genData = new();
-                        KeyValuePair<Uri, ScriptChecker>[] copyCheckers = Checkers.ToArray();
+                        KeyValuePair<string, ScriptChecker>[] copyCheckers = Checkers.ToArray();
                         foreach ((_, ScriptChecker checker) in copyCheckers)
                         {
                             genData.MergeIn(checker.GeneratedWorkspace);
                         }
-                        foreach ((Uri path, _) in copyCheckers)
+                        foreach ((string path, _) in copyCheckers)
                         {
-                            ScriptChecker checker = new(File.ReadAllText(FixPath(path)))
+                            ScriptChecker checker = new(File.ReadAllText(path))
                             {
                                 SurroundingWorkspace = genData
                             };
                             checker.Run();
-                            AddInternal(path, checker);
-                            Diagnostics.PublishCheckerResults(path, checker);
+                            AddInternal(PathToUri(path), checker);
+                            Diagnostics.PublishCheckerResults(PathToUri(path), checker);
                         }
                         WorkspaceData = genData;
                         Console.Error.WriteLine($"Have {Checkers.Count} files fully scanned and ready");
                     }
                     ScriptingWorkspaceData NewData = new();
-                    foreach ((_, ScriptChecker checker) in Checkers.ToArray())
+                    foreach ((string path, ScriptChecker checker) in Checkers.ToArray())
                     {
+                        Console.Error.WriteLine($"Merge {path} in dataset {string.Join(',', checker.GeneratedWorkspace.Scripts.Keys)}");
                         NewData.MergeIn(checker.GeneratedWorkspace);
                     }
                     WorkspaceData = NewData;

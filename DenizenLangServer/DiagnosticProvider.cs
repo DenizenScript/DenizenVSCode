@@ -111,7 +111,7 @@ namespace DenizenLangServer
             Task.Factory.StartNew(() =>
             {
                 string realPath = WorkspaceTracker.FixPath(uri);
-                Uri newUri = new("file:///" + Uri.EscapeDataString(realPath));
+                Uri newUri = WorkspaceTracker.PathToUri(realPath);
                 lock (DiagPublishLock)
                 {
                     DiagSession.Client.Document.PublishDiagnostics(newUri, diag).Wait();
