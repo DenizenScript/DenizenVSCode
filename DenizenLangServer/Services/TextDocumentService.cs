@@ -520,7 +520,7 @@ namespace DenizenLangServer.Services
                                 }
                                 string baseTag = fullTag.Before('[');
                                 if (MetaDocs.CurrentMeta.Tags.TryGetValue(baseTag, out MetaTag actualBase) && actualBase.AllowsParam
-                                    && CommandTabCompletions.ByTag.TryGetValue(actualBase.ParsedFormat.Parts[0].Parameter, out CommandTabCompletions baseCompleter))
+                                    && CommandTabCompletions.TryGetCompleterForTagParam(actualBase.ParsedFormat.Parts[0].Parameter, out CommandTabCompletions baseCompleter))
                                 {
                                     return new CompletionList(baseCompleter.ByPrefix[""](fullTag.After('['), Token));
                                 }
@@ -551,7 +551,7 @@ namespace DenizenLangServer.Services
                                 fullTracer.Trace();
                                 SingleTag.Part currentPart = parsedFullTag.Parts[^1];
                                 MetaTag actualTag = currentPart.PossibleTags.FirstOrDefault(t => t.AllowsParam);
-                                if (actualTag is not null && CommandTabCompletions.ByTag.TryGetValue(actualTag.ParsedFormat.Parts[^1].Parameter, out CommandTabCompletions completer))
+                                if (actualTag is not null && CommandTabCompletions.TryGetCompleterForTagParam(actualTag.ParsedFormat.Parts[^1].Parameter, out CommandTabCompletions completer))
                                 {
                                     return new CompletionList(completer.ByPrefix[""](fullTag.AfterLast('['), Token));
                                 }
