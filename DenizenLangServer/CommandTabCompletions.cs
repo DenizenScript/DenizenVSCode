@@ -139,20 +139,27 @@ namespace DenizenLangServer
             }
             if (docParam.Contains('/'))
             {
-                if (docParam.StartsWithFast('<') && docParam.EndsWithFast('>'))
+                if (docParam.StartsWithFast('<') && docParam.EndsWithFast('>') && !docParam[1..^1].Contains('<'))
                 {
                     docParam = docParam[1..^1];
-                    if (docParam.Contains('<'))
-                    {
-                        return results;
-                    }
                 }
                 string[] parts = docParam.SplitFast('/');
                 foreach (string option in parts)
                 {
-                    if (!option.Contains('<') && option.StartsWith(arg))
+                    if (!option.Contains('<'))
                     {
-                        results.Add(CompleteForTagPiece(tag, prefix + string.Join(" / ", parts.Select(p => p == option ? $"**{p}**" : p)), option, Token));
+                        if (option.StartsWith(arg))
+                        {
+                            results.Add(CompleteForTagPiece(tag, prefix + string.Join(" / ", parts.Select(p => p == option ? $"**{p}**" : p)), option, Token));
+                        }
+                    }
+                    else if (option == "<entity>")
+                    {
+                        results.AddRange(CompleteEnum(Data.EntityArray, "Entity Type", arg, Token));
+                    }
+                    else if (option == "<material>")
+                    {
+                        results.AddRange(CompleteEnum(Data.Materials, "Material", arg, Token));
                     }
                 }
                 return results;
