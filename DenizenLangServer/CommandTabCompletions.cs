@@ -105,7 +105,7 @@ namespace DenizenLangServer
             {
                 formatScr = $"\n**Format:** `{format}`\n";
             }
-            return new MarkupContent(MarkupKind.Markdown, $"{script.Type} script '{script.Name}'  \n{defInfo}{formatScr}\nIn `{script.FileName}` at line `{script.LineNumber}`");
+            return new MarkupContent(MarkupKind.Markdown, $"{script.Type} script '{script.Name}'  \n{defInfo}{formatScr}\nIn `{script.FileName}` at line `{(script.LineNumber + 1)}`");
         }
     }
 }
