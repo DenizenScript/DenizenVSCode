@@ -357,13 +357,17 @@ namespace DenizenLangServer.Services
                             IEnumerable<MetaMechanism> mechs = MetaDocs.CurrentMeta.Mechanisms.Values;
                             if (cmd.CleanName == "inventory")
                             {
-                                if (!afterDash.ToLowerFast().Contains("adjust"))
+                                if (afterDash.ToLowerFast().Contains("adjust"))
                                 {
-                                    mechs = Array.Empty<MetaMechanism>();
+                                    mechs = mechs.Where(mech => mech.MechObject == "ItemTag");
                                 }
                                 else
                                 {
-                                    mechs = mechs.Where(mech => mech.MechObject == "ItemTag");
+                                    mechs = Array.Empty<MetaMechanism>();
+                                }
+                                if (afterDash.ToLowerFast().Contains("flag"))
+                                {
+                                    results = results.Concat(CommandTabCompletions.CompleteFlag(false, argValue, Token)).ToArray();
                                 }
                             }
                             else if (cmd.CleanName == "adjustblock")
@@ -371,6 +375,10 @@ namespace DenizenLangServer.Services
                                 mechs = mechs.Where(mech => mech.MechObject == "MaterialTag");
                             }
                             results = results.Concat(mechs.Where(mech => mech.MechName.StartsWith(argValue)).Select(mech => new CompletionItem(mech.MechName, CompletionItemKind.Property, mech.FullName, CommandTabCompletions.DescribeMech(mech), Token))).ToArray();
+                        }
+                        else if (cmd.CleanName == "flag")
+                        {
+                            results = results.Concat(CommandTabCompletions.CompleteFlag(afterDash.Contains("flag server"), argValue, Token)).ToArray();
                         }
                         if (results.Length > 0)
                         {
@@ -495,7 +503,8 @@ namespace DenizenLangServer.Services
                                 }
                                 return new CompletionList(Array.Empty<CompletionItem>());
                             }
-                            SingleTag tag = TagHelper.Parse(fullTag[..(lastDot - 1)], (_) => { /* ignore */ });
+                            string beforeDot = fullTag[..(lastDot - 1)];
+                            SingleTag tag = TagHelper.Parse(beforeDot, (_) => { /* ignore */ });
                             TagTracer tracer = new() { Tag = tag, Docs = MetaDocs.CurrentMeta };
                             tracer.Trace();
                             SingleTag.Part lastPart = tag.Parts[^1];
@@ -515,6 +524,12 @@ namespace DenizenLangServer.Services
                             }
                             else if (!subComponent.Contains(']'))
                             {
+                                string lastTagBit = subComponent.Before('[');
+                                string inBracket = fullTag.AfterLast('[');
+                                if (lastTagBit == "flag" || lastTagBit == "has_flag" || lastTagBit == "flag_expiration" || lastTagBit == "flag_map")
+                                {
+                                    return new CompletionList(CommandTabCompletions.CompleteFlag(beforeDot == "server", inBracket, Token));
+                                }
                                 SingleTag parsedFullTag = TagHelper.Parse(fullTag.BeforeLast('[') + "[]", (_) => { /* ignore */ });
                                 TagTracer fullTracer = new() { Tag = parsedFullTag, Docs = MetaDocs.CurrentMeta };
                                 fullTracer.Trace();
@@ -522,7 +537,7 @@ namespace DenizenLangServer.Services
                                 MetaTag actualTag = currentPart.PossibleTags.FirstOrDefault(t => t.AllowsParam);
                                 if (actualTag is not null && actualTag.ParsedFormat.Parts[^1].Parameter is not null)
                                 {
-                                    return new CompletionList(CommandTabCompletions.CompleteGenericTagParam(actualTag.ParsedFormat.Parts[^1].Parameter, "", fullTag.AfterLast('['), actualTag, Token));
+                                    return new CompletionList(CommandTabCompletions.CompleteGenericTagParam(actualTag.ParsedFormat.Parts[^1].Parameter, "", inBracket, actualTag, Token));
                                 }
                             }
                         }

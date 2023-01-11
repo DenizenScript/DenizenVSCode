@@ -94,6 +94,39 @@ namespace DenizenLangServer
             Register(ByTag, "<property-map>", "", (a, t) => SuggestMechPairSet(null, a, t));
         }
 
+        public static IEnumerable<CompletionItem> CompleteFlag(bool isServer, string arg, JToken Token)
+        {
+            List<CompletionItem> results = new();
+            ScriptingWorkspaceData dataSet = WorkspaceTracker.WorkspaceData;
+            if (!ClientConfiguration.TrackFullWorkspace || dataSet is null)
+            {
+                return results;
+            }
+            MixedKnowledgeSet flagSet = isServer ? dataSet.AllKnownServerFlagNames : dataSet.AllKnownObjectFlagNames;
+            foreach (string flag in flagSet.EnumerateAll())
+            {
+                if (flag.StartsWith(arg))
+                {
+                    bool isExact = flagSet.ExactKnown.Contains(flag);
+                    List<string> scripts = new();
+                    foreach (ScriptContainerData container in dataSet.Scripts.Values)
+                    {
+                        if ((isServer ? container.ServerFlags : container.ObjectFlags).Contains(flag))
+                        {
+                            scripts.Add(container.Name);
+                        }
+                    }
+                    string scriptList = string.Join(", ", scripts.Take(3).Select(s => $"`{s}`"));
+                    if (scripts.Count > 3)
+                    {
+                        scriptList += ", ...";
+                    }
+                    results.Add(new CompletionItem(flag, CompletionItemKind.Field, flag, new MarkupContent(MarkupKind.Markdown, $"Known {(isExact ? "Exact" : "Partial")} {(isServer ? "Server" : "Object")} flag: `{flag}`, set in {scripts.Count} script(s): {scriptList}"), Token));
+                }
+            }
+            return results;
+        }
+
         public static CompletionItem CompleteForTagPiece(MetaTag tag, string inputData, string result, JToken Token)
         {
             MarkupContent describe = new(MarkupKind.Markdown, $"### Tag {DescriptionClean(tag.Name.BeforeLast('[') + "[...]>")}\n{LinkMeta(tag)}\n\n**Input option**: {inputData}\n\n{ObligatoryText(tag)}");
