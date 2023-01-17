@@ -48,13 +48,30 @@ namespace DenizenLangServer
             Task.Factory.StartNew(() => { UpdateWorkspaceData(index); });
         }
 
+        private static bool HaveShownPath = false;
+
         public static string FixPath(Uri uri)
         {
             if (uri is null)
             {
                 return null;
             }
-            return Uri.UnescapeDataString(uri.ToString()["file:///".Length..]);
+            string path = Uri.UnescapeDataString(uri.ToString()["file://".Length..]);
+            if (!HaveShownPath)
+            {
+                HaveShownPath = true;
+                Console.Error.WriteLine($"Working in path {uri} which resolves to {path}");
+            }
+            // Microsoft always puts a preceding '/' on their corrupt escaped URIs.
+            // If on Windows: preceding '/' is invalid, and MUST be stripped. On Microsoft's own operating system.
+            // If on Linux, it's required, so we have to not strip that.
+            // Check for ':' as a heuristic check for drive labels like 'C:' as a heuristic OS check.
+            // Cannot rely on anything other than the ':' to be predictable.
+            if (path[0..3].Contains(':'))
+            {
+                path = path[1..];
+            }
+            return path;
         }
 
         public static Uri PathToUri(string path)

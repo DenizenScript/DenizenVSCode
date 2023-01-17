@@ -18,8 +18,15 @@ namespace DenizenLangServer.Services
         [JsonRpcMethod(AllowExtensionData = true)]
         public InitializeResult Initialize(int processId, Uri rootUri, ClientCapabilities capabilities, JToken initializationOptions = null, string trace = null)
         {
-            SpecialTools.Internationalize();
-            WorkspaceTracker.WorkspacePath = WorkspaceTracker.FixPath(rootUri);
+            try
+            {
+                SpecialTools.Internationalize();
+                WorkspaceTracker.WorkspacePath = WorkspaceTracker.FixPath(rootUri);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Something went wrong while loading: {ex}");
+            }
             return new InitializeResult(new ServerCapabilities
             {
                 HoverProvider = new HoverOptions() { WorkDoneProgress = false },
