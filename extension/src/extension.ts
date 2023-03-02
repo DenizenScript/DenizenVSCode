@@ -15,6 +15,7 @@ let outputChannel = vscode.window.createOutputChannel("Denizen");
 let debugHighlighting : boolean = false;
 let debugFolding : boolean = false;
 let doInlineColors : boolean = true;
+let displayDarkColors : boolean = false;
 
 class HighlightCache {
     needRefreshStartLine : number = -1;
@@ -128,6 +129,7 @@ function loadAllColors() {
     debugHighlighting = configuration.get("denizenscript.debug.highlighting");
     debugFolding = configuration.get("denizenscript.debug.folding");
     doInlineColors = configuration.get("denizenscript.behaviors.do_inline_colors");
+    displayDarkColors = configuration.get("denizenscript.behaviors.display_dark_colors");
     const customColors : string = configuration.get("denizenscript.theme_colors.text_color_map");
     const colorsSplit : string[] = customColors.split(',');
     for (const i in colorsSplit) {
@@ -357,18 +359,39 @@ function getColorData(color : string) : string {
     return null;
 }
 
+function fixDark(color : string) {
+    if (color == null) {
+        return null;
+    }
+    if (displayDarkColors) {
+        return color;
+    }
+    const splitter : number = color.indexOf('|');
+    const part : string = splitter == -1 ? color : color.substring(0, splitter);
+    if (!part.startsWith('#') || part.length < 7) {
+        return color;
+    }
+    const red : number = parseInt(part.substring(1, 3), 16);
+    const green : number = parseInt(part.substring(3, 5), 16);
+    const blue : number = parseInt(part.substring(5, 7), 16);
+    if (red < 64 && green < 64 && blue < 64) {
+        return null;
+    }
+    return color;
+}
+
 function getTagColor(tagText : string, preColor : string) : string {
     if (!doInlineColors) {
         return null;
     }
     tagText = tagText.toLowerCase();
     if (tagText in tagSpecialColors) {
-        return tagSpecialColors[tagText];
+        return fixDark(tagSpecialColors[tagText]);
     }
     if (tagText.startsWith("&color[") && tagText.endsWith("]") && !tagText.includes(".")) {
         const colorText : string = tagText.substring("&color[".length, tagText.length - 1);
         if (colorText.length == 7 && colorText.startsWith("#") && isHex(colorText.substring(1))) {
-            return colorText;
+            return fixDark(colorText);
         }
     }
     const formatter : string = formatCodes[tagText];

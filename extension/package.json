@@ -172,6 +172,11 @@
                     "default": true,
                     "description": "Whether to generate the correct local colors for color tags."
                 },
+                "denizenscript.behaviors.display_dark_colors": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to generate inline colors that are extremely dark (ie hard to see)."
+                },
                 "denizenscript.behaviors.do_hover_docs": {
                     "type": "boolean",
                     "default": true,
