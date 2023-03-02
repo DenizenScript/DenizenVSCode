@@ -134,7 +134,7 @@ function loadAllColors() {
         const color = colorsSplit[i];
         let pair : string[] = color.split('=');
         if (pair.length == 2) {
-            tagSpecialColors["&[" + pair[0] + "]"] = pair[1];
+            tagSpecialColors["&[" + pair[0].toLowerCase() + "]"] = pair[1];
         }
         else {
             outputChannel.appendLine("Cannot interpret color " + color);
@@ -235,7 +235,7 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
             if (inTagParamCounter == 0) {
                 const lastTag : string = tag.substring(lastDot + 1, lastBracket);
                 const bracketedText : string = tag.substring(lastBracket + 1, i);
-                const colorFormat = "&[" + bracketedText + "]";
+                const colorFormat = "&[" + bracketedText.toLowerCase() + "]";
                 if (lastTag == "custom_color" && !bracketedText.includes('<') && colorFormat in tagSpecialColors) {
                     const color : string = tagSpecialColors[colorFormat];
                     addDecor(decorations, "auto:" + color, lineNumber, start + lastDecor, start + i);
@@ -361,6 +361,7 @@ function getTagColor(tagText : string, preColor : string) : string {
     if (!doInlineColors) {
         return null;
     }
+    tagText = tagText.toLowerCase();
     if (tagText in tagSpecialColors) {
         return tagSpecialColors[tagText];
     }
