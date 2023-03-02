@@ -175,6 +175,8 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
     let defaultDecor : string = "tag";
     let lastDecor : number = -1; // Color the < too.
     let textColor : string = "tag_param";
+    let lastDot : number = 0;
+    let lastBracket : number = 0;
     for (let i = 0; i < len; i++) {
         const c : string = tag.charAt(i);
         if (c == '<') {
@@ -185,6 +187,7 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
                 textColor = defaultDecor;
                 defaultDecor = "tag";
                 tagStart = i;
+                lastDot = i;
             }
         }
         else if (c == '>' && inTagCounter > 0) {
@@ -209,6 +212,7 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
         else if (c == '[' && inTagCounter == 0 && i + 1 < len) {
             inTagParamCounter++;
             if (inTagParamCounter == 1) {
+                lastBracket = i;
                 addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
                 addDecor(decorations, "tag_param_bracket", lineNumber, start + i, start + i + 1);
                 lastDecor = i + 1;
@@ -229,7 +233,14 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
         else if (c == ']' && inTagCounter == 0) {
             inTagParamCounter--;
             if (inTagParamCounter == 0) {
-                if (defaultDecor == "def_name") {
+                const lastTag : string = tag.substring(lastDot + 1, lastBracket);
+                const bracketedText : string = tag.substring(lastBracket + 1, i);
+                const colorFormat = "&[" + bracketedText + "]";
+                if (lastTag == "custom_color" && !bracketedText.includes('<') && colorFormat in tagSpecialColors) {
+                    const color : string = tagSpecialColors[colorFormat];
+                    addDecor(decorations, "auto:" + color, lineNumber, start + lastDecor, start + i);
+                }
+                else if (defaultDecor == "def_name") {
                     decorateDefName(decorations, tag.substring(lastDecor, i), lineNumber, start + lastDecor);
                 }
                 else {
@@ -244,6 +255,7 @@ function decorateTag(tag : string, start: number, lineNumber: number, decoration
             addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
             lastDecor = i + 1;
             addDecor(decorations, "tag_dot", lineNumber, start + i, start + i + 1);
+            lastDot = i;
         }
         else if (c == ' ' && inTagCounter == 0) {
             addDecor(decorations, defaultDecor, lineNumber, start + lastDecor, start + i);
