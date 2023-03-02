@@ -28,7 +28,14 @@ namespace DenizenLangServer.Services
         {
             public DenizenBehaviorSettings Behaviors { get; } = new DenizenBehaviorSettings();
 
+            public ThemeColorSettings Theme_colors { get; set; } = new ThemeColorSettings();
+
             public string Extra_sources { get; set; }
+        }
+
+        public class ThemeColorSettings
+        {
+            public string Text_color_map { get; set; }
         }
 
         public class DenizenBehaviorSettings
@@ -48,6 +55,7 @@ namespace DenizenLangServer.Services
                 ClientConfiguration.DoHoverDocs = settings.Denizenscript.Behaviors.Do_hover_docs;
                 ClientConfiguration.DoTabCompletes = settings.Denizenscript.Behaviors.Do_tab_completes;
                 ClientConfiguration.TrackFullWorkspace = settings.Denizenscript.Behaviors.Track_full_workspace;
+                ClientConfiguration.TextColorMap = settings.Denizenscript.Theme_colors.Text_color_map.SplitFast(',').ToDictionary((s) => s.Before('=').Trim(), (s) => s.After('=').Trim());
                 if (ClientConfiguration.ExtraSources != settings.Denizenscript.Extra_sources)
                 {
                     Console.Error.WriteLine($"Alternate meta sources detected, scanning...");

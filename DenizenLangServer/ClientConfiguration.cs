@@ -18,5 +18,7 @@ namespace DenizenLangServer
         public static string ExtraSources = "";
 
         public static bool TrackFullWorkspace = true;
+
+        public static Dictionary<string, string> TextColorMap = new();
     }
 }

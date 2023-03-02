@@ -92,6 +92,7 @@ namespace DenizenLangServer
             Register(ByTag, "<mechanism>=<value>", "", (a, t) => SuggestMechPair(null, a, t));
             Register(ByTag, "<mechanism>=<value>;...", "", (a, t) => SuggestMechPairSet(null, a, t));
             Register(ByTag, "<property-map>", "", (a, t) => SuggestMechPairSet(null, a, t));
+            Register(ByTag, "<custom_color_name>", "", () => ClientConfiguration.TextColorMap.Keys, "Configured Custom Color");
         }
 
         public static IEnumerable<CompletionItem> CompleteFlag(bool isServer, string arg, JToken Token)
@@ -202,7 +203,7 @@ namespace DenizenLangServer
 
         public static IEnumerable<CompletionItem> CompleteEnum(IEnumerable<string> enumSet, string key, string arg, JToken Token)
         {
-            return enumSet.Where(i => i.StartsWith(arg)).Select(i => new CompletionItem(i, CompletionItemKind.Enum, i, key == null ? null : new MarkupContent(MarkupKind.Markdown, $"Vanilla **{key}**: {i}"), Token));
+            return enumSet.Where(i => i.StartsWith(arg)).Select(i => new CompletionItem(i, CompletionItemKind.Enum, i, key == null ? null : new MarkupContent(MarkupKind.Markdown, $"**{key}**: {i}"), Token));
         }
 
         public static IEnumerable<CompletionItem> SuggestMechanisms(string objectType, string arg, JToken Token, string suffix)
