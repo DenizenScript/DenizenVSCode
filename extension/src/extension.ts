@@ -703,6 +703,9 @@ function decorateDefinitionsKey(arg : string, start: number, lineNumber: number,
             lastDecor = i + 1;
         }
     }
+    if (lastDecor < len - 1) {
+        addDecor(decorations, textColor, lineNumber, start + lastDecor, start + len);
+    }
 }
 
 function decorateEventLine(line : string, preLength: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
