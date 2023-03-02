@@ -326,10 +326,10 @@ const tagSpecialColors: { [color: string]: string } = {
     "&f": "#FFFFFF", "white": "#FFFFFF", "&r": "#FFFFFF", "reset": "#FFFFFF"
 };
 const formatCodes: { [code: string]: string } = {
-    "&l": "bold", "&L": "bold", "bold": "bold",
-    "&o": "italic", "&O": "italic", "italic": "italic",
-    "&m": "strike", "&M": "strike", "strikethrough": "strike",
-    "&n": "underline", "&N": "underline", "underline": "underline"
+    "&l": "bold", "bold": "bold",
+    "&o": "italic", "italic": "italic",
+    "&m": "strike", "strikethrough": "strike",
+    "&n": "underline", "underline": "underline"
 };
 
 const hexChars: { [c: string] : boolean } = {}
@@ -349,6 +349,9 @@ function isHex(text : string) : boolean {
 }
 
 function getColorData(color : string) : string {
+    if (color.startsWith("#")) {
+        return color;
+    }
     if (color.startsWith("auto:#")) {
         return color.substring("auto:".length);
     }
@@ -478,7 +481,7 @@ function decorateArg(arg : string, start: number, lineNumber: number, decoration
                 lastDecor = i + 1;
             }
         }
-        else if (inTagCounter == 0 && c == ':' && deffableCmdLabels.includes(contextualLabel.replace("~", ""))) {
+        else if (inTagCounter == 0 && c == ':' && deffableCmdLabels.includes(contextualLabel.replaceAll("~", ""))) {
             let part : string = arg.substring(lastDecor, i);
             let bump = 0;
             const origPart = part;
@@ -939,12 +942,87 @@ function forceRefresh(reason: String) {
 
 let changeCounter : number = 0;
 
+let hasLoadedConfig : boolean = false;
+let searchedPathsForConfig : string[] = [];
+let configColors : { [name : string] : string } = {};
+
+function applyConfigColors() {
+    for (const name in configColors) {
+        const val : string = configColors[name];
+        let color = "";
+        if (val.startsWith("<") && val.endsWith(">")) {
+            for (const tag of val.slice(1, -1).split("><")) {
+                const newColor : string = getTagColor(tag, color);
+                if (newColor) {
+                    color = newColor;
+                }
+            }
+        }
+        if (color != "") {
+            tagSpecialColors["&[" + name + "]"] = color;
+        }
+    }
+}
+
+function tryLoadConfigYaml(relativeTo : vscode.TextDocument) {
+    if (hasLoadedConfig) {
+        return;
+    }
+    try {
+        const parts : string[] = relativeTo.fileName.replaceAll('\\', '/').split('/').slice(0, -1);
+        for (let i : number = parts.length; i >= 1; i--) {
+            const subPath : string = parts.slice(0, i).join('/') + '/' + "config.yml";
+            if (subPath in searchedPathsForConfig) {
+                return;
+            }
+            searchedPathsForConfig.push(subPath);
+            if (fs.existsSync(subPath)) {
+                const content : string = fs.readFileSync(subPath, { encoding: 'utf-8', flag: 'r' });
+                const lines : string[] = content.replaceAll('\r', '').split('\n');
+                let isReadingColors : boolean = false;
+                for (const line of lines) {
+                    const trimmed : string = line.trim();
+                    if (trimmed == "" || trimmed.startsWith("#")) {
+                        continue;
+                    }
+                    if (line == "Colors:") {
+                        outputChannel.appendLine("Path " + subPath + " had a valid config.yml! Loading custom colors from it.");
+                        hasLoadedConfig = true;
+                        isReadingColors = true;
+                        continue;
+                    }
+                    if (isReadingColors) {
+                        if (!line.startsWith("  ")) {
+                            isReadingColors = false;
+                            break;
+                        }
+                        const colon : number = trimmed.indexOf(': ');
+                        if (colon != -1) {
+                            const name : string = trimmed.substring(0, colon);
+                            const colorData : string = trimmed.substring(colon + 2);
+                            configColors[name.toLowerCase()] = colorData.toLowerCase();
+                        }
+                    }
+                }
+            }
+            if (hasLoadedConfig) {
+                applyConfigColors();
+                return;
+            }
+        }
+    }
+    catch (err) {
+        outputChannel.appendLine("Failed while trying to read a config file: " + err);
+    }
+}
+
 export async function activate(context: vscode.ExtensionContext) {
     let path : string = await activateDotNet();
     activateLanguageServer(context, path);
     activateHighlighter(context);
     vscode.workspace.onDidOpenTextDocument(doc => {
         if (doc.uri.toString().endsWith(".dsc")) {
+            tryLoadConfigYaml(doc);
             forceRefresh("onDidOpenTextDocument");
         }
     }, null, context.subscriptions);
@@ -972,7 +1050,15 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     }, null, context.subscriptions);
     vscode.window.onDidChangeVisibleTextEditors(editors => {
-        forceRefresh("onDidChangeVisibleTextEditors");
+        for (const editor of editors) {
+            const uri = editor.document.uri.toString();
+            if (!uri.endsWith(".dsc")) {
+                continue;
+            }
+            tryLoadConfigYaml(editor.document);
+            forceRefresh("onDidChangeVisibleTextEditors");
+            return;
+        }
     }, null, context.subscriptions);
     vscode.workspace.onDidChangeConfiguration(event => {
         loadAllColors();
