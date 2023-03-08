@@ -279,6 +279,7 @@ const deffableCmdLabels : string[] = [ "cmd:run", "cmd:runlater", "cmd:clickable
 function checkIfHasTagEnd(arg : string, quoted: boolean, quoteMode: string, canQuote : boolean) : boolean {
     const len : number = arg.length;
     let params : number = 0;
+    let hasFallback : boolean = false;
     for (let i = 0; i < len; i++) {
         const c : string = arg.charAt(i);
         if (canQuote && (c == '"' || c == '\'')) {
@@ -299,8 +300,11 @@ function checkIfHasTagEnd(arg : string, quoted: boolean, quoteMode: string, canQ
         else if (c == '>') {
             return true;
         }
-        else if (c == ' ' && !quoted && canQuote && params == 0) {
+        else if (c == ' ' && !quoted && canQuote && params == 0 && !hasFallback) {
             return false;
+        }
+        else if (c == '|' && i > 0 && arg.charAt(i - 1) == '|') {
+            hasFallback = true;
         }
     }
     return false;
