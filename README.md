@@ -22,12 +22,13 @@ Install guide can be found [in the Guides here](https://guide.denizenscript.com/
 
 - Full syntax highlighting (customizable via settings)
 - Error checking (imperfect but catches a lot of common mistakes)
-- Some autocomplete suggestions
+- Autocomplete suggestions, for tags, commands, script names, flag names, etc.
+- Hover-docs when you mouse over any recognized data (script names, commands, tags, etc.)
+- Full workspace analysis and checking
 
 ### Planned Future Features
 
-- More detailed/thorough autocomplete suggestions
-- More detailed error checking, including full-workspace-analysis
+- More detailed/thorough autocomplete suggestions, error checking, etc.
 
 ### Licensing pre-note:
 
@@ -43,7 +44,7 @@ You can do basically whatever you want, except you may not hold any developer li
 
 The MIT License (MIT)
 
-Copyright (c) 2019-2022 The Denizen Scripting Team
+Copyright (c) 2019-2023 The Denizen Scripting Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
