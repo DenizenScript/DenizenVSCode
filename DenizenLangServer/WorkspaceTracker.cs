@@ -56,27 +56,32 @@ namespace DenizenLangServer
             {
                 return null;
             }
-            string path = Uri.UnescapeDataString(uri.ToString()["file://".Length..]);
-            if (!HaveShownPath)
-            {
-                HaveShownPath = true;
-                Console.Error.WriteLine($"Working in path {uri} which resolves to {path}");
-            }
-            // Microsoft always puts a preceding '/' on their corrupt escaped URIs. (Sept 2023: seems to no longer be corrupt escaped URIs... but still slash inconsistencies)
+            string path = uri.ToString()["file://".Length..];
+            // Microsoft always puts a preceding '/' on their corrupt escaped URIs.
             // If on Windows: preceding '/' is invalid, and MUST be stripped. On Microsoft's own operating system.
             // If on Linux, it's required, so we have to not strip that.
             // Check for ':' (to find drive labels like 'C:') as a heuristic OS check.
             // Cannot rely on anything other than the ':' to be predictable.
-            if (path[0..3].Contains(':'))
+            string unescaped = Uri.UnescapeDataString(path);
+            if (unescaped[0..3].Contains(':'))
             {
-                path = path[1..];
+                path = unescaped[1..];
+            }
+            if (!HaveShownPath)
+            {
+                HaveShownPath = true;
+                Console.Error.WriteLine($"Working in path {uri} which resolves to {path}");
             }
             return path;
         }
 
         public static Uri PathToUri(string path)
         {
-            return new("file:///" + path);
+            if (path[0..3].Contains(':'))
+            {
+                path = $"/{Uri.EscapeDataString(path)}";
+            }
+            return new("file://" + path);
         }
 
         public static void UpdateWorkspaceData(long updateCounter)
