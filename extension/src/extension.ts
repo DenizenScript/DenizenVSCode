@@ -644,8 +644,8 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
     if (line.endsWith("\r")) {
         line = line.substring(0, line.length - 1);
     }
-    const trimmedEnd : string = line.trimRight();
-    let trimmed : string = trimmedEnd.trimLeft();
+    const trimmedEnd : string = line.trimEnd();
+    let trimmed : string = trimmedEnd.trimStart().replaceAll('\n', ' ');
     if (trimmed.length == 0) {
         return;
     }
