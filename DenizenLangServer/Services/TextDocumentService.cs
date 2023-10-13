@@ -316,6 +316,22 @@ namespace DenizenLangServer.Services
                 relevantLine = relevantLine[..^1];
             }
             string trimmed = relevantLine.TrimStart();
+            if (!trimmed.StartsWithFast('-'))
+            {
+                int lastDash = content.LastIndexOf('-', startOfLine);
+                int lastColon = content.LastIndexOf(':', startOfLine);
+                if (lastDash > lastColon)
+                {
+                    int startOfFirstLine = content.LastIndexOf('\n', lastDash - 1) + 1;
+                    string[] priorLines = content[startOfFirstLine..(startOfLine - 1)].Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                    int firstSpaces = priorLines[0].Length - priorLines[0].TrimStart().Length;
+                    if (priorLines.Skip(1).All(line => line.Length - line.TrimStart().Length > firstSpaces))
+                    {
+                        relevantLine = string.Join(' ', priorLines).Trim() + " " + relevantLine;
+                        trimmed = relevantLine.TrimStart();
+                    }
+                }
+            }
             if (!relevantLine.Contains(' '))
             {
                 CompletionItem[] results = SnippetHelper.GetSnippetsFor(trimmed.TrimEnd(), Token);
@@ -496,7 +512,7 @@ namespace DenizenLangServer.Services
                                 {
                                     return new CompletionList(Array.Empty<CompletionItem>());
                                 }
-                                string baseTag = fullTag.Before('[');
+                                string baseTag = fullTag.Before('[').Trim();
                                 if (MetaDocs.CurrentMeta.Tags.TryGetValue(baseTag, out MetaTag actualBase) && actualBase.AllowsParam)
                                 {
                                     return new CompletionList(CommandTabCompletions.CompleteGenericTagParam(actualBase.ParsedFormat.Parts[0].Parameter, "", fullTag.AfterLast('['), actualBase, Token));
@@ -508,7 +524,7 @@ namespace DenizenLangServer.Services
                             TagTracer tracer = new() { Tag = tag, Docs = MetaDocs.CurrentMeta };
                             tracer.Trace();
                             SingleTag.Part lastPart = tag.Parts[^1];
-                            string subComponent = fullTag[lastDot..];
+                            string subComponent = fullTag[lastDot..].Trim();
                             if (!subComponent.Contains('['))
                             {
                                 if (lastPart.PossibleSubTypes.Any())
@@ -524,13 +540,13 @@ namespace DenizenLangServer.Services
                             }
                             else if (!subComponent.Contains(']'))
                             {
-                                string lastTagBit = subComponent.Before('[');
+                                string lastTagBit = subComponent.Before('[').Trim();
                                 string inBracket = fullTag.AfterLast('[');
                                 if (lastTagBit == "flag" || lastTagBit == "has_flag" || lastTagBit == "flag_expiration" || lastTagBit == "flag_map")
                                 {
                                     return new CompletionList(CommandTabCompletions.CompleteFlag(beforeDot == "server", inBracket, Token));
                                 }
-                                SingleTag parsedFullTag = TagHelper.Parse(fullTag.BeforeLast('[') + "[]", (_) => { /* ignore */ });
+                                SingleTag parsedFullTag = TagHelper.Parse(fullTag.BeforeLast('[').Trim() + "[]", (_) => { /* ignore */ });
                                 TagTracer fullTracer = new() { Tag = parsedFullTag, Docs = MetaDocs.CurrentMeta };
                                 fullTracer.Trace();
                                 SingleTag.Part currentPart = parsedFullTag.Parts[^1];

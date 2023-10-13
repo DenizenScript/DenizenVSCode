@@ -161,12 +161,31 @@ function refreshDecor() {
     }
 }
 
+let decorFixes: number[] = [];
+
 function addDecor(decorations: { [color: string]: vscode.Range[] }, type: string, lineNumber: number, startChar: number, endChar: number) {
     if (!(type in highlightDecors) && type.startsWith("auto:")) {
         highlightDecors[type] = vscode.window.createTextEditorDecorationType(parseColor(type.substring("auto:".length)));
         decorations[type] = [];
     }
-    decorations[type].push(new vscode.Range(new vscode.Position(lineNumber, startChar), new vscode.Position(lineNumber, endChar)));
+    const originalStartChar = startChar;
+    const originalEndChar = endChar;
+    let endLine = lineNumber;
+    for (const dfix of decorFixes) {
+        if (originalStartChar < dfix) {
+            break;
+        }
+        lineNumber++;
+        startChar = originalStartChar - dfix;
+    }
+    for (const dfix of decorFixes) {
+        if (originalEndChar < dfix) {
+            break;
+        }
+        endLine++;
+        endChar = originalEndChar - dfix;
+    }
+    decorations[type].push(new vscode.Range(new vscode.Position(lineNumber, startChar), new vscode.Position(endLine, endChar)));
 }
 
 function decorateTag(tag : string, start: number, lineNumber: number, decorations: { [color: string]: vscode.Range[] }) {
@@ -279,7 +298,6 @@ const deffableCmdLabels : string[] = [ "cmd:run", "cmd:runlater", "cmd:clickable
 function checkIfHasTagEnd(arg : string, quoted: boolean, quoteMode: string, canQuote : boolean) : boolean {
     const len : number = arg.length;
     let params : number = 0;
-    let hasFallback : boolean = false;
     for (let i = 0; i < len; i++) {
         const c : string = arg.charAt(i);
         if (canQuote && (c == '"' || c == '\'')) {
@@ -299,12 +317,6 @@ function checkIfHasTagEnd(arg : string, quoted: boolean, quoteMode: string, canQ
         }
         else if (c == '>') {
             return true;
-        }
-        else if (c == ' ' && !quoted && canQuote && params == 0 && !hasFallback) {
-            return false;
-        }
-        else if (c == '|' && i > 0 && arg.charAt(i - 1) == '|') {
-            hasFallback = true;
         }
     }
     return false;
@@ -833,7 +845,7 @@ function decorateFullFile(editor: vscode.TextEditor) {
     let definitelyDataSpacing : number = -1;
     // Actually choose colors
     for (let i : number = 0; i < endLine; i++) {
-        const lineText : string = splitText[i];
+        let lineText : string = splitText[i];
         const trimmedLineStart : string = lineText.trimStart();
         const spaces : number = lineText.length - trimmedLineStart.length;
         const trimmedLine : string = trimmedLineStart.trimEnd();
@@ -852,8 +864,29 @@ function decorateFullFile(editor: vscode.TextEditor) {
         if (spaces < definitelyDataSpacing) {
             definitelyDataSpacing = -1;
         }
+        decorFixes = [];
+        let lineNum = i;
+        if (trimmedLine.startsWith("- ")) {
+            while (i + 1 < splitText.length) {
+                const nextLine : string = splitText[i + 1];
+                const nextTrimmedLineStart : string = nextLine.trimStart();
+                const nextSpaces : number = nextLine.length - nextTrimmedLineStart.length;
+                const nextTrimmedLine : string = nextTrimmedLineStart.trimEnd();
+                if (nextSpaces > spaces && !nextTrimmedLine.startsWith("- ")) {
+                    decorFixes.push(lineText.length + 1);
+                    lineText += "\n" + nextLine;
+                    i++;
+                    if (nextTrimmedLine.endsWith(':')) {
+                        break;
+                    }
+                }
+                else {
+                    break;
+                }
+            }
+        }
         if (i >= startLine) {
-            decorateLine(lineText, i, decorations, lastKey, definitelyDataSpacing != -1);
+            decorateLine(lineText, lineNum, decorations, lastKey, definitelyDataSpacing != -1);
         }
     }
     // Apply them
