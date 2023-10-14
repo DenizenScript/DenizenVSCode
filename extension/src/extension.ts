@@ -866,7 +866,7 @@ function decorateFullFile(editor: vscode.TextEditor) {
         }
         decorFixes = [];
         let lineNum = i;
-        if (trimmedLine.startsWith("- ")) {
+        if (trimmedLine.startsWith("- ") && !trimmedLine.endsWith(":")) {
             while (i + 1 < splitText.length) {
                 const nextLine : string = splitText[i + 1];
                 const nextTrimmedLineStart : string = nextLine.trimStart();
