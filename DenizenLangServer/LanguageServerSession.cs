@@ -51,18 +51,13 @@ namespace DenizenLangServer
 
     }
 
-    public class SessionDocument
+    public class SessionDocument(TextDocumentItem doc)
     {
-        public SessionDocument(TextDocumentItem doc)
-        {
-            Document = TextDocument.Load<FullTextDocument>(doc);
-        }
-
         private readonly LockObject SyncLock = new();
 
         public event EventHandler DocumentChanged;
 
-        public TextDocument Document { get; set; }
+        public TextDocument Document { get; set; } = TextDocument.Load<FullTextDocument>(doc);
 
         public void NotifyChanges(IEnumerable<TextDocumentContentChangeEvent> changes)
         {

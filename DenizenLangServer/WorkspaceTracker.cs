@@ -115,7 +115,7 @@ namespace DenizenLangServer
                         }
                         Console.Error.WriteLine($"Have {Checkers.Count} files loaded and initially scanned");
                         ScriptingWorkspaceData genData = new();
-                        KeyValuePair<string, ScriptChecker>[] copyCheckers = Checkers.ToArray();
+                        KeyValuePair<string, ScriptChecker>[] copyCheckers = [.. Checkers];
                         foreach ((_, ScriptChecker checker) in copyCheckers)
                         {
                             genData.MergeIn(checker.GeneratedWorkspace);

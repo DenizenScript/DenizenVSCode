@@ -3,11 +3,11 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>DenizenLangServer</RootNamespace>
     <AssemblyName>DenizenLangServer</AssemblyName>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <LangVersion>Latest</LangVersion>
     <Product>DenizenLangServer</Product>
     <PackageId>DenizenLangServer</PackageId>
-    <Copyright>Copyright (C) The DenizenScript Team 2019-2022</Copyright>
+    <Copyright>Copyright (C) The DenizenScript Team 2019-2023</Copyright>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
   </PropertyGroup>
   <ItemGroup>

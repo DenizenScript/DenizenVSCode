@@ -116,7 +116,7 @@ namespace DenizenLangServer.Services
                     }
                 }
             }
-            if (trimmed.EndsWith(":") && (trimmed.StartsWith("on ") || trimmed.StartsWith("after ")))
+            if (trimmed.EndsWith(':') && (trimmed.StartsWith("on ") || trimmed.StartsWith("after ")))
             {
                 bool isAction = false;
                 if (trimmed.StartsWith("on "))
@@ -260,7 +260,7 @@ namespace DenizenLangServer.Services
             Session.Documents.TryRemove(textDocument.Uri, out _);
         }
 
-        private static readonly CompletionItem[] EmptyCompletionItems = Array.Empty<CompletionItem>();
+        private static readonly CompletionItem[] EmptyCompletionItems = [];
 
         private static readonly JToken Token = JToken.FromObject("Data"); // TODO: ???
 
@@ -343,7 +343,7 @@ namespace DenizenLangServer.Services
             if (trimmed.StartsWith("- "))
             {
                 string afterDash = trimmed[2..];
-                if (afterDash.StartsWith("~"))
+                if (afterDash.StartsWith('~'))
                 {
                     afterDash = afterDash[1..];
                 }
@@ -366,7 +366,7 @@ namespace DenizenLangServer.Services
                             .Select(a => new CompletionItem(a.Item1, CompletionItemKind.Field, a.Item2, Token)).ToArray();
                         if (CommandTabCompletions.ByCommand.TryGetValue(cmd.CleanName, out CommandTabCompletions completer) && completer.ByPrefix.TryGetValue(prefix, out Func<string, JToken, IEnumerable<CompletionItem>> completeFunc))
                         {
-                            results = results.Concat(completeFunc(argValue, Token)).ToArray();
+                            results = [.. results, .. completeFunc(argValue, Token)];
                         }
                         if (cmd.CleanName == "adjust" || cmd.CleanName == "inventory" || cmd.CleanName == "adjustblock")
                         {
@@ -383,18 +383,22 @@ namespace DenizenLangServer.Services
                                 }
                                 if (afterDash.ToLowerFast().Contains("flag"))
                                 {
-                                    results = results.Concat(CommandTabCompletions.CompleteFlag(false, argValue, Token)).ToArray();
+                                    results = [.. results, .. CommandTabCompletions.CompleteFlag(false, argValue, Token)];
                                 }
                             }
                             else if (cmd.CleanName == "adjustblock")
                             {
                                 mechs = mechs.Where(mech => mech.MechObject == "MaterialTag");
                             }
-                            results = results.Concat(mechs.Where(mech => mech.MechName.StartsWith(argValue)).Select(mech => new CompletionItem(mech.MechName, CompletionItemKind.Property, mech.FullName, CommandTabCompletions.DescribeMech(mech), Token))).ToArray();
+                            results =
+                            [
+                                .. results,
+                                .. mechs.Where(mech => mech.MechName.StartsWith(argValue)).Select(mech => new CompletionItem(mech.MechName, CompletionItemKind.Property, mech.FullName, CommandTabCompletions.DescribeMech(mech), Token)),
+                            ];
                         }
                         else if (cmd.CleanName == "flag")
                         {
-                            results = results.Concat(CommandTabCompletions.CompleteFlag(afterDash.Contains("flag server"), argValue, Token)).ToArray();
+                            results = [.. results, .. CommandTabCompletions.CompleteFlag(afterDash.Contains("flag server"), argValue, Token)];
                         }
                         if (results.Length > 0)
                         {
@@ -590,7 +594,7 @@ namespace DenizenLangServer.Services
                     }
                     eventName = EventTools.SeparateSwitches(MetaDocs.CurrentMeta, eventName, out List<KeyValuePair<string, string>> switches);
                     string[] parts = eventName.Split(' ');
-                    List<CompletionItem> completions = new();
+                    List<CompletionItem> completions = [];
                     foreach (MetaEvent evt in MetaDocs.CurrentMeta.Events.Values)
                     {
                         foreach (ScriptEventCouldMatcher matcher in evt.CouldMatchers.Where(c => c.TryMatch(parts, true, false) > 0))

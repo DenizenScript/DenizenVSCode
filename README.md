@@ -17,6 +17,7 @@ Install guide can be found [in the Guides here](https://guide.denizenscript.com/
 - Within `extension/`, run `npm install` and `npm install -g typescript`
 - Within `extension/`, build the extension TypeScript files with `tsc -p ./ --skipLibCheck`
 - You can test by just hitting F5 (it helps to have the `extension.ts` file open so VS knows what you're trying to run)
+- Packaging can be done via `vsce package`
 
 ### Current Features
 

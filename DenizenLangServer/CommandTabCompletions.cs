@@ -17,11 +17,11 @@ namespace DenizenLangServer
 {
     public class CommandTabCompletions
     {
-        public static Dictionary<string, CommandTabCompletions> ByCommand = new();
+        public static Dictionary<string, CommandTabCompletions> ByCommand = [];
 
-        public static Dictionary<string, CommandTabCompletions> ByTag = new();
+        public static Dictionary<string, CommandTabCompletions> ByTag = [];
 
-        public Dictionary<string, Func<string, JToken, IEnumerable<CompletionItem>>> ByPrefix = new();
+        public Dictionary<string, Func<string, JToken, IEnumerable<CompletionItem>>> ByPrefix = [];
 
         public static void Register(Dictionary<string, CommandTabCompletions> set, string command, string prefix, Func<IEnumerable<string>> options, string enumKey)
         {
@@ -63,7 +63,7 @@ namespace DenizenLangServer
             Register(ByCommand, "take", "item", SuggestItem);
             Register(ByCommand, "cast", "", () => Data.PotionEffects, "Potion Effect Type");
             Register(ByCommand, "statistic", "", () => Data.Statistics, "Statistic");
-            HashSet<string> determineCompletions = new() { "cancelled", "cancelled:false" };
+            HashSet<string> determineCompletions = ["cancelled", "cancelled:false"];
             Register(ByCommand, "determine", "", () => determineCompletions, null);
             foreach (string runner in new[] { "run", "runlater", "clickable", "inject", "modifyblock" })
             {
@@ -97,7 +97,7 @@ namespace DenizenLangServer
 
         public static IEnumerable<CompletionItem> CompleteFlag(bool isServer, string arg, JToken Token)
         {
-            List<CompletionItem> results = new();
+            List<CompletionItem> results = [];
             ScriptingWorkspaceData dataSet = WorkspaceTracker.WorkspaceData;
             if (!ClientConfiguration.TrackFullWorkspace || dataSet is null)
             {
@@ -109,7 +109,7 @@ namespace DenizenLangServer
                 if (flag.StartsWith(arg))
                 {
                     bool isExact = flagSet.ExactKnown.Contains(flag);
-                    List<string> scripts = new();
+                    List<string> scripts = [];
                     foreach (ScriptContainerData container in dataSet.Scripts.Values)
                     {
                         if ((isServer ? container.ServerFlags : container.ObjectFlags).Contains(flag))
@@ -136,7 +136,7 @@ namespace DenizenLangServer
 
         public static IEnumerable<CompletionItem> CompleteGenericTagParam(string docParam, string prefix, string arg, MetaTag tag, JToken Token)
         {
-            List<CompletionItem> results = new();
+            List<CompletionItem> results = [];
             docParam = docParam.Replace('(', ')').Replace('{', ')').Replace('}', ')').Replace(")", "").Replace("|...", "");
             if (ByTag.TryGetValue(docParam, out CommandTabCompletions completer))
             {
@@ -230,34 +230,42 @@ namespace DenizenLangServer
 
         public static IEnumerable<CompletionItem> SuggestInventoryType(string arg, JToken Token)
         {
-            List<CompletionItem> results = new();
-            results.AddRange(CompleteEnum(ExtraData.InventoryMatchers, "Inventory Type", arg, Token));
-            results.AddRange(SuggestScriptByType("inventory", arg, Token));
+            List<CompletionItem> results =
+            [
+                .. CompleteEnum(ExtraData.InventoryMatchers, "Inventory Type", arg, Token),
+                .. SuggestScriptByType("inventory", arg, Token),
+            ];
             return results;
         }
 
         public static IEnumerable<CompletionItem> SuggestEnchantmentType(string arg, JToken Token)
         {
-            List<CompletionItem> results = new();
-            results.AddRange(CompleteEnum(Data.Enchantments, "Enchantment Key", arg, Token));
-            results.AddRange(SuggestScriptByType("enchantment", arg, Token));
+            List<CompletionItem> results =
+            [
+                .. CompleteEnum(Data.Enchantments, "Enchantment Key", arg, Token),
+                .. SuggestScriptByType("enchantment", arg, Token),
+            ];
             return results;
         }
 
         public static IEnumerable<CompletionItem> SuggestEntityType(string arg, JToken Token)
         {
-            List<CompletionItem> results = new();
-            results.AddRange(CompleteEnum(Data.EntityArray, "Entity Type", arg, Token));
-            results.AddRange(SuggestScriptByType("entity", arg, Token));
+            List<CompletionItem> results =
+            [
+                .. CompleteEnum(Data.EntityArray, "Entity Type", arg, Token),
+                .. SuggestScriptByType("entity", arg, Token),
+            ];
             return results;
         }
 
         public static IEnumerable<CompletionItem> SuggestItem(string arg, JToken Token)
         {
-            List<CompletionItem> results = new();
-            results.AddRange(CompleteEnum(Data.ItemArray, "Item", arg, Token));
-            results.AddRange(SuggestScriptByType("item", arg, Token));
-            results.AddRange(SuggestScriptByType("book", arg, Token));
+            List<CompletionItem> results =
+            [
+                .. CompleteEnum(Data.ItemArray, "Item", arg, Token),
+                .. SuggestScriptByType("item", arg, Token),
+                .. SuggestScriptByType("book", arg, Token),
+            ];
             return results;
         }
 

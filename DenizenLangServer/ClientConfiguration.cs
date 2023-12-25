@@ -19,6 +19,6 @@ namespace DenizenLangServer
 
         public static bool TrackFullWorkspace = true;
 
-        public static Dictionary<string, string> TextColorMap = new();
+        public static Dictionary<string, string> TextColorMap = [];
     }
 }

@@ -95,7 +95,7 @@ namespace DenizenLangServer
 
         public void PublishCheckerResults(Uri uri, ScriptChecker checker)
         {
-            List<Diagnostic> diag = new();
+            List<Diagnostic> diag = [];
             foreach (ScriptChecker.ScriptWarning warning in checker.Errors)
             {
                 diag.Add(new Diagnostic(DiagnosticSeverity.Error, GetRange(warning), "Denizen Script Checker", warning.WarningUniqueKey, warning.CustomMessageForm));
