@@ -90,7 +90,7 @@ namespace DenizenLangServer.Services
             {
                 return new LanguageServer.VsCode.Contracts.Range(position.Line, start, position.Line, end);
             }
-            string trimmed = relevantLine.TrimStart();
+            string trimmed = relevantLine.TrimStart().ToLowerFast();
             int spaces = relevantLine.Length - trimmed.Length;
             string subPiece = relevantLine[position.Character..];
             int canGoForwardBy = SafeAdvanceForward.FirstNonMatchingIndex(subPiece);
@@ -109,7 +109,7 @@ namespace DenizenLangServer.Services
                     }
                     for (int i = position.Character - 1; i >= 0; i--)
                     {
-                        if (relevantLine[i..].StartsWith(possible.Label))
+                        if (relevantLine[i..].ToLowerFast().StartsWith(possible.Label.ToLowerFast()))
                         {
                             return new Hover(possible.Documentation, range(i, i + possible.Label.Length));
                         }
@@ -315,7 +315,7 @@ namespace DenizenLangServer.Services
             {
                 relevantLine = relevantLine[..^1];
             }
-            string trimmed = relevantLine.TrimStart();
+            string trimmed = relevantLine.TrimStart().ToLowerFast();
             if (!trimmed.StartsWithFast('-'))
             {
                 int lastDash = content.LastIndexOf('-', startOfLine);
@@ -328,7 +328,7 @@ namespace DenizenLangServer.Services
                     if (priorLines.Skip(1).All(line => line.Length - line.TrimStart().Length > firstSpaces))
                     {
                         relevantLine = string.Join(' ', priorLines).Trim() + " " + relevantLine;
-                        trimmed = relevantLine.TrimStart();
+                        trimmed = relevantLine.TrimStart().ToLowerFast();
                     }
                 }
             }

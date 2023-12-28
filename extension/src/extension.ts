@@ -645,7 +645,7 @@ function decorateLine(line : string, lineNumber: number, decorations: { [color: 
         line = line.substring(0, line.length - 1);
     }
     const trimmedEnd : string = line.trimEnd();
-    let trimmed : string = trimmedEnd.trimStart().replaceAll('\n', ' ');
+    let trimmed : string = trimmedEnd.trimStart().replaceAll('\n', ' ').toLowerCase();
     if (trimmed.length == 0) {
         return;
     }
