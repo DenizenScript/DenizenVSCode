@@ -275,7 +275,7 @@ namespace DenizenLangServer
             {
                 return Array.Empty<CompletionItem>();
             }
-            return WorkspaceTracker.WorkspaceData.Scripts.Values.Where(s => type is null || s.Type == type).Where(s => s.Name.StartsWith(arg)).Select(s => new CompletionItem(s.Name, CompletionItemKind.Method, s.Name, DescribeScript(s), Token));
+            return WorkspaceTracker.WorkspaceData.Scripts.Values.Where(s => type is null || s.Type == type).Where(s => (arg.StartsWith('_') || !s.Name.StartsWith('_')) && s.Name.StartsWith(arg)).Select(s => new CompletionItem(s.Name, CompletionItemKind.Method, s.Name, DescribeScript(s), Token));
         }
 
         public static MarkupContent DescribeScript(ScriptContainerData script)
