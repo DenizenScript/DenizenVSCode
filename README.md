@@ -9,6 +9,16 @@ This can be downloaded from [The Marketplace](https://marketplace.visualstudio.c
 
 Install guide can be found [in the Guides here](https://guide.denizenscript.com/guides/first-steps/script-editor.html).
 
+You can enable auto-indenting by opening `.vscode/settings.json` and adding:
+
+```json
+{
+    "[denizenscript]": {
+        "editor.autoIndent": "full",
+    }
+}
+```
+
 ### Building
 
 - Within `DenizenLangServer/`, build the C# language server project with `dotnet build --configuration=release`, or in Visual Studio 2022.

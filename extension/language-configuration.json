@@ -31,5 +31,13 @@
     "indentationRules": {
       "increaseIndentPattern": "^(This_Should_Never_Happen){5000}$",
       "decreaseIndentPattern": "^(This_Should_Never_Happen){5000}$"
-    }
+    },
+    "onEnterRules": [
+        {
+            "beforeText": "^.*:$",
+            "action": {
+                "indent": "indent"
+            }
+        }
+    ]
 }
