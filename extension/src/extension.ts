@@ -885,6 +885,9 @@ function decorateFullFile(editor: vscode.TextEditor) {
                 }
             }
         }
+        if (trimmedLine.startsWith("- definemap ") && trimmedLine.endsWith(":") && definitelyDataSpacing == -1) {
+            definitelyDataSpacing = spaces + 1;
+        }
         if (i >= startLine) {
             decorateLine(lineText, lineNum, decorations, lastKey, definitelyDataSpacing != -1);
         }
