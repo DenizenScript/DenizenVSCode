@@ -564,19 +564,20 @@ namespace DenizenLangServer.Services
                     }
                 }
             }
+            // TODO: This is a hack.
+            string currentType = "";
+            int lastTypeLabelIndex = doc.Content.LastIndexOf(" type: ", offset);
+            if (lastTypeLabelIndex != -1)
+            {
+                int endOfLine = doc.Content.IndexOf('\n', lastTypeLabelIndex);
+                if (endOfLine != -1)
+                {
+                    currentType = doc.Content[(lastTypeLabelIndex + " type: ".Length)..endOfLine].Trim();
+                }
+            }
             if (trimmed.StartsWith("on ") || trimmed.StartsWith("after "))
             {
-                bool isAction = false;
-                if (trimmed.StartsWith("on "))
-                {
-                    int assignIndex = doc.Content.LastIndexOf("type: assignment", offset);
-                    if (assignIndex != -1)
-                    {
-                        int worldIndex = doc.Content.LastIndexOf("type: world", offset);
-                        isAction = assignIndex > worldIndex;
-                    }
-                }
-                if (isAction)
+                if (currentType == "action" && trimmed.StartsWith("on "))
                 {
                     string actionName = trimmed;
                     // TODO
@@ -609,6 +610,42 @@ namespace DenizenLangServer.Services
                         }
                     }
                     return new CompletionList(completions);
+                }
+            }
+            if (!trimmed.StartsWith('-') && !trimmed.Contains(':'))
+            {
+                int mechanismsPlacement = doc.Content.IndexOf(" mechanisms:", lastTypeLabelIndex);
+                if (mechanismsPlacement != -1 && mechanismsPlacement < offset)
+                {
+                    int startOfMechLine = doc.Content.LastIndexOf('\n', mechanismsPlacement);
+                    if (startOfMechLine != -1)
+                    {
+                        int spaces = mechanismsPlacement - startOfMechLine + 1;
+                        int ownSpaces = relevantLine.Length - trimmed.Length;
+                        if (ownSpaces > spaces)
+                        {
+                            IEnumerable<MetaMechanism> mechs = null;
+                            if (currentType == "entity")
+                            {
+                                mechs = MetaDocs.CurrentMeta.Mechanisms.Values.Where(m => m.MechObject == "EntityTag");
+                            }
+                            else if (currentType == "item")
+                            {
+                                mechs = MetaDocs.CurrentMeta.Mechanisms.Values.Where(m => m.MechObject == "ItemTag");
+                            }
+                            if (mechs is not null)
+                            {
+                                List<CompletionItem> completions =
+                                [
+                                    .. mechs.Where(mech => mech.MechName.StartsWith(trimmed)).Select(mech => new CompletionItem(mech.MechName, CompletionItemKind.Property, mech.FullName, CommandTabCompletions.DescribeMech(mech), Token)),
+                                ];
+                                if (completions.Count > 0)
+                                {
+                                    return new CompletionList(completions);
+                                }
+                            }
+                        }
+                    }
                 }
             }
             // TODO: Actual completion logic for other cases (Type keys, tags, etc)
