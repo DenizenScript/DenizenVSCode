@@ -63,7 +63,7 @@ namespace DenizenLangServer
         {
             lock (SyncLock)
             {
-                Document = Document.ApplyChanges(changes.ToList());
+                Document = Document.ApplyChanges([.. changes]);
             }
             OnDocumentChanged();
         }

@@ -33,7 +33,7 @@ namespace DenizenLangServer.Services
         {
             foreach (char letter in prefixes.Select(s => s[0]).Distinct())
             {
-                List<Snippet> list = Snippets.GetOrCreate(letter, () => new List<Snippet>());
+                List<Snippet> list = Snippets.GetOrCreate(letter, () => []);
                 list.Add(new Snippet() { Name = name, Description = description, Prefixes = prefixes, Body = body, DescriptionMarkup = MarkupContent.Markdown($"{description}\n```\n{body}\n```\n") });
             }
         }

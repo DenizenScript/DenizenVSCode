@@ -61,7 +61,7 @@ namespace DenizenLangServer.Services
                     Console.Error.WriteLine($"Alternate meta sources detected, scanning...");
                     ClientConfiguration.ExtraSources = settings.Denizenscript.Extra_sources ?? "";
                     IEnumerable<string> newSources = ClientConfiguration.ExtraSources.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-                    MetaDocsLoader.SourcesToUse = MetaDocsLoader.DENIZEN_SOURCES.JoinWith(MetaDocsLoader.DENIZEN_ADDON_SOURCES).JoinWith(newSources).Distinct().ToArray();
+                    MetaDocsLoader.SourcesToUse = [.. MetaDocsLoader.DENIZEN_SOURCES.JoinWith(MetaDocsLoader.DENIZEN_ADDON_SOURCES).JoinWith(newSources).Distinct()];
                     Task.Factory.StartNew(() =>
                     {
                         try

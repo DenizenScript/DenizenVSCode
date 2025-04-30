@@ -159,7 +159,7 @@ namespace DenizenLangServer
                         }
                         return results;
                     }
-                    HashSet<string> givenKeys = givenPairs.Where(s => s.Contains('=')).Select(s => s.Before('=')).ToHashSet();
+                    HashSet<string> givenKeys = [.. givenPairs.Where(s => s.Contains('=')).Select(s => s.Before('='))];
                     foreach (string docPair in docPairs)
                     {
                         string[] parts = docPair.SplitFast('=', 1);
@@ -215,7 +215,7 @@ namespace DenizenLangServer
         {
             if (arg.Contains('='))
             {
-                return Array.Empty<CompletionItem>();
+                return [];
             }
             else
             {
@@ -273,7 +273,7 @@ namespace DenizenLangServer
         {
             if (!ClientConfiguration.TrackFullWorkspace || WorkspaceTracker.WorkspaceData is null)
             {
-                return Array.Empty<CompletionItem>();
+                return [];
             }
             return WorkspaceTracker.WorkspaceData.Scripts.Values.Where(s => type is null || s.Type == type).Where(s => (arg.StartsWith('_') || !s.Name.StartsWith('_')) && s.Name.StartsWith(arg)).Select(s => new CompletionItem(s.Name, CompletionItemKind.Method, s.Name, DescribeScript(s), Token));
         }

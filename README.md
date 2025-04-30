@@ -24,7 +24,7 @@ You can enable auto-indenting by opening `.vscode/settings.json` and adding:
 - Within `DenizenLangServer/`, build the C# language server project with `dotnet build --configuration=release`, or in Visual Studio 2022.
 - Copy the output files (deepest folder under `DenizenLangServer/bin/`) to path `extension/server/`
 - You will need NodeJS and NPM: https://nodejs.org/en/
-- Within `extension/`, run `npm install` and `npm install -g typescript`
+- Within `extension/`, run `npm install` and `npm install -g typescript` and `npm install -g @vscode/vsce`
 - Within `extension/`, build the extension TypeScript files with `tsc -p ./ --skipLibCheck`
 - You can test by just hitting F5 (it helps to have the `extension.ts` file open so VS knows what you're trying to run)
 - Packaging can be done via `vsce package`
@@ -55,7 +55,7 @@ You can do basically whatever you want, except you may not hold any developer li
 
 The MIT License (MIT)
 
-Copyright (c) 2019-2023 The Denizen Scripting Team
+Copyright (c) 2019-2025 The Denizen Scripting Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

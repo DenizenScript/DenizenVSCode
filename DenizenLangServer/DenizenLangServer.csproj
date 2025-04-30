@@ -7,7 +7,7 @@
     <LangVersion>Latest</LangVersion>
     <Product>DenizenLangServer</Product>
     <PackageId>DenizenLangServer</PackageId>
-    <Copyright>Copyright (C) The DenizenScript Team 2019-2023</Copyright>
+    <Copyright>Copyright (C) The DenizenScript Team 2019-2025</Copyright>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
   </PropertyGroup>
   <ItemGroup>
@@ -15,7 +15,7 @@
     <PackageReference Include="CXuesong.JsonRpc.Streams" Version="0.5.4" />
     <PackageReference Include="CXuesong.JsonRpc.DynamicProxy" Version="0.5.3" />
     <PackageReference Include="CXuesong.LanguageServer.VsCode" Version="0.3.5" />
-    <PackageReference Include="YamlDotNet" Version="13.7.1" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="SharpDenizenTools\*.*" />
